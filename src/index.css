@@ -1,0 +1,14 @@
+/* Chrome, Edge, Safari */
+.scroll-invisible::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Firefox */
+.scroll-invisible {
+  scrollbar-width: none; /* Oculta en Firefox */
+}
+
+.scroll-invisible {
+  -ms-overflow-style: none; /* IE 10+ */
+}
