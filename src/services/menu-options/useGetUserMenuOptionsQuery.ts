@@ -6,7 +6,7 @@ import { MenuOption } from './menu-options.types'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
 
 export function useGetUserMenuOptionsQuery() {
-  const { menuOptions, setMenuOptions } = useMenuOptionStore()
+  const { setMenuOptions, menuOptions } = useMenuOptionStore()
   const { username } = getSessionInfo()
 
   return useQuery({

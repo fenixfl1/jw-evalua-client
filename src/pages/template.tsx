@@ -132,7 +132,9 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
     navigate(option.PATH)
   }
 
-  const getSubMenu = (options: MenuOption[]): MenuProps['items'] => {
+  const getSubMenu = (options: MenuOption[] = []): MenuProps['items'] => {
+    // eslint-disable-next-line no-console
+    console.log({ options })
     return options?.map((option: MenuOption) => {
       return {
         key: option?.MENU_OPTION_ID,

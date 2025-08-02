@@ -9,3 +9,12 @@ export interface MenuOption {
   PATH: string
   TYPE?: 'link' | 'divider' | 'group' | 'item' | 'submenu'
 }
+
+export interface OptionWithPermission extends Omit<MenuOption, 'ICON'> {
+  PERMISSIONS: {
+    PERMISSION_ID: number
+    DESCRIPTION: string
+    ACTION_ID: number
+    ACTION_NAME: string
+  }[]
+}

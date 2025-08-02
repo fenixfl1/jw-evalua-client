@@ -28,7 +28,7 @@ export function useGetRolePaginationMutation() {
     onSuccess: setRoleList,
     onError: () => setRoleList(initialData),
     mutationFn: async ({ condition, page, size }) => {
-      const { data } = await postRequest<ReturnPayload<Role>>(
+      const { data } = await postRequest<Role[]>(
         getQueryString(API_PATH_GET_ROLE_PAGINATION, { page, size }),
         condition
       )

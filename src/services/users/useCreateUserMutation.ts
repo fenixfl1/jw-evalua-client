@@ -8,10 +8,9 @@ export function useCreateUserMutation() {
     initialData: <User>{},
     mutationKey: ['users', 'create-user'],
     mutationFn: async (payload) => {
-      const { data } = await postRequest<User>(
-        API_PATH_CREATE_UPDATE_USER,
-        payload
-      )
+      const {
+        data: { data },
+      } = await postRequest<User>(API_PATH_CREATE_UPDATE_USER, payload)
 
       return data
     },

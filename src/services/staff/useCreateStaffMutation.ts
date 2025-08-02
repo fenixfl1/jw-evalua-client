@@ -8,10 +8,9 @@ export function useCreateStaffMutation() {
     initialData: <Staff>{},
     mutationKey: ['staff', 'create-staff'],
     mutationFn: async (payload) => {
-      const { data } = await postRequest<Staff>(
-        API_PATH_CREATE_UPDATE_STAFF,
-        payload
-      )
+      const {
+        data: { data },
+      } = await postRequest<Staff>(API_PATH_CREATE_UPDATE_STAFF, payload)
 
       return data
     },

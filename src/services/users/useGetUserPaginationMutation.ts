@@ -28,7 +28,7 @@ export function useGetUserPaginationMutation() {
     onSuccess: setUserList,
     onError: () => setUserList(initialData),
     mutationFn: async ({ condition, page, size }) => {
-      const { data } = await postRequest<ReturnPayload<User>>(
+      const { data } = await postRequest<User[]>(
         getQueryString(API_PATH_GET_USER_PAGINATION, { page, size }),
         condition
       )

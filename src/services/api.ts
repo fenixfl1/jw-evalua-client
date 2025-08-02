@@ -4,10 +4,12 @@ import { getSessionToken } from 'src/lib/session'
 import { Metadata } from 'src/types/general'
 
 export interface ApiResponse<T> {
-  data: T
-  metadata: Metadata
-  message: string
   error?: AxiosError
+  data: {
+    data: T
+    metadata: { pagination: Metadata }
+    message?: string
+  }
 }
 
 export const api = axios.create({

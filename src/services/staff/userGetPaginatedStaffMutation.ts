@@ -27,7 +27,7 @@ export function useGetPaginatedStaffMutation() {
     mutationKey: ['staff', 'get-paginated-staff'],
     onSuccess: setStaffList,
     mutationFn: async ({ condition, page, size }) => {
-      const { data } = await postRequest<ReturnPayload<Staff>>(
+      const { data } = await postRequest<Staff[]>(
         buildQueryString(API_GET_STAFF_PAGINATION, { page }, { size }),
         condition
       )
