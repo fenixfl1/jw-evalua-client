@@ -6,4 +6,12 @@ export interface User {
   USERNAME: string
   IS_ACTIVE: boolean
   ROLES: string
+  CREATED_AT: string
+  STATE: string
+  IDENTITY_DOCUMENT: string
+  EMAIL: string
+  PHONE: string
+  BIRTH_DATE: string
+  GENDER: string
+  ADDRESS: string
 }

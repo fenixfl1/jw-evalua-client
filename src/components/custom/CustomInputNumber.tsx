@@ -1,10 +1,9 @@
-import React, { useState } from "react"
-import { InputNumberProps } from "antd/lib/input-number"
-import { InputNumber } from "antd"
-import { defaultTheme } from "@/styles/themes"
+import React, { useState } from 'react'
+import { InputNumberProps } from 'antd/lib/input-number'
+import { InputNumber } from 'antd'
 
-type FormatType = "currency" | "percent" | "range"
-export type CurrencyType = "RD" | "UE" | "US"
+type FormatType = 'currency' | 'percent' | 'range'
+export type CurrencyType = 'RD' | 'UE' | 'US'
 
 export type InputFormat = {
   format: FormatType
@@ -19,11 +18,11 @@ export interface CustomInputNumberProps extends InputNumberProps {
 const regExp = /\B(?=(\d{3})+(?!\d)\.?)/g
 
 const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
-  format = { format: "", currency: "" },
+  format = { format: '', currency: '' },
   precision = 2,
   style,
   width,
-  size = defaultTheme.size,
+  size,
   max,
   ...props
 }) => {
@@ -31,26 +30,30 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
 
   const formatter = (value: number | string) => {
     switch (format.format) {
-      case "currency": {
+      case 'currency': {
         return {
-          format: `${format.currency}$ ${value}`.replace(regExp, ","),
+          format: `${format.currency}$ ${value}`.replace(regExp, ','),
           parse: `${value}`
-            .replace(format.currency?.[0] as string, "")
-            .replace(format.currency?.[1] as string, "")
-            .replace(/\$\s?|(,*)/g, ""),
+            .replace(format.currency?.[0] as string, '')
+            .replace(format.currency?.[1] as string, '')
+            .replace(/\$\s?|(,*)/g, ''),
         }
       }
-      case "percent": {
-        !max ? setMaxValue(100) : setMaxValue(Number(max))
+      case 'percent': {
+        if (!max) {
+          setMaxValue(100)
+        } else {
+          setMaxValue(Number(max))
+        }
         return {
           format: `${value}%`,
-          parse: `${value}`.replace("%", ""),
+          parse: `${value}`.replace('%', ''),
         }
       }
-      case "range": {
+      case 'range': {
         return {
           format: `${Math.trunc(Number(value))}`,
-          parse: `${value}`.replace("%", ""),
+          parse: `${value}`.replace('%', ''),
         }
       }
       default:

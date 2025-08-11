@@ -1,13 +1,14 @@
-import React, { useState } from "react"
-import { InboxOutlined, UploadOutlined } from "@ant-design/icons"
-import { Upload, UploadProps } from "antd"
-import { UploadFile } from "antd/lib/upload/interface"
-import { UploadRequestOption } from "rc-upload/lib/interface"
-import { getBase64 } from "@/helpers/base64-helpers"
-import sleep from "@/helpers/sleep"
-import { CustomButton, CustomModal, CustomRow } from "."
-import ConditionalComponent from "../ConditionalComponent"
-import styled from "styled-components"
+import React, { useState } from 'react'
+import { UploadOutlined } from '@ant-design/icons'
+import { Upload, UploadProps } from 'antd'
+import { UploadFile } from 'antd/lib/upload/interface'
+import { UploadRequestOption } from 'rc-upload/lib/interface'
+import ConditionalComponent from '../ConditionalComponent'
+import styled from 'styled-components'
+import { getBase64 } from 'src/utils/base64-helpers'
+import sleep from 'src/utils/sleep'
+import CustomButton from './CustomButton'
+import CustomModal from './CustomModal'
 
 const Button = styled(CustomButton)`
   padding: 10px !important;
@@ -34,8 +35,8 @@ interface CustomUploadProps extends UploadProps {
 }
 
 const CustomUpload: React.FC<CustomUploadProps> = ({
-  action = "https://www.mocky.io/v2/5cc8019d300000980a055e76",
-  listType = "picture-card",
+  action = 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
+  listType = 'picture-card',
   multiple = false,
   onUpload,
   accept,
@@ -46,8 +47,8 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   ...props
 }) => {
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewTitle, setPreviewTitle] = useState("")
-  const [previewImage, setPreviewImage] = useState("")
+  const [previewTitle, setPreviewTitle] = useState('')
+  const [previewImage, setPreviewImage] = useState('')
 
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
@@ -58,7 +59,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     setPreviewOpen(true)
     setPreviewTitle(
       file.name ||
-        (file.url?.substring(file.url?.lastIndexOf("/") + 1) as string)
+        (file.url?.substring(file.url?.lastIndexOf('/') + 1) as string)
     )
   }
 
@@ -66,7 +67,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     const { file, onError, onSuccess } = options
     let isOk = true
     await sleep(500)
-    if (typeof onUpload === "function") isOk = await onUpload?.(file as never)
+    if (typeof onUpload === 'function') isOk = await onUpload?.(file as never)
 
     if (!isOk) {
       onError?.({ status: 500 } as never)
@@ -77,7 +78,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
 
   const uploadButton = (
     <ConditionalComponent
-      condition={listType === "picture-card"}
+      condition={listType === 'picture-card'}
       fallback={
         <Button icon={<UploadOutlined />} block>
           {label}
@@ -110,7 +111,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         footer={null}
         onCancel={handleCancel}
       >
-        <img alt="previewTitle" style={{ width: "100%" }} src={previewImage} />
+        <img alt="previewTitle" style={{ width: '100%' }} src={previewImage} />
       </CustomModal>
     </>
   )

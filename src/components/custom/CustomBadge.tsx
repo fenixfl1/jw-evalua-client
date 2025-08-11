@@ -1,20 +1,13 @@
-import React from "react"
-import { Badge, BadgeProps } from "antd"
-import { defaultTheme } from "@/styles/themes"
+import React from 'react'
+import { Badge, BadgeProps } from 'antd'
 
 const CustomBadge: React.FC<BadgeProps> = ({
-  size = defaultTheme.size,
   showZero = false,
   overflowCount = 9,
   ...props
 }) => {
   return (
-    <Badge
-      overflowCount={overflowCount}
-      size={size as never}
-      showZero={showZero}
-      {...props}
-    >
+    <Badge overflowCount={overflowCount} showZero={showZero} {...props}>
       {props.children}
     </Badge>
   )

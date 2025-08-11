@@ -1,15 +1,14 @@
-import React from "react"
 import {
   CheckCircleOutlined,
   CheckOutlined,
   ExclamationCircleOutlined,
   StopOutlined,
-} from "@ant-design/icons"
-import { Modal } from "antd"
+} from '@ant-design/icons'
+import { Modal } from 'antd'
 
-import { ModalFuncProps } from "antd/lib/modal"
+import { ModalFuncProps } from 'antd/lib/modal'
 
-type CustomModalFuncProps = Omit<ModalFuncProps, "open" | "visible"> & {
+type CustomModalFuncProps = Omit<ModalFuncProps, 'open' | 'visible'> & {
   visible?: boolean
   hideCancelButton?: boolean
 }
@@ -18,14 +17,14 @@ export const CustomModalConfirmation = ({
   okButtonProps,
   cancelButtonProps,
   visible,
-  okText = "Aceptar",
-  cancelText = "Cancelar",
+  okText = 'Aceptar',
+  cancelText = 'Cancelar',
   ...props
 }: CustomModalFuncProps): void => {
   Modal.confirm({
     open: visible,
-    title: "Confirmar",
-    content: "content: Alguna descripción",
+    title: 'Confirmar',
+    content: 'content: Alguna descripción',
     closable: true,
     okText,
     cancelText,
@@ -44,14 +43,14 @@ export const CustomModalConfirmation = ({
 export const CustomModalError = ({
   okButtonProps,
   visible = false,
-  okText = "Aceptar",
-  cancelText = "Cancelar",
+  okText = 'Aceptar',
+  cancelText = 'Cancelar',
   ...props
 }: CustomModalFuncProps): void => {
   Modal.error({
-    title: "Error",
+    title: 'Error',
     open: visible,
-    content: "A ocurrido un error.",
+    content: 'A ocurrido un error.',
     okText,
     cancelText,
     okButtonProps: {
@@ -60,7 +59,7 @@ export const CustomModalError = ({
     },
     cancelButtonProps: {
       ...props.cancelButtonProps,
-      style: { display: props.hideCancelButton ? "none" : "" },
+      style: { display: props.hideCancelButton ? 'none' : '' },
     },
     ...props,
   })
@@ -68,14 +67,14 @@ export const CustomModalError = ({
 
 export const CustomModalInfo = ({
   okButtonProps,
-  okText = "Aceptar",
-  cancelText = "Cancelar",
+  okText = 'Aceptar',
+  cancelText = 'Cancelar',
   visible = false,
   ...props
 }: CustomModalFuncProps): void => {
   Modal.info({
-    title: "Información",
-    content: "Mensaje de información",
+    title: 'Información',
+    content: 'Mensaje de información',
     open: visible,
     okText,
     cancelText,
@@ -85,22 +84,22 @@ export const CustomModalInfo = ({
     },
     cancelButtonProps: {
       ...props.cancelButtonProps,
-      style: { display: props.hideCancelButton ? "none" : "" },
+      style: { display: props.hideCancelButton ? 'none' : '' },
     },
     ...props,
   })
 }
 
 export const CustomModalSuccess = ({
-  okText = "Aceptar",
-  cancelText = "Cancelar",
+  okText = 'Aceptar',
+  cancelText = 'Cancelar',
   ...props
 }: CustomModalFuncProps): void => {
   Modal.success({
-    title: "Proceso completado con éxito",
+    title: 'Proceso completado con éxito',
     icon: <CheckCircleOutlined />,
     open: props.visible,
-    content: "Proceso completado con éxito.",
+    content: 'Proceso completado con éxito.',
     okText,
     cancelText,
     okButtonProps: {
@@ -109,7 +108,7 @@ export const CustomModalSuccess = ({
     },
     cancelButtonProps: {
       ...props.cancelButtonProps,
-      style: { display: props.hideCancelButton ? "none" : "" },
+      style: { display: props.hideCancelButton ? 'none' : '' },
     },
     ...props,
   })
@@ -117,7 +116,7 @@ export const CustomModalSuccess = ({
 
 export const CustomModalWarning = (props: CustomModalFuncProps): void => {
   Modal.warning({
-    title: "Advertencia",
+    title: 'Advertencia',
     open: props.visible,
     icon: <ExclamationCircleOutlined />,
     okButtonProps: {
@@ -126,9 +125,9 @@ export const CustomModalWarning = (props: CustomModalFuncProps): void => {
     },
     cancelButtonProps: {
       ...props.cancelButtonProps,
-      style: { display: props.hideCancelButton ? "none" : "" },
+      style: { display: props.hideCancelButton ? 'none' : '' },
     },
-    content: "Advertencia",
+    content: 'Advertencia',
     ...props,
   })
 }

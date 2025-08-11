@@ -1,13 +1,12 @@
-import React from "react"
-import { Avatar } from "antd"
-import { GroupProps } from "antd/lib/avatar"
-import { defaultTheme } from "@/styles/themes"
+import React from 'react'
+import { Avatar } from 'antd'
+import { AvatarGroupProps } from 'antd/lib/avatar/AvatarGroup'
 
 const { Group } = Avatar
 
-const CustomAvatarGroup: React.FC<GroupProps> = ({
-  size = "small",
-  max = { count: 5, popover: { trigger: "hover" } },
+const CustomAvatarGroup: React.FC<AvatarGroupProps> = ({
+  size = 'small',
+  max = { count: 5, popover: { trigger: 'hover' } },
   ...props
 }) => {
   return (

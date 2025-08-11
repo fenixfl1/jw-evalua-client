@@ -1,6 +1,6 @@
 import React from 'react'
 import InputMask from 'react-input-mask'
-import CustomInput, { CustomInputProps } from './CustomInput'
+import { CustomInputProps } from './CustomInput'
 import { Input } from 'antd'
 
 interface CustomMaskedInputProps

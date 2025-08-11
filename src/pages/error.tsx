@@ -8,6 +8,7 @@ import CustomCol from 'src/components/custom/CustomCol'
 import CustomRow from 'src/components/custom/CustomRow'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import { AppError } from 'src/utils/app-error'
+import { useEffect } from 'react'
 
 const StackDescription = styled.div`
   position: relative;
@@ -45,6 +46,11 @@ const Container = styled(CustomRow)`
 
 const RouteErrorElement = () => {
   const error = useRouteError() as AppError
+
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ error })
+  }, [error])
 
   return (
     <Container justify="center" align="middle">

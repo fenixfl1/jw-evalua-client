@@ -18,13 +18,16 @@ import CustomCol from 'src/components/custom/CustomCol'
 import { useGetUserMenuOptionsQuery } from 'src/services/menu-options/useGetUserMenuOptionsQuery'
 import { MenuOption } from 'src/services/menu-options/menu-options.types'
 import SVGReader from 'src/components/SVGReader'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
 import { findParentKeys } from 'src/utils/find-parent-keys'
 import { MenuProps } from 'antd'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import CustomButton from 'src/components/custom/CustomButton'
 import { CustomModalConfirmation } from 'src/components/custom/CustomModalMethods'
+import UserProfile from 'src/components/Profile'
+import { useUserStore } from 'src/store/user.store'
+import { getAvatarLink } from 'src/utils/get-avatar-link'
 
 const LogoContainer = styled.div`
   display: flex;
@@ -88,8 +91,11 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { activityId } = useParams()
   const navigate = useNavigate()
   const { isAuthenticated } = useAppContext()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useGetUserMenuOptionsQuery()
+
+  const { profileVisibilityState, setProfileVisibilitySate } = useUserStore()
 
   const {
     setCurrentMenuOption,
@@ -101,6 +107,12 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
     selectedKeys,
     reset,
   } = useMenuOptionStore()
+
+  useEffect(() => {
+    if (!profileVisibilityState && searchParams.get('username')) {
+      setProfileVisibilitySate(true)
+    }
+  }, [profileVisibilityState, searchParams])
 
   useEffect(() => {
     let current = currenMenuOption
@@ -206,74 +218,79 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   }
 
   return (
-    <ConditionalComponent condition={isAuthenticated} fallback={children}>
-      <ThemeTransitionLayout>
-        <Layout hasSider>
-          <Sider width={240}>
-            <CustomRow justify={'center'} style={{ height: '100px' }}>
-              <LogoContainer>
-                <img src={'/assets/logo.png'} />
-              </LogoContainer>
-            </CustomRow>
-            <Menu
-              mode={'inline'}
-              openKeys={openKeys}
-              selectedKeys={selectedKeys}
-              items={items}
-              onOpenChange={handleOpenChange}
-            />
+    <>
+      <ConditionalComponent condition={isAuthenticated} fallback={children}>
+        <ThemeTransitionLayout>
+          <Layout hasSider>
+            <Sider width={240}>
+              <CustomRow justify={'center'} style={{ height: '100px' }}>
+                <LogoContainer>
+                  <img src={'/assets/logo.png'} />
+                </LogoContainer>
+              </CustomRow>
+              <Menu
+                mode={'inline'}
+                openKeys={openKeys}
+                selectedKeys={selectedKeys}
+                items={items}
+                onOpenChange={handleOpenChange}
+              />
 
-            <CustomButton
-              size={'large'}
-              className={'btn-logout'}
-              type={'text'}
-              onClick={handleRemoveSession}
-              icon={<LogoutOutlined />}
-            >
-              Cerrar Sesión
-            </CustomButton>
-          </Sider>
-          <CustomLayout>
-            <Header>
-              <CustomRow
-                justify={'space-between'}
-                width={'100%'}
-                align={'middle'}
+              <CustomButton
+                size={'large'}
+                className={'btn-logout'}
+                type={'text'}
+                onClick={handleRemoveSession}
+                icon={<LogoutOutlined />}
               >
-                <CustomCol xs={12}>
-                  <CustomTitle style={{ color: '#1c9bef' }} level={2}>
-                    {currenMenuOption?.DESCRIPTION}
-                  </CustomTitle>
-                </CustomCol>
-                <CustomRow gap={5}>
-                  <CustomAvatar
-                    size={44}
-                    icon={<UserOutlined />}
-                    src={
-                      getSessionInfo().avatar ||
-                      `https://ui-avatars.com/api/?name=${
-                        getSessionInfo().name
-                      }&background=random`
-                    }
-                  />
-                  <CustomText strong>
-                    {capitalize(
-                      getSessionInfo().name || getSessionInfo().username || ''
-                    )}
-                  </CustomText>
+                Cerrar Sesión
+              </CustomButton>
+            </Sider>
+            <CustomLayout>
+              <Header>
+                <CustomRow
+                  justify={'space-between'}
+                  width={'100%'}
+                  align={'middle'}
+                >
+                  <CustomCol xs={12}>
+                    <CustomTitle level={2}>
+                      {currenMenuOption?.DESCRIPTION}
+                    </CustomTitle>
+                  </CustomCol>
+                  <CustomRow gap={5}>
+                    <CustomAvatar
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setSearchParams({ username: getSessionInfo().username })
+                        setProfileVisibilitySate(true)
+                      }}
+                      size={44}
+                      icon={<UserOutlined />}
+                      src={getAvatarLink()}
+                    />
+                    <CustomText strong>
+                      {capitalize(
+                        getSessionInfo().name || getSessionInfo().username || ''
+                      )}
+                    </CustomText>
+                  </CustomRow>
                 </CustomRow>
-              </CustomRow>
-            </Header>
+              </Header>
 
-            <CustomLayout style={{ padding: '0 24px 24px' }}>
-              <CustomRow width={'100%'} justify={'center'}>
-                <Content>{children}</Content>
-              </CustomRow>
+              <CustomLayout style={{ padding: '0 24px 24px' }}>
+                <CustomRow width={'100%'} justify={'center'}>
+                  <Content>{children}</Content>
+                </CustomRow>
+              </CustomLayout>
             </CustomLayout>
-          </CustomLayout>
-        </Layout>
-      </ThemeTransitionLayout>
-    </ConditionalComponent>
+          </Layout>
+        </ThemeTransitionLayout>
+      </ConditionalComponent>
+      <ConditionalComponent condition={profileVisibilityState}>
+        <UserProfile />
+      </ConditionalComponent>
+    </>
   )
 }
 

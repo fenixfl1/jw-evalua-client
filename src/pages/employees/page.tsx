@@ -68,7 +68,7 @@ const EmployeesPage: React.FC = () => {
             onCreate={toggleModalState}
             filterContent={<>Plantilla de filtro</>}
           />
-          <EmployeesTable />
+          <EmployeesTable onChange={handleSearch} />
         </CustomCard>
       </CustomSpin>
 
