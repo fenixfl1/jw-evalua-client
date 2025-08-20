@@ -2,6 +2,8 @@
   "token": {
     "borderRadius": 5,
     "colorPrimary": "#3869a1",
+    "colorBgBase": "#222831",
+    "colorBgContainer": "#1d1d1d",
     "boxShadow": "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)"
   },
   "components": {
@@ -18,6 +20,9 @@
     "Badge": {
       "marginXS": 5
     },
+    "Layout": {
+      "headerBg": "#1d2736"
+    },
     "Button": {
       "primaryShadow": null,
       "defaultShadow": null,
@@ -25,6 +30,9 @@
     },
     "Tabs": {
       "horizontalMargin": "0 0 20px 0"
+    },
+    "Collapse": {
+      "contentBg": "#1d1d1d"
     }
   }
 }

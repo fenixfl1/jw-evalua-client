@@ -28,13 +28,14 @@ import { CustomModalConfirmation } from 'src/components/custom/CustomModalMethod
 import UserProfile from 'src/components/Profile'
 import { useUserStore } from 'src/store/user.store'
 import { getAvatarLink } from 'src/utils/get-avatar-link'
+import CustomDivider from 'src/components/custom/CustomDivider'
 
 const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   img {
-    width: 75%;
+    width: 65%;
   }
 `
 
@@ -43,9 +44,6 @@ const Header = styled(CustomHeader)`
   align-items: center;
   height: 64px;
   width: calc(100vw - 240px);
-  box-shadow: ${({ theme }) => theme.boxShadow} !important;
-  background-color: ${({ theme: { isDark } }) =>
-    isDark ? '#000000' : '#f5f5f5'} !important;
 `
 
 const Content = styled(CustomContent)`
@@ -145,8 +143,6 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   }
 
   const getSubMenu = (options: MenuOption[] = []): MenuProps['items'] => {
-    // eslint-disable-next-line no-console
-    console.log({ options })
     return options?.map((option: MenuOption) => {
       return {
         key: option?.MENU_OPTION_ID,
@@ -228,6 +224,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                   <img src={'/assets/logo.png'} />
                 </LogoContainer>
               </CustomRow>
+              <CustomDivider />
               <Menu
                 mode={'inline'}
                 openKeys={openKeys}

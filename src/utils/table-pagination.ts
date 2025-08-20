@@ -1,10 +1,11 @@
 import { TablePaginationConfig } from 'antd'
 import { PaginationConfig } from 'antd/lib/pagination'
+import { PaginationType } from 'antd/lib/transfer/interface'
 import { Metadata } from 'src/types/general'
 
 export const getTablePagination = (
   metadata: Metadata
-): PaginationConfig & TablePaginationConfig => {
+): PaginationConfig & TablePaginationConfig & PaginationType => {
   return {
     current: metadata.currentPage,
     pageSize: metadata.pageSize,

@@ -14,6 +14,7 @@ export const DANGER_COLOR = '#ff4d4f'
 export const SUCCESS_COLOR = '#f0f4f6'
 export const INFO_COLOR = ''
 export const SECONDARY_BG_COLOR = '#f5f5f5'
+export const DISABLED_COLOR = '#c5c6cb'
 
 export const colors = {
   primary: PRIMARY_COLOR,

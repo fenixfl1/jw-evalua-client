@@ -122,3 +122,10 @@ export interface GetPayload<T = unknown> {
   page: number
   size: number
 }
+
+export interface TransferData {
+  key: string
+  title: string
+  description: string
+  chosen: boolean
+}

@@ -13,7 +13,6 @@ import CustomCol from './custom/CustomCol'
 import CustomCollapse from './custom/CustomCollapse'
 import CustomDescriptions from './custom/CustomDescription'
 import CustomDrawer from './custom/CustomDrawer'
-import { customNotification } from './custom/customNotification'
 import { CustomText } from './custom/CustomParagraph'
 import CustomRow from './custom/CustomRow'
 import CustomSpace from './custom/CustomSpace'
@@ -120,11 +119,11 @@ const UserProfile: React.FC = () => {
         AVATAR: url,
       })
 
-      queryClient.invalidateQueries({ queryKey: ['get-user'] })
+      queryClient.invalidateQueries({ queryKey: ['users', 'get-user'] })
 
       sessionStorage.setItem('avatar', url)
       form.resetFields()
-      customNotification({
+      notification.success({
         message: 'Operación Exitosa',
         description: 'Foto de perfil actualizada con éxito.',
       })

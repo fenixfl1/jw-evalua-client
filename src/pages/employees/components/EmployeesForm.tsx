@@ -68,7 +68,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
     >
       <CustomSpin spinning={isCreateStaffPending}>
         <CustomForm form={form} {...formItemLayout}>
-          <CustomRow justify={'space-between'}>
+          <CustomRow justify={'center'}>
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Cédula'}
@@ -79,7 +79,6 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                 <CustomInput placeholder={''} />
               </CustomFormItem>
             </CustomCol>
-            <CustomCol {...defaultBreakpoints} />
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Nombres'}
@@ -117,6 +116,16 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                 <CustomInput placeholder={'user@example.com'} />
               </CustomFormItem>
             </CustomCol>
+
+            <CustomCol {...defaultBreakpoints}>
+              <CustomFormItem
+                label={'Fecha Nac.'}
+                name={'BIRTH_DATA'}
+                rules={[{ required: true }]}
+              >
+                <CustomDatePicker />
+              </CustomFormItem>
+            </CustomCol>
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Sexo'}
@@ -129,15 +138,6 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                     { label: 'Femenino', value: 'F' },
                   ]}
                 />
-              </CustomFormItem>
-            </CustomCol>
-            <CustomCol {...defaultBreakpoints}>
-              <CustomFormItem
-                label={'Fecha Nac.'}
-                name={'BIRTH_DATA'}
-                rules={[{ required: true }]}
-              >
-                <CustomDatePicker />
               </CustomFormItem>
             </CustomCol>
             <CustomCol xs={24}>
