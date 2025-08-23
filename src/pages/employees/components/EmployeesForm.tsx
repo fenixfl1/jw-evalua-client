@@ -12,14 +12,13 @@ import CustomRow from 'src/components/custom/CustomRow'
 import CustomCol from 'src/components/custom/CustomCol'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
 import CustomInput from 'src/components/custom/CustomInput'
-// import CustomMaskedInput from 'src/components/custom/CustomMaskedInput'
 import CustomDatePicker from 'src/components/custom/CustomDatePicker'
 import CustomRadioGroup from 'src/components/custom/CustomRadioGroup'
 import CustomTextArea from 'src/components/custom/CustomTextArea'
 import { useCreateStaffMutation } from 'src/services/staff/useCreateStaffMutation'
-import { errorHandler } from 'src/utils/error-handler'
 import { Staff } from 'src/services/staff/staff.types'
 import { useAppNotification } from 'src/context/NotificationContext'
+import { useErrorHandler } from 'src/hooks/use-error-handler'
 
 interface EmployeesFormProps {
   open?: boolean
@@ -32,6 +31,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
   onClose,
   record,
 }) => {
+  const [errorHandler] = useErrorHandler()
   const notification = useAppNotification()
   const [form] = Form.useForm()
 
@@ -68,7 +68,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
     >
       <CustomSpin spinning={isCreateStaffPending}>
         <CustomForm form={form} {...formItemLayout}>
-          <CustomRow justify={'center'}>
+          <CustomRow justify={'start'}>
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Cédula'}
@@ -79,6 +79,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                 <CustomInput placeholder={''} />
               </CustomFormItem>
             </CustomCol>
+            <CustomCol {...defaultBreakpoints} />
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Nombres'}

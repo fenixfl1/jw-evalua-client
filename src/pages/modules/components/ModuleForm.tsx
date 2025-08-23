@@ -70,6 +70,11 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
         field: 'FILTER',
         operator: 'LIKE',
       },
+      {
+        value: 'N',
+        field: 'HAS_USER',
+        operator: '=',
+      },
     ]
 
     getStaff({ page: 1, size: 15, condition })

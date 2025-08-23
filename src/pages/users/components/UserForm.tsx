@@ -22,8 +22,8 @@ import { Role } from 'src/services/roles/role.type'
 import { useRoleStore } from 'src/store/role.store'
 import { useCreateUserMutation } from 'src/services/users/useCreateUserMutation'
 import CustomSpin from 'src/components/custom/CustomSpin'
-import { errorHandler } from 'src/utils/error-handler'
 import { useAppNotification } from 'src/context/NotificationContext'
+import { useErrorHandler } from 'src/hooks/use-error-handler'
 
 interface UserFormProps {
   open?: boolean
@@ -32,6 +32,7 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
   const notification = useAppNotification()
+  const [errorHandler] = useErrorHandler()
   const [modal, contextHolder] = Modal.useModal()
   const [form] = Form.useForm()
   const [searchKey, setSearchKey] = useState<string>('')
@@ -75,6 +76,11 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
         value: 'A',
         operator: '=',
         field: 'STATE',
+      },
+      {
+        value: 'N',
+        operator: '=',
+        field: 'HAS_USER',
       },
     ]
 

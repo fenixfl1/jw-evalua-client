@@ -11,4 +11,5 @@ export interface Staff {
   CREATED_AT?: Date
   CREATED_BY?: number
   STATE?: string
+  HAS_USER?: 'S' | 'N'
 }
