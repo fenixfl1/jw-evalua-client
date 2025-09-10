@@ -6,6 +6,8 @@ import { Metadata } from 'src/types/general'
 export const getTablePagination = (
   metadata: Metadata
 ): PaginationConfig & TablePaginationConfig & PaginationType => {
+  if (!metadata) return false
+
   return {
     current: metadata.currentPage,
     pageSize: metadata.pageSize,

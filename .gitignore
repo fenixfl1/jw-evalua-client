@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.xlsm
+*.xlsx
+/__excel_extract

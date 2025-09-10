@@ -22,6 +22,7 @@ import ConditionalComponent from './ConditionalComponent'
 import CustomSpin from './custom/CustomSpin'
 import CustomPopover from './custom/CustomPopover'
 import FilterTemplate from './FilterTemplate'
+import CustomDivider from './custom/CustomDivider'
 
 interface SmartTableProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +43,7 @@ interface SmartTableProps {
   searchPlaceholder?: string
   showActions?: boolean
   rowKey?: string
+  showStates?: boolean
 }
 
 const SmartTable: React.FC<SmartTableProps> = ({
@@ -59,9 +61,10 @@ const SmartTable: React.FC<SmartTableProps> = ({
   onEdit,
   onSearch,
   onUpdate,
+  rowKey,
   searchPlaceholder = 'Buscar...',
   showActions = true,
-  rowKey,
+  showStates = true,
 }) => {
   const actions: ColumnsType<unknown> = [
     {
@@ -70,7 +73,10 @@ const SmartTable: React.FC<SmartTableProps> = ({
       key: 'ACTIONS',
       title: 'Acciones',
       render: (state: string, record) => (
-        <CustomSpace direction={'horizontal'}>
+        <CustomSpace
+          direction={'horizontal'}
+          split={<CustomDivider type={'vertical'} size={'small'} />}
+        >
           <CustomTooltip title={'Editar'}>
             <CustomButton
               disabled={state === 'I'}
@@ -113,7 +119,11 @@ const SmartTable: React.FC<SmartTableProps> = ({
       render: (state: string) => (state === 'A' ? 'Activo' : 'Inactivo'),
     }
 
-    const arr = [..._columns, stateColumn]
+    const arr = [..._columns]
+
+    if (showStates && !arr.some((col) => col.key === 'STATE')) {
+      arr.push(stateColumn)
+    }
 
     if (showActions && !_columns.some((col) => col.key === 'ACTIONS')) {
       return Array.from(new Set([...arr, ...actions]))

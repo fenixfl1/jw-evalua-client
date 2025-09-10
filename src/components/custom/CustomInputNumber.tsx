@@ -24,6 +24,7 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
   width,
   size,
   max,
+  value,
   ...props
 }) => {
   const [maxValue, setMaxValue] = useState<number>()
@@ -64,8 +65,14 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
     }
   }
 
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ value })
+  }, [value])
+
   return (
     <InputNumber
+      value={value}
       formatter={(value) => formatter(value as string).format}
       parser={(value) => formatter(value as string).parse}
       precision={precision}

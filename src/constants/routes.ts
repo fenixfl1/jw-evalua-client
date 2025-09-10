@@ -5,6 +5,7 @@ export const PATH_CONSOLE = 'console'
 export const PATH_APPS = 'services'
 export const PATH_SETTING = 'settings'
 export const PATH_LOGIN = '/login'
+export const PATH_MODULE_GOALS = 'goals/:module'
 
 // external routes
 export const BASE_API_PATH = import.meta.env?.VITE_APP_API_SERVICE_URL
@@ -27,3 +28,13 @@ export const API_PATH_CHANGE_PASSWORD = '/user/change_password'
 export const API_PATH_GET_MODULE_PAGINATION = '/module/pagination'
 export const API_PATH_CREATE_UPDATE_MODULE = '/module'
 export const API_PATH_CREATE_OR_UPDATE_MODULE_MEMBERS = '/module/members'
+// goals
+export const API_PATH_CREATE_GOAL = '/goal'
+export const API_PATH_ASSIGN_GOAL_STAFF = '/goal/assign/staff'
+export const API_PATH_ASSIGN_GOAL_MODULE = '/goal/assign/module'
+export const API_PATH_POST_GOAL_PROGRESS = '/goal/progress'
+export const API_PATH_GET_GOAL_SUMMARY_STAFF = '/goal/summary/staff/'
+export const API_PATH_GET_GOAL_SUMMARY_MODULE = '/goal/summary/module/'
+export const API_PATH_GET_GOAL_SUMMARY_MODULE_PAGINATION =
+  '/goal/summary/module/pagination'
+export const API_PATH_GET_GOALS_BY_MODULE = '/goal/module/'

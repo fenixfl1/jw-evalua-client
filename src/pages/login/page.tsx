@@ -12,8 +12,8 @@ import CustomRow from 'src/components/custom/CustomRow'
 import CustomSider from 'src/components/custom/CustomSider'
 import CustomSpin from 'src/components/custom/CustomSpin'
 import { useAuthenticateUserMutation } from 'src/services/auth/useAuthenticateUserMutation'
-import { errorHandler } from 'src/utils/error-handler'
 import styled from 'styled-components'
+import { useErrorHandler } from '../../hooks/use-error-handler'
 
 const Sider = styled(CustomSider)`
   background-color: ${({ theme: { isDark, colorBgLayout } }) =>
@@ -44,6 +44,7 @@ type LoginForm = {
 }
 
 const Login = () => {
+  const [errorHandler] = useErrorHandler()
   const [form] = useForm<LoginForm>()
   const [remember, setRemember] = useState<boolean>()
 
