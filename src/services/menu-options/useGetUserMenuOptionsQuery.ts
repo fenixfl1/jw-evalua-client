@@ -11,7 +11,7 @@ export function useGetUserMenuOptionsQuery() {
 
   return useQuery({
     initialData: [],
-    enabled: !menuOptions.length,
+    enabled: !!username && !menuOptions.length,
     queryKey: ['menu-options', 'get-user-menu-options', username],
     queryFn: async () => {
       const {

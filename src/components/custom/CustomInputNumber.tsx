@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { InputNumberProps } from 'antd/lib/input-number'
 import { InputNumber } from 'antd'
 
@@ -22,63 +22,48 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
   precision = 2,
   style,
   width,
-  size,
   max,
-  value,
+  onChange,
   ...props
 }) => {
-  const [maxValue, setMaxValue] = useState<number>()
+  const isPercent = format.format === 'percent'
+  const isCurrency = format.format === 'currency'
+  const isRange = format.format === 'range'
 
-  const formatter = (value: number | string) => {
-    switch (format.format) {
-      case 'currency': {
-        return {
-          format: `${format.currency}$ ${value}`.replace(regExp, ','),
-          parse: `${value}`
-            .replace(format.currency?.[0] as string, '')
-            .replace(format.currency?.[1] as string, '')
-            .replace(/\$\s?|(,*)/g, ''),
-        }
-      }
-      case 'percent': {
-        if (!max) {
-          setMaxValue(100)
-        } else {
-          setMaxValue(Number(max))
-        }
-        return {
-          format: `${value}%`,
-          parse: `${value}`.replace('%', ''),
-        }
-      }
-      case 'range': {
-        return {
-          format: `${Math.trunc(Number(value))}`,
-          parse: `${value}`.replace('%', ''),
-        }
-      }
-      default:
-        return {
-          format: undefined as unknown as string,
-          parse: undefined as unknown as string,
-        }
-    }
+  const formatterFn = isCurrency
+    ? (value?: string | number) =>
+        `${format.currency}$ ${value ?? ''}`.replace(regExp, ',')
+    : isPercent
+    ? (value?: string | number) => `${value ?? ''}%`
+    : isRange
+    ? (value?: string | number) => `${Math.trunc(Number(value ?? ''))}`
+    : undefined
+
+  const parserFn = isCurrency
+    ? (value?: string) =>
+        `${value ?? ''}`
+          .replace(format.currency?.[0] as string, '')
+          .replace(format.currency?.[1] as string, '')
+          .replace(/\$\s?|(,*)/g, '')
+    : isPercent
+    ? (value?: string) => `${value ?? ''}`.replace('%', '')
+    : isRange
+    ? (value?: string) => `${value ?? ''}`.replace('%', '')
+    : undefined
+
+  const handleChange: InputNumberProps['onChange'] = (val) => {
+    const next = typeof val === 'number' && Number.isNaN(val) ? null : val
+    onChange?.(next)
   }
-
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log({ value })
-  }, [value])
 
   return (
     <InputNumber
-      value={value}
-      formatter={(value) => formatter(value as string).format}
-      parser={(value) => formatter(value as string).parse}
+      formatter={formatterFn}
+      parser={parserFn}
       precision={precision}
-      max={max ?? maxValue}
-      size={size}
+      max={isPercent ? max ?? 100 : max}
       style={{ ...style, width }}
+      onChange={handleChange}
       {...props}
     />
   )

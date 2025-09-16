@@ -101,7 +101,7 @@ const SmartTable: React.FC<SmartTableProps> = ({
   const content = (
     <FilterTemplate
       onSearch={() => onSearch?.('')}
-      onFilter={onChange}
+      onFilter={() => onChange()}
       form={form}
       initialValue={initialFilter}
     >

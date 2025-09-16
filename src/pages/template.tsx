@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { App } from 'antd'
 import CustomSider from 'src/components/custom/CustomSider'
 import CustomLayout from 'src/components/custom/CustomLayout'
 import CustomHeader from 'src/components/custom/CustomHeader'
@@ -24,7 +25,6 @@ import { findParentKeys } from 'src/utils/find-parent-keys'
 import { MenuProps } from 'antd'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import CustomButton from 'src/components/custom/CustomButton'
-import { CustomModalConfirmation } from 'src/components/custom/CustomModalMethods'
 import UserProfile from 'src/components/Profile'
 import { useUserStore } from 'src/store/user.store'
 import { getAvatarLink } from 'src/utils/get-avatar-link'
@@ -86,12 +86,13 @@ const Layout = styled(CustomLayout)`
 `
 
 const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const { modal } = App.useApp()
   const { activityId } = useParams()
   const navigate = useNavigate()
   const { isAuthenticated } = useAppContext()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  useGetUserMenuOptionsQuery()
+  const { refetch } = useGetUserMenuOptionsQuery()
 
   const { profileVisibilityState, setProfileVisibilitySate } = useUserStore()
 
@@ -105,6 +106,10 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
     selectedKeys,
     reset,
   } = useMenuOptionStore()
+
+  React.useEffect(() => {
+    if (!menuOptions.length) refetch()
+  }, [])
 
   useEffect(() => {
     if (!profileVisibilityState && searchParams.get('username')) {
@@ -201,7 +206,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   }
 
   const handleRemoveSession = () => {
-    CustomModalConfirmation({
+    modal.confirm({
       type: 'warn',
       title: 'Cerrar Sesión',
       content: 'Seguro que desea cerrar la sesión?',

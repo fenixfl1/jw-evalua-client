@@ -20,14 +20,14 @@ export interface CreateGoalPayload {
 export interface AssignGoalToModulePayload {
   GOAL_ID: number
   MODULE_ID: number
-  PERIOD_ID: number
+  PERIOD: number
   TARGET_VALUE: number
 }
 
 export interface PostGoalProgressPayload {
   GOAL_ID: number
   SCOPE: 'individual' | 'module'
-  PERIOD_ID: number
+  PERIOD: number
   ACTUAL_VALUE: number
   MODULE_ID?: number
   STAFF_ID?: number
@@ -45,7 +45,7 @@ export interface ModuleSummaryDetail {
 
 export interface ModuleSummary {
   MODULE_ID: number
-  PERIOD_ID: number
+  PERIOD: number
   TOTAL_COMPLIANCE: number
   DETAILS: ModuleSummaryDetail[]
 }

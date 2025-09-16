@@ -1,7 +1,7 @@
 import React from 'react'
 import { RefSelectProps, Select, SelectProps } from 'antd'
 
-interface CustomSelectProps extends SelectProps {
+export interface CustomSelectProps extends SelectProps {
   width?: string | number
   ref?: React.RefObject<RefSelectProps>
 }

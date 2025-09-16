@@ -1,37 +1,27 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { App, Form, InputNumber } from 'antd'
+import { App, Form } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
 import GoalForm from './GoalForm'
 import ModuleGoalForm from './ModuleGoalForm'
-import CustomButton from 'src/components/custom/CustomButton'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import CustomProgress from 'src/components/custom/CustomProgress'
 import CustomDivider from 'src/components/custom/CustomDivider'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import { useCreateGoalMutation } from 'src/services/goals/useCreateGoalMutation'
-import { useAssignGoalToModuleMutation } from 'src/services/goals/useAssignGoalToModuleMutation'
-import { usePostGoalProgressMutation } from 'src/services/goals/usePostGoalProgressMutation'
 import { useGetModuleSummaryPaginationMutation } from 'src/services/goals/useGetModuleSummaryPaginationMutation'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
-import CustomForm from 'src/components/custom/CustomFrom'
-import CustomInputNumber from 'src/components/custom/CustomInputNumber'
 import SmartTable from 'src/components/SmartTable'
 import { ModuleSummaryDetail } from 'src/services/goals/types'
-import CustomCollapse from 'src/components/custom/CustomCollapse'
-import CustomCol from 'src/components/custom/CustomCol'
 import { AdvancedCondition } from 'src/types/general'
 import { useGoalStore } from 'src/store/goal.store'
 import useDebounce from 'src/hooks/use-debounce'
 import { getConditionFromForm } from 'src/utils/get-condition-from-form'
-import { useErrorHandler } from 'src/hooks/use-error-handler'
-
-type Module = {
-  MODULE_ID: number
-  DESCRIPTION: string
-}
+import { WorkModule } from 'src/services/work_modules/module.types'
+import GoalActions from './GoalActions'
+import StateSelector from 'src/components/StateSelector'
 
 type GoalStatus =
   | 'Activa'
@@ -69,13 +59,12 @@ export type TeamGoal = {
 }
 
 type GoalsProps = {
-  module: Module
+  module: WorkModule
 }
 
 const Goals: React.FC<GoalsProps> = ({ module }) => {
   const { message } = App.useApp()
   const [form] = Form.useForm()
-  const [errorHandler] = useErrorHandler()
 
   const [createModalState, setCreateModalState] = useState(false)
   const [createServerModal, setCreateServerModal] = useState(false)
@@ -91,10 +80,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
   }, [])
 
   const { mutateAsync: createGoal } = useCreateGoalMutation()
-  const { mutateAsync: assignGoal, isPending: isAssigning } =
-    useAssignGoalToModuleMutation()
-  const { mutateAsync: postProgress, isPending: isPosting } =
-    usePostGoalProgressMutation()
+
   const { mutate: getSummary, isPending: isGetSummaryPending } =
     useGetModuleSummaryPaginationMutation()
 
@@ -114,14 +100,20 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
   const filter = (
     <>
       <CustomFormItem
+        label={'Estado'}
+        name={['FILTER', 'STATE__IN']}
         labelCol={{ span: 24 }}
-        name={'PERIOD_ID'}
+      >
+        <StateSelector />
+      </CustomFormItem>
+      <CustomFormItem
+        labelCol={{ span: 24 }}
+        name={['FILTER', 'PERIOD__EQ']}
         label={'Periodo'}
       >
         <CustomSelect
           allowClear
-          placeholder="Periodo (YYYYWW)"
-          style={{ width: 220 }}
+          placeholder={'Periodo (YYYYWW)'}
           options={periodOptions}
         />
       </CustomFormItem>
@@ -136,7 +128,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
       const filter = getConditionFromForm(FILTER)
 
       if (filter.length) {
-        condition.concat(filter)
+        condition.push(...filter)
       }
 
       if (debounce) {
@@ -166,10 +158,9 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     {
       key: 'period',
       title: 'Periodo',
-      // render: () =>
-      //   periodId
-      //     ? `${String(periodId).slice(0, 4)}-W${String(periodId).slice(4)}`
-      //     : '—',
+      dataIndex: 'PERIOD',
+      render: (value: number) =>
+        periodOptions.find((item) => item.value === value).label,
     },
     {
       dataIndex: 'TARGET_VALUE',
@@ -193,144 +184,21 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
       dataIndex: 'COMPLIANCE',
       key: 'COMPLIANCE',
       title: 'Progreso',
-      render: (_, record) => (
-        <CustomProgress
-          percent={Math.round(Math.min(record.COMPLIANCE || 0, 100))}
-          showInfo
-        />
-      ),
-    },
-    {
-      key: 'owner',
-      dataIndex: 'owner',
-      title: 'Responsable',
-      render: () => module['SUPERVISOR_NAME'] ?? '—',
+      render: (value: number) => {
+        return (
+          <CustomProgress
+            percent={Math.round(Number(Math.min(value || 0, 100).toFixed(2)))}
+            showInfo
+          />
+        )
+      },
     },
   ]
 
   return (
     <>
       <CustomSpace>
-        <CustomCol xs={24}>
-          <CustomCollapse
-            defaultActiveKey={[1]}
-            items={[
-              {
-                key: 1,
-                label: 'Acciones',
-                children: (
-                  <CustomSpace wrap>
-                    <CustomForm form={form} layout={'inline'}>
-                      <CustomFormItem
-                        name="GOAL_ID"
-                        rules={[{ required: true }]}
-                      >
-                        <CustomSelect
-                          style={{ width: 260 }}
-                          placeholder="Selecciona meta"
-                          options={moduleSummary.map((g) => ({
-                            value: g.GOAL_ID,
-                            label: `${g.GOAL_ID} - ${g.DESCRIPTION}`,
-                          }))}
-                        />
-                      </CustomFormItem>
-                      <CustomFormItem
-                        name="PERIOD_ID"
-                        rules={[{ required: true }]}
-                      >
-                        <CustomSelect
-                          style={{ width: 220 }}
-                          placeholder="Periodo (YYYYWW)"
-                          options={periodOptions}
-                        />
-                      </CustomFormItem>
-                      <CustomFormItem
-                        name={'TARGET_VALUE'}
-                        rules={[{ required: true }]}
-                      >
-                        <CustomInputNumber min={1} placeholder={'Objetivo'} />
-                      </CustomFormItem>
-                      <CustomFormItem>
-                        <CustomButton
-                          loading={isAssigning}
-                          onClick={async () => {
-                            try {
-                              const values = await form.validateFields()
-
-                              await assignGoal({
-                                GOAL_ID: values.GOAL_ID,
-                                MODULE_ID: module.MODULE_ID,
-                                PERIOD_ID: Number(values.PERIOD_ID),
-                                TARGET_VALUE: Number(values.TARGET_VALUE),
-                              })
-                              message.success('Asignación registrada')
-                            } catch (error) {
-                              errorHandler(error)
-                            }
-                          }}
-                        >
-                          Asignar al módulo
-                        </CustomButton>
-                      </CustomFormItem>
-                    </CustomForm>
-
-                    <CustomForm
-                      layout="inline"
-                      onFinish={async (values) => {
-                        await postProgress({
-                          GOAL_ID: values.GOAL_ID,
-                          SCOPE: 'module',
-                          MODULE_ID: module.MODULE_ID,
-                          PERIOD_ID: Number(values.PERIOD_ID),
-                          ACTUAL_VALUE: Number(values.ACTUAL_VALUE),
-                        })
-                        message.success('Progreso registrado')
-                      }}
-                    >
-                      <CustomFormItem
-                        name="GOAL_ID"
-                        rules={[{ required: true }]}
-                      >
-                        <CustomSelect
-                          style={{ width: 260 }}
-                          placeholder="Meta"
-                          options={moduleSummary.map((g) => ({
-                            value: g.GOAL_ID,
-                            label: `${g.GOAL_ID} - ${g.DESCRIPTION}`,
-                          }))}
-                        />
-                      </CustomFormItem>
-                      <CustomFormItem
-                        name="PERIOD_ID"
-                        rules={[{ required: true }]}
-                      >
-                        <CustomSelect
-                          style={{ width: 220 }}
-                          placeholder="Periodo (YYYYWW)"
-                          options={periodOptions}
-                        />
-                      </CustomFormItem>
-                      <CustomFormItem
-                        name="ACTUAL_VALUE"
-                        rules={[{ required: true }]}
-                      >
-                        <InputNumber
-                          placeholder="Real"
-                          style={{ width: 160 }}
-                        />
-                      </CustomFormItem>
-                      <CustomFormItem>
-                        <CustomButton htmlType="submit" loading={isPosting}>
-                          Registrar progreso
-                        </CustomButton>
-                      </CustomFormItem>
-                    </CustomForm>
-                  </CustomSpace>
-                ),
-              },
-            ]}
-          />
-        </CustomCol>
+        <GoalActions module={module} moduleSummary={moduleSummary} />
 
         <CustomDivider />
         <SmartTable
@@ -348,7 +216,6 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
           rowKey={'GOAL_ID'}
           searchPlaceholder={'Buscar metas...'}
           showActions={false}
-          showStates={false}
         />
       </CustomSpace>
 

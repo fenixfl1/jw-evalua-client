@@ -1,5 +1,5 @@
 import { useForm } from 'antd/es/form/Form'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import CustomButton from 'src/components/custom/CustomButton'
 import CustomCheckbox from 'src/components/custom/CustomCheckbox'
 import CustomCol from 'src/components/custom/CustomCol'
@@ -14,6 +14,7 @@ import CustomSpin from 'src/components/custom/CustomSpin'
 import { useAuthenticateUserMutation } from 'src/services/auth/useAuthenticateUserMutation'
 import styled from 'styled-components'
 import { useErrorHandler } from '../../hooks/use-error-handler'
+import { useMenuOptionStore } from 'src/store/menu-options.store'
 
 const Sider = styled(CustomSider)`
   background-color: ${({ theme: { isDark, colorBgLayout } }) =>
@@ -48,8 +49,12 @@ const Login = () => {
   const [form] = useForm<LoginForm>()
   const [remember, setRemember] = useState<boolean>()
 
+  const { reset } = useMenuOptionStore()
+
   const { mutateAsync: authenticateUser, isPaused } =
     useAuthenticateUserMutation()
+
+  useEffect(reset, [])
 
   const handleFinish = async (values: LoginForm) => {
     try {
