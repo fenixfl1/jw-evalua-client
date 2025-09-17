@@ -58,6 +58,14 @@ const Content = styled(CustomContent)`
   border-radius: ${({ theme }) => theme.borderRadius}px !important;
 `
 
+const BodyContainer = styled.div`
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* width: calc(100vw - 50px); */
+  box-sizing: border-box !important;
+`
+
 const Sider = styled(CustomSider)`
   height: 100vh !important;
   background-color: ${({ theme: { isDark, colorBgLayout } }) =>
@@ -248,44 +256,50 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                 Cerrar Sesión
               </CustomButton>
             </Sider>
-            <CustomLayout>
-              <Header>
-                <CustomRow
-                  justify={'space-between'}
-                  width={'100%'}
-                  align={'middle'}
-                >
-                  <CustomCol xs={12}>
-                    <CustomTitle level={2}>
-                      {currenMenuOption?.DESCRIPTION}
-                    </CustomTitle>
-                  </CustomCol>
-                  <CustomRow gap={5}>
-                    <CustomAvatar
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        setSearchParams({ username: getSessionInfo().username })
-                        setProfileVisibilitySate(true)
-                      }}
-                      size={44}
-                      icon={<UserOutlined />}
-                      src={getAvatarLink()}
-                    />
-                    <CustomText strong>
-                      {capitalize(
-                        getSessionInfo().name || getSessionInfo().username || ''
-                      )}
-                    </CustomText>
+            <BodyContainer>
+              <CustomLayout>
+                <Header>
+                  <CustomRow
+                    justify={'space-between'}
+                    width={'100%'}
+                    align={'middle'}
+                  >
+                    <CustomCol xs={12}>
+                      <CustomTitle level={2}>
+                        {currenMenuOption?.DESCRIPTION}
+                      </CustomTitle>
+                    </CustomCol>
+                    <CustomRow gap={5}>
+                      <CustomAvatar
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setSearchParams({
+                            username: getSessionInfo().username,
+                          })
+                          setProfileVisibilitySate(true)
+                        }}
+                        size={44}
+                        icon={<UserOutlined />}
+                        src={getAvatarLink()}
+                      />
+                      <CustomText strong>
+                        {capitalize(
+                          getSessionInfo().name ||
+                            getSessionInfo().username ||
+                            ''
+                        )}
+                      </CustomText>
+                    </CustomRow>
                   </CustomRow>
-                </CustomRow>
-              </Header>
+                </Header>
 
-              <CustomLayout style={{ padding: '0 24px 24px' }}>
-                <CustomRow width={'100%'} justify={'center'}>
-                  <Content>{children}</Content>
-                </CustomRow>
+                <CustomLayout style={{ padding: '0 24px 24px' }}>
+                  <CustomRow width={'100%'} justify={'center'}>
+                    <Content>{children}</Content>
+                  </CustomRow>
+                </CustomLayout>
               </CustomLayout>
-            </CustomLayout>
+            </BodyContainer>
           </Layout>
         </ThemeTransitionLayout>
       </ConditionalComponent>
