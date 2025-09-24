@@ -9,7 +9,8 @@
   "components": {
     "Menu": {
       "lineWidth": 0,
-      "fontSize": 14
+      "fontSize": 14,
+      "itemBg": "#001529"
     },
     "Typography": {
       "fontSize": 14
@@ -21,7 +22,8 @@
       "marginXS": 5
     },
     "Layout": {
-      "headerBg": "#1d2736"
+      "headerBg": "#1d2736",
+      "siderBg": "#001529"
     },
     "Button": {
       "primaryShadow": null,

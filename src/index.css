@@ -12,3 +12,11 @@
 .scroll-invisible {
   -ms-overflow-style: none; /* IE 10+ */
 }
+
+.ant-table-cell::before {
+  content: none !important;
+  height: 80% !important;
+  margin: auto !important;
+  width: 0.5 !important;
+  /* background-color: red !important; */
+}

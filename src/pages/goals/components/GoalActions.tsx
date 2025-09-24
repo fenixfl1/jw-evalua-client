@@ -1,6 +1,6 @@
 import { App, Form } from 'antd'
-import dayjs from 'dayjs'
-import { useMemo } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import CustomButton from 'src/components/custom/CustomButton'
 import CustomCol from 'src/components/custom/CustomCol'
 import CustomCollapse from 'src/components/custom/CustomCollapse'
@@ -10,35 +10,72 @@ import CustomForm from 'src/components/custom/CustomFrom'
 import CustomInputNumber from 'src/components/custom/CustomInputNumber'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import CustomSpace from 'src/components/custom/CustomSpace'
+import useDebounce from 'src/hooks/use-debounce'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
-import { ModuleSummaryDetail } from 'src/services/goals/types'
+import { useGetPeriods } from 'src/hooks/use-get-periods'
 import { useAssignGoalToModuleMutation } from 'src/services/goals/useAssignGoalToModuleMutation'
+import { useGetGoalPaginationMutation } from 'src/services/goals/useGetGoalPaginationMutation'
 import { usePostGoalProgressMutation } from 'src/services/goals/usePostGoalProgressMutation'
 import { WorkModule } from 'src/services/work_modules/module.types'
+import { useGoalStore } from 'src/store/goal.store'
+import { AdvancedCondition } from 'src/types/general'
 
 interface GoalActionsProps {
   module: WorkModule
-  moduleSummary: ModuleSummaryDetail[]
+  onFinish?: () => void
 }
 
-const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
+const GoalActions: React.FC<GoalActionsProps> = ({ module, onFinish }) => {
   const { message } = App.useApp()
+  const [searchParams] = useSearchParams()
   const [errorHandler] = useErrorHandler()
   const [form] = Form.useForm()
+
+  const [searchKey, setSearchKey] = useState('')
+  const debounce = useDebounce(searchKey)
 
   const { mutateAsync: assignGoal, isPending: isAssigning } =
     useAssignGoalToModuleMutation()
   const { mutateAsync: postProgress, isPending: isPosting } =
     usePostGoalProgressMutation()
+  const { mutate: getGoals } = useGetGoalPaginationMutation()
 
-  const periodOptions = useMemo(() => {
-    const year = dayjs().year()
-    return Array.from({ length: 53 }, (_, i) => {
-      const w = i + 1
-      const value = Number(`${year}${String(w).padStart(2, '0')}`)
-      return { value, label: `${year}-W${String(w).padStart(2, '0')}` }
-    })
-  }, [])
+  const { goals, goalMetadata: metadata } = useGoalStore()
+
+  const [periodOptions, currentPeriod] = useGetPeriods()
+
+  const handleGetGoals = useCallback(() => {
+    const condition: AdvancedCondition[] = [
+      {
+        value: 'A',
+        field: 'STATE',
+        operator: '=',
+      },
+    ]
+
+    if (debounce) {
+      condition.push({
+        value: debounce,
+        field: 'FILTER',
+        operator: 'LIKE',
+      })
+    }
+
+    getGoals({ condition, page: metadata.currentPage, size: metadata.pageSize })
+  }, [debounce])
+
+  useEffect(handleGetGoals, [handleGetGoals])
+
+  useEffect(() => {
+    form.setFieldValue(
+      ['MODULE', 'MODULE_ID'],
+      searchParams.get('moduleId') ?? module?.MODULE_ID
+    )
+    form.setFieldValue(
+      ['PROGRESS', 'MODULE_ID'],
+      searchParams.get('moduleId') ?? module?.MODULE_ID
+    )
+  }, [searchParams])
 
   return (
     <CustomCol xs={24}>
@@ -54,7 +91,6 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                   <CustomFormItem
                     hidden
                     name={['MODULE', 'MODULE_ID']}
-                    initialValue={module.MODULE_ID}
                     noStyle
                   />
                   <CustomFormItem
@@ -63,8 +99,9 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                   >
                     <CustomSelect
                       style={{ width: 260 }}
-                      placeholder="Selecciona meta"
-                      options={moduleSummary.map((g) => ({
+                      placeholder={'Selecciona meta'}
+                      onSearch={setSearchKey}
+                      options={goals.map((g) => ({
                         value: g.GOAL_ID,
                         label: `${g.GOAL_ID} - ${g.DESCRIPTION}`,
                       }))}
@@ -72,6 +109,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                   </CustomFormItem>
                   <CustomFormItem
                     name={['MODULE', 'PERIOD']}
+                    initialValue={currentPeriod}
                     rules={[{ required: true }]}
                   >
                     <CustomSelect
@@ -97,6 +135,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                           })
                           message.success('Asignación registrada')
                           form.resetFields(['MODULE'])
+                          onFinish?.()
                         } catch (error) {
                           errorHandler(error)
                         }
@@ -116,6 +155,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                       await postProgress(values)
                       message.success('Progreso registrado')
                       form.resetFields(['PROGRESS'])
+                      onFinish?.()
                     } catch (error) {
                       errorHandler(error)
                     }
@@ -140,8 +180,9 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                   >
                     <CustomSelect
                       style={{ width: 260 }}
-                      placeholder="Meta"
-                      options={moduleSummary.map((g) => ({
+                      placeholder={'Meta'}
+                      onSearch={setSearchKey}
+                      options={goals.map((g) => ({
                         value: g.GOAL_ID,
                         label: `${g.GOAL_ID} - ${g.DESCRIPTION}`,
                       }))}
@@ -149,6 +190,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, moduleSummary }) => {
                   </CustomFormItem>
                   <CustomFormItem
                     name={['PROGRESS', 'PERIOD']}
+                    initialValue={currentPeriod}
                     rules={[{ required: true }]}
                   >
                     <CustomSelect

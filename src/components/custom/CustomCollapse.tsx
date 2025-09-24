@@ -4,15 +4,15 @@ import { DownOutlined } from '@ant-design/icons'
 import { Collapse as AntCollapse, CollapseProps } from 'antd'
 
 const Collapse = styled(AntCollapse)`
-  background-color: ${({ theme: { isDark } }) =>
-    isDark ? 'transparent' : '#ffff '} !important;
+  background-color: ${({ theme: { isDark, colorBgContainer } }) =>
+    isDark ? 'transparent' : colorBgContainer} !important;
   color: ${({ theme }) => theme.colorText} !important;
 
   .ant-collapse-item {
     border: none !important;
     border-radius: ${({ theme }) => theme.borderRadius}px !important;
     background-color: ${({ theme: { isDark } }) =>
-      isDark ? '#141414' : '#f5f5f5'} !important;
+      isDark ? '#141414' : 'rgb(248,250,255)'} !important;
   }
 
   .ant-collapse-item:not(:last-child) {
@@ -32,7 +32,7 @@ const Collapse = styled(AntCollapse)`
 `
 
 const CustomCollapse = React.forwardRef<HTMLDivElement, CollapseProps>(
-  ({ bordered = false, expandIconPosition = 'end', ...props }, ref) => {
+  ({ bordered = false, expandIconPosition = 'start', ...props }, ref) => {
     return (
       <Collapse
         ref={ref}

@@ -29,6 +29,7 @@ import UserProfile from 'src/components/Profile'
 import { useUserStore } from 'src/store/user.store'
 import { getAvatarLink } from 'src/utils/get-avatar-link'
 import CustomDivider from 'src/components/custom/CustomDivider'
+import CustomSpace from 'src/components/custom/CustomSpace'
 
 const LogoContainer = styled.div`
   display: flex;
@@ -43,7 +44,10 @@ const Header = styled(CustomHeader)`
   display: flex;
   align-items: center;
   height: 64px;
-  width: calc(100vw - 240px);
+  width: calc(100vw - 280px);
+  border-radius: 8px !important;
+  margin: 21px 24px 0 20px;
+  padding: 0 35px !important;
 `
 
 const Content = styled(CustomContent)`
@@ -53,8 +57,6 @@ const Content = styled(CustomContent)`
   min-height: 280px;
   width: 100%;
   max-width: 1200px;
-  background-color: ${({ theme: { isDark, baseBgColor } }) =>
-    isDark ? undefined : baseBgColor} !important;
   border-radius: ${({ theme }) => theme.borderRadius}px !important;
 `
 
@@ -62,14 +64,11 @@ const BodyContainer = styled.div`
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-  /* width: calc(100vw - 50px); */
   box-sizing: border-box !important;
 `
 
 const Sider = styled(CustomSider)`
   height: 100vh !important;
-  background-color: ${({ theme: { isDark, colorBgLayout } }) =>
-    isDark ? '#001529' : colorBgLayout} !important;
   box-shadow: ${({ theme }) => theme.boxShadow} !important;
   padding: 10px !important;
   position: relative;
@@ -85,8 +84,6 @@ const Sider = styled(CustomSider)`
 
 const Menu = styled(CustomMenu)`
   border-right: 0;
-  background-color: ${({ theme: { isDark, colorBgLayout } }) =>
-    isDark ? '#001529' : colorBgLayout} !important;
 `
 
 const Layout = styled(CustomLayout)`
@@ -234,7 +231,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
             <Sider width={240}>
               <CustomRow justify={'center'} style={{ height: '100px' }}>
                 <LogoContainer>
-                  <img src={'/assets/logo.png'} />
+                  <img src={'/assets/logo.jpg'} />
                 </LogoContainer>
               </CustomRow>
               <CustomDivider />
@@ -262,14 +259,15 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                   <CustomRow
                     justify={'space-between'}
                     width={'100%'}
+                    height={'100%'}
                     align={'middle'}
                   >
                     <CustomCol xs={12}>
-                      <CustomTitle level={2}>
+                      <CustomTitle level={3} style={{ margin: 'auto' }}>
                         {currenMenuOption?.DESCRIPTION}
                       </CustomTitle>
                     </CustomCol>
-                    <CustomRow gap={5}>
+                    <CustomSpace direction="horizontal" width={null}>
                       <CustomAvatar
                         style={{ cursor: 'pointer' }}
                         onClick={() => {
@@ -289,7 +287,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                             ''
                         )}
                       </CustomText>
-                    </CustomRow>
+                    </CustomSpace>
                   </CustomRow>
                 </Header>
 

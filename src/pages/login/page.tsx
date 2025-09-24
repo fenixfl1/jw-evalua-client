@@ -6,31 +6,27 @@ import CustomCol from 'src/components/custom/CustomCol'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
 import CustomForm from 'src/components/custom/CustomFrom'
 import CustomInput from 'src/components/custom/CustomInput'
-import CustomLayout from 'src/components/custom/CustomLayout'
 import CustomPasswordInput from 'src/components/custom/CustomPasswordInput'
 import CustomRow from 'src/components/custom/CustomRow'
-import CustomSider from 'src/components/custom/CustomSider'
-import CustomSpin from 'src/components/custom/CustomSpin'
 import { useAuthenticateUserMutation } from 'src/services/auth/useAuthenticateUserMutation'
 import styled from 'styled-components'
 import { useErrorHandler } from '../../hooks/use-error-handler'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
+import CustomCard from 'src/components/custom/CustomCard'
 
-const Sider = styled(CustomSider)`
-  background-color: ${({ theme: { isDark, colorBgLayout } }) =>
-    isDark ? '#001529' : colorBgLayout} !important;
-  box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
-    0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12);
-`
-
-const LogoContainer = styled.div`
-  height: 100vh;
-  width: calc(100vw - 600px);
+const Layout = styled.div`
+  height: 100vh !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: ${({ theme: { isDark, colorBgLayout } }) =>
-    isDark ? '#141414' : colorBgLayout} !important;
+  background-image: url('https://t3.ftcdn.net/jpg/04/30/16/76/360_F_430167688_4YBPLOWg5Tw5fBSHLQM78kd9fS8JZLFU.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+`
+
+const Card = styled(CustomCard)`
+  box-shadow: ${({ theme }) => theme.boxShadow};
+  height: 26rem;
 `
 
 const buttonStyle: React.CSSProperties = { width: '100%' }
@@ -51,7 +47,7 @@ const Login = () => {
 
   const { reset } = useMenuOptionStore()
 
-  const { mutateAsync: authenticateUser, isPaused } =
+  const { mutateAsync: authenticateUser, isPending } =
     useAuthenticateUserMutation()
 
   useEffect(reset, [])
@@ -65,29 +61,17 @@ const Login = () => {
   }
 
   return (
-    <>
-      <CustomSpin spinning={isPaused}>
-        <CustomLayout hasSider style={{ border: '1px solid yellow' }}>
-          <LogoContainer>
-            <img width={'60%'} src={'assets/logo.png'} />
-          </LogoContainer>
-
-          <Sider width={600}>
-            <CustomRow
-              style={{ height: 'inherit' }}
-              justify={'center'}
-              align={'middle'}
-            >
+    <Layout>
+      <CustomCol xs={24} sm={14} md={10} lg={8} xl={6}>
+        <Card>
+          <CustomRow justify={'center'} align={'middle'} height={'100%'}>
+            <img src={'assets/logo.png'} width={'30%'} />
+            <CustomCol xs={24}>
               <CustomForm
-                style={{
-                  width: '80%',
-                  padding: '0 20px',
-                }}
                 autoComplete={'off'}
                 form={form}
                 onFinish={handleFinish}
               >
-                <img width={'100%'} src={'assets/logo.png'} />
                 <CustomFormItem
                   label={<CustomLabel text="Usuario" />}
                   name="username"
@@ -103,17 +87,6 @@ const Login = () => {
                   labelCol={{ span: 24 }}
                 >
                   <CustomPasswordInput />
-                </CustomFormItem>
-                <CustomFormItem>
-                  <CustomRow justify="center">
-                    <CustomButton
-                      htmlType="submit"
-                      type="primary"
-                      style={buttonStyle}
-                    >
-                      Iniciar sesión
-                    </CustomButton>
-                  </CustomRow>
                 </CustomFormItem>
                 <div style={{ margin: '25px 0' }} />
                 <CustomCol xs={24}>
@@ -134,12 +107,25 @@ const Login = () => {
                     </CustomFormItem>
                   </CustomRow>
                 </CustomCol>
+                <div style={{ margin: '25px 0' }} />
+                <CustomFormItem>
+                  <CustomRow justify="center">
+                    <CustomButton
+                      loading={isPending}
+                      htmlType="submit"
+                      type="primary"
+                      style={buttonStyle}
+                    >
+                      Iniciar sesión
+                    </CustomButton>
+                  </CustomRow>
+                </CustomFormItem>
               </CustomForm>
-            </CustomRow>
-          </Sider>
-        </CustomLayout>
-      </CustomSpin>
-    </>
+            </CustomCol>
+          </CustomRow>
+        </Card>
+      </CustomCol>
+    </Layout>
   )
 }
 

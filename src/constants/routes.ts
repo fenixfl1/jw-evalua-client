@@ -38,3 +38,11 @@ export const API_PATH_GET_GOAL_SUMMARY_MODULE = '/goal/summary/module/'
 export const API_PATH_GET_GOAL_SUMMARY_MODULE_PAGINATION =
   '/goal/summary/module/pagination'
 export const API_PATH_GET_GOALS_BY_MODULE = '/goal/module/'
+export const API_PATH_GET_GOAL_PAGINATION = '/goal/pagination'
+
+// evaluations
+export const API_PATH_CREATE_EVALUATION = '/evaluation'
+export const API_PATH_UPDATE_EVALUATION = '/evaluation/'
+export const API_PATH_GET_EVALUATION = '/evaluation/'
+export const API_PATH_GET_EVALUATION_PAGINATION = '/evaluation/pagination'
+

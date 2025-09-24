@@ -1,21 +1,27 @@
 {
   "token": {
     "borderRadius": 5,
-    "colorPrimary": "#3869a1",
-    "colorBgLayout": "#f2f2f2",
-    "boxShadow": "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)"
+    "colorPrimary": "#1564bf",
+    "colorBgLayout": "#f8faff",
+    "boxShadow": "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)",
+    "colorBgContainer": "#ffffff"
   },
   "components": {
     "Menu": {
       "lineWidth": 0,
-      "fontSize": 14
+      "fontSize": 14,
+      "itemSelectedBg": "rgba(22,119,255,0.49)",
+      "itemColor": "rgb(255,255,255)",
+      "itemBg": "rgb(21,100,191)",
+      "itemSelectedColor": "rgb(255,255,255)"
     },
     "Typography": {
-      "fontSize": 14
+      "fontSize": 14,
+      "colorText": "rgb(0,0,0)"
     },
     "Layout": {
-      "headerBg": "#f5f5f5",
-      "siderBg": "#EEEEEE"
+      "headerBg": "#1564bf",
+      "siderBg": "#1564bf"
     },
     "Form": {
       "itemMarginBottom": 12
@@ -30,7 +36,8 @@
     },
     "Table": {
       "bodySortBg": "#3869a1",
-      "colorBgContainer": "rgba(250,250,250,0.2)"
+      "headerBg": "rgba(22,119,255,0.49)",
+      "colorBgContainer": "rgb(248,250,255)"
     },
     "Tabs": {
       "horizontalMargin": "0 0 20px 0"

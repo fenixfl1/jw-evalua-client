@@ -41,6 +41,9 @@ export interface ModuleSummaryDetail {
   COMPLIANCE: number
   UPDATED_AT?: string
   DESCRIPTION?: string
+  PERIOD?: number
+  STATE?: string
+  MODULE_ID?: number
 }
 
 export interface ModuleSummary {

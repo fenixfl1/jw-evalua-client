@@ -6,8 +6,10 @@ import { useModuleStore } from 'src/store/module.store'
 import { AdvancedCondition } from 'src/types/general'
 import Goals from './components/Goals'
 import CustomSpin from 'src/components/custom/CustomSpin'
+import { useSearchParams } from 'react-router-dom'
 
 const Page: React.FC = () => {
+  const [, setSearchParams] = useSearchParams()
   const { workModules } = useModuleStore()
   const { mutate: getModules, isPending: isGetModulesPending } =
     useGetPaginatedModulesMutation()
@@ -29,13 +31,24 @@ const Page: React.FC = () => {
     return workModules.map((module) => ({
       key: `${module.MODULE_ID}`,
       label: module.DESCRIPTION,
-      children: <Goals module={module} />,
+      children: <Goals key={module.MODULE_ID} module={module} />,
+      onClick: () => {},
     }))
   }, [workModules])
 
   return (
     <CustomSpin spinning={isGetModulesPending}>
-      <CustomTabs tabPosition={'right'} items={items} />
+      <CustomTabs
+        tabPosition={'right'}
+        items={items}
+        onChange={(key) => {
+          const params = new URLSearchParams()
+          params.set('moduleId', key)
+          setSearchParams(params, {
+            preventScrollReset: true,
+          })
+        }}
+      />
     </CustomSpin>
   )
 }
