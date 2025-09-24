@@ -231,7 +231,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
             <Sider width={240}>
               <CustomRow justify={'center'} style={{ height: '100px' }}>
                 <LogoContainer>
-                  <img src={'/assets/logo.jpg'} />
+                  <img src={'/assets/logo3.png'} />
                 </LogoContainer>
               </CustomRow>
               <CustomDivider />
