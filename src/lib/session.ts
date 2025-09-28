@@ -1,9 +1,11 @@
 import Cookies from 'js-cookie'
 import moment from 'moment'
+import { Business } from 'src/services/users/users.types'
 
 const COOKIE_KEY_USER_NAME = 'appUsername'
 const COOKIE_KEY_USER_DATA = 'appUserData'
 const COOKIE_KEY_SESSION_TOKEN = 'appSession'
+const COOKE_KEY_BUSINESS_INFO = 'appBusiness'
 
 export const isLoggedIn = (): boolean => {
   const requiredCookiesKeys = [COOKIE_KEY_SESSION_TOKEN, COOKIE_KEY_USER_DATA]
@@ -18,6 +20,7 @@ export type UserData = {
   userId: string
   name: string
   avatar: string
+  business: Business
   sessionCookie: {
     token: string
     expiration: string
@@ -25,18 +28,20 @@ export type UserData = {
 }
 
 export const createSession = async (user: UserData): Promise<void> => {
-  const { username, sessionCookie, userId, avatar } = user
+  const { username, sessionCookie, userId, avatar, name, business } = user
   const { token: sessionToken, expiration: sessionExpiration } = sessionCookie
   const expires = new Date(sessionExpiration)
   const sessionInfo = JSON.stringify({
     username,
     userId,
+    name,
   })
 
   sessionStorage.setItem('avatar', avatar)
 
   Cookies.set(COOKIE_KEY_USER_DATA, sessionInfo, { expires })
   Cookies.set(COOKIE_KEY_SESSION_TOKEN, sessionToken, { expires })
+  Cookies.set(COOKE_KEY_BUSINESS_INFO, JSON.stringify(business), { expires })
   Cookies.set(COOKIE_KEY_USER_NAME, username, {
     expires: new Date(moment(expires).add(-1, 'minutes').toISOString()),
   })
@@ -69,4 +74,8 @@ export const getSessionInfo = (): UserData => {
 
 export const getSessionToken = (): string => {
   return Cookies.get(COOKIE_KEY_SESSION_TOKEN) || ''
+}
+
+export const getBusinessInfo = (): Business => {
+  return JSON.parse(Cookies.get(COOKE_KEY_BUSINESS_INFO) ?? '{}')
 }

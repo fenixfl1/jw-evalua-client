@@ -156,13 +156,7 @@ const EvaluationPage: React.FC = () => {
         key: 'PERIOD',
       },
       {
-        title: 'Meta',
-        dataIndex: 'GOAL_DESCRIPTION',
-        key: 'GOAL_DESCRIPTION',
-        render: (value?: string) => value || 'N/A',
-      },
-      {
-        title: 'Calificacion (%)',
+        title: 'Calificación (%)',
         dataIndex: 'OVERALL_SCORE',
         key: 'OVERALL_SCORE',
         render: (value?: number) =>

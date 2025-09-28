@@ -1,4 +1,5 @@
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { App } from 'antd'
 import { ColumnsType } from 'antd/lib/table'
 import React from 'react'
 import CustomButton from 'src/components/custom/CustomButton'
@@ -12,13 +13,34 @@ import formatter from 'src/utils/formatter'
 import { getTablePagination } from 'src/utils/table-pagination'
 
 interface EmployeesTableProps {
-  onEdit?: (record: Staff) => void
-  onUpdate?: (record: Staff) => void
   onChange: (page: number, size: number) => void
+  onUpdate?: (record: Staff) => void
+  onEdit?: (staffId: number) => void
 }
 
-const EmployeesTable: React.FC<EmployeesTableProps> = ({ onChange }) => {
+const EmployeesTable: React.FC<EmployeesTableProps> = ({
+  onChange,
+  onUpdate,
+  onEdit,
+}) => {
+  const { modal } = App.useApp()
   const { metadata, staffList } = useStaffStore()
+
+  const handleUpdate = async (record: Staff) => {
+    modal.confirm({
+      title: 'Aviso, Cambio de estado',
+      onOk: () => onUpdate(record),
+      content: (
+        <p>
+          Seguro que desea cambiar el estado del empleado <br />
+          <strong>
+            "{record.NAME} {record.LAST_NAME}"
+          </strong>
+          ?
+        </p>
+      ),
+    })
+  }
 
   const columns: ColumnsType<Staff> = [
     {
@@ -63,19 +85,24 @@ const EmployeesTable: React.FC<EmployeesTableProps> = ({ onChange }) => {
       title: 'Acciones',
       width: '5%',
       align: 'center',
-      render: (value: string) => (
+      render: (value: string, record) => (
         <CustomSpace
           direction={'horizontal'}
           split={<CustomDivider type={'vertical'} style={{ margin: 0 }} />}
         >
           <CustomTooltip title={'Editar'}>
-            <CustomButton type={'link'} icon={<EditOutlined />} />
+            <CustomButton
+              type={'link'}
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record.STAFF_ID)}
+            />
           </CustomTooltip>
           <CustomTooltip title={value === 'A' ? 'Inhabilitar' : 'Habilitar'}>
             <CustomButton
               danger={value === 'A'}
               type={'link'}
               icon={<DeleteOutlined />}
+              onClick={() => handleUpdate(record)}
             />
           </CustomTooltip>
         </CustomSpace>

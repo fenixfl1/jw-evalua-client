@@ -20,6 +20,7 @@ export const API_PATH_GET_MENU_OPTIONS_WITH_PERMISSIONS =
 export const API_GET_STAFF_PAGINATION = '/staff/pagination'
 export const API_PATH_CREATE_UPDATE_STAFF = '/staff'
 export const API_PATH_GET_USER_PAGINATION = '/user/pagination'
+export const API_PATH_GET_ONE_STAFF = '/staff/'
 export const API_PATH_CREATE_UPDATE_ROLE = '/role'
 export const API_PATH_GET_ROLE_PAGINATION = '/role/pagination'
 export const API_PATH_CREATE_UPDATE_USER = '/user'
@@ -33,12 +34,15 @@ export const API_PATH_CREATE_GOAL = '/goal'
 export const API_PATH_ASSIGN_GOAL_STAFF = '/goal/assign/staff'
 export const API_PATH_ASSIGN_GOAL_MODULE = '/goal/assign/module'
 export const API_PATH_POST_GOAL_PROGRESS = '/goal/progress'
+export const API_PATH_GET_GOAL_PAGINATION = '/goal/pagination'
 export const API_PATH_GET_GOAL_SUMMARY_STAFF = '/goal/summary/staff/'
 export const API_PATH_GET_GOAL_SUMMARY_MODULE = '/goal/summary/module/'
 export const API_PATH_GET_GOAL_SUMMARY_MODULE_PAGINATION =
   '/goal/summary/module/pagination'
 export const API_PATH_GET_GOALS_BY_MODULE = '/goal/module/'
-export const API_PATH_GET_GOAL_PAGINATION = '/goal/pagination'
+
+// competencies
+export const API_PATH_GET_COMPETENCIES = '/competency'
 
 // evaluations
 export const API_PATH_CREATE_EVALUATION = '/evaluation'
@@ -46,3 +50,6 @@ export const API_PATH_UPDATE_EVALUATION = '/evaluation/'
 export const API_PATH_GET_EVALUATION = '/evaluation/'
 export const API_PATH_GET_EVALUATION_PAGINATION = '/evaluation/pagination'
 
+// dashboard
+export const API_PATH_GET_DASHBOARD_SUMMARY = '/dashboard/summary'
+export const API_PATH_GET_DASHBOARD_ACTIVITY = '/dashboard/activity'

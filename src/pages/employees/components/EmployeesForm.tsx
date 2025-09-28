@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Form } from 'antd'
 import CustomModal from 'src/components/custom/CustomModal'
 import CustomSpin from 'src/components/custom/CustomSpin'
@@ -19,6 +19,10 @@ import { useCreateStaffMutation } from 'src/services/staff/useCreateStaffMutatio
 import { Staff } from 'src/services/staff/staff.types'
 import { useAppNotification } from 'src/context/NotificationContext'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
+import CustomSelect from 'src/components/custom/CustomSelect'
+import moment from 'moment'
+import { useUpdateStaffMutation } from 'src/services/staff/useUpdateStaffMutation'
+import queryClient from 'src/lib/query-client'
 
 interface EmployeesFormProps {
   open?: boolean
@@ -33,21 +37,37 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
 }) => {
   const [errorHandler] = useErrorHandler()
   const notification = useAppNotification()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<Staff>()
 
   const isEditing = !!record?.STAFF_ID
 
   const { mutateAsync: createStaff, isPending: isCreateStaffPending } =
     useCreateStaffMutation()
+  const { mutateAsync: updateStaff, isPending: isUpdatePending } =
+    useUpdateStaffMutation()
+
+  useEffect(() => {
+    form.setFieldsValue({ ...record, BIRTH_DATE: moment(record.BIRTH_DATE) })
+  }, [record])
 
   const handleOnFinish = async () => {
     try {
       const data = await form.validateFields()
 
-      await createStaff(data)
+      let message = 'Empleado Registrado exitosamente.'
+
+      if (isEditing) {
+        await updateStaff({ ...data })
+        message = 'Empleado actualizado exitosamente.'
+        queryClient.invalidateQueries({
+          queryKey: ['staff', 'get-one-staff', data.STAFF_ID],
+        })
+      } else {
+        await createStaff(data)
+      }
       notification({
         message: 'Operación exitosa',
-        description: 'Empleado Registrado exitosamente.',
+        description: message,
       })
 
       form.resetFields()
@@ -66,9 +86,10 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
       onOk={handleOnFinish}
       okText={isEditing ? 'Actualizar' : 'Guardar'}
     >
-      <CustomSpin spinning={isCreateStaffPending}>
+      <CustomSpin spinning={isCreateStaffPending || isUpdatePending}>
         <CustomForm form={form} {...formItemLayout}>
           <CustomRow justify={'start'}>
+            <CustomFormItem hidden name={'STAFF_ID'} />
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Cédula'}
@@ -79,7 +100,21 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                 <CustomInput placeholder={''} />
               </CustomFormItem>
             </CustomCol>
-            <CustomCol {...defaultBreakpoints} />
+            <CustomCol {...defaultBreakpoints}>
+              <CustomFormItem
+                label={'Estado'}
+                name={'STATE'}
+                rules={[{ required: true }]}
+                initialValue={'A'}
+              >
+                <CustomSelect
+                  options={[
+                    { label: 'Activo', value: 'A' },
+                    { label: 'Inactivo', value: 'I' },
+                  ]}
+                />
+              </CustomFormItem>
+            </CustomCol>
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Nombres'}
@@ -121,7 +156,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
                 label={'Fecha Nac.'}
-                name={'BIRTH_DATA'}
+                name={'BIRTH_DATE'}
                 rules={[{ required: true }]}
               >
                 <CustomDatePicker />

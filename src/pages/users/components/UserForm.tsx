@@ -78,9 +78,9 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
         field: 'STATE',
       },
       {
-        value: 'N',
-        operator: '=',
-        field: 'HAS_USER',
+        value: true,
+        field: 'USER_ID',
+        operator: 'IS NULL',
       },
     ]
 

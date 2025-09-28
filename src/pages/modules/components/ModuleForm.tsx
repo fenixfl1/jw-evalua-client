@@ -71,9 +71,9 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
         operator: 'LIKE',
       },
       {
-        value: 'N',
-        field: 'HAS_USER',
-        operator: '=',
+        value: true,
+        field: 'USER_ID',
+        operator: 'IS NULL',
       },
     ]
 

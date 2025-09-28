@@ -19,7 +19,7 @@ const Layout = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('https://t3.ftcdn.net/jpg/04/30/16/76/360_F_430167688_4YBPLOWg5Tw5fBSHLQM78kd9fS8JZLFU.jpg');
+  background-image: url('assets/background2.jpg');
   background-repeat: no-repeat;
   background-size: cover;
 `

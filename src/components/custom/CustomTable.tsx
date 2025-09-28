@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react'
+import React, { useState } from 'react'
 import { Table } from 'antd'
 import { ColumnType } from 'antd/es/table'
 import { TableProps } from 'antd/lib/table'
 import styled from 'styled-components'
+import { DownloadOutlined } from '@ant-design/icons'
+import ConditionalComponent from '../ConditionalComponent'
+import CustomButton from './CustomButton'
+import CustomTooltip from './CustomTooltip'
+import ExportOptions from '../ExportOptions'
 
 const Container = styled.div`
   position: relative;
@@ -16,8 +21,20 @@ const Container = styled.div`
   }
 `
 
+type SimpleCol = string
+type ChildDef = { key: string; header: string }
+export type GroupCol = {
+  header: string
+  children: ChildDef[]
+  maxItems?: number
+}
+
+export type ColumnsMap = Record<string, SimpleCol | GroupCol>
+
 interface CustomTableProps extends Omit<TableProps<any>, 'onChange'> {
   onChange?: (page: number, size: number) => void
+  exportable?: boolean
+  columnsMap?: ColumnsMap
 }
 
 export interface CustomColumnType<T> extends ColumnType<T> {
@@ -26,12 +43,35 @@ export interface CustomColumnType<T> extends ColumnType<T> {
 
 const CustomTable = React.forwardRef<any, CustomTableProps>(
   (
-    { dataSource = [], expandable, bordered = false, onChange, ...props },
+    {
+      dataSource = [],
+      expandable,
+      bordered = false,
+      onChange,
+      exportable = false,
+      columnsMap,
+      ...props
+    },
     ref
   ) => {
+    const [modalState, setModalState] = useState(false)
+
     return (
       <>
         <Container>
+          <ConditionalComponent condition={exportable}>
+            <CustomTooltip title={'Exportar'}>
+              <CustomButton
+                className={'btn-export-table'}
+                size={'large'}
+                icon={<DownloadOutlined />}
+                type={'text'}
+                onClick={() => setModalState(true)}
+              >
+                Exportar
+              </CustomButton>
+            </CustomTooltip>
+          </ConditionalComponent>
           <Table
             dataSource={dataSource}
             bordered={bordered}
@@ -53,6 +93,16 @@ const CustomTable = React.forwardRef<any, CustomTableProps>(
             {...props}
           />
         </Container>
+
+        <ConditionalComponent condition={modalState}>
+          <ExportOptions
+            columnsMap={columnsMap}
+            dataSource={dataSource}
+            onCancel={() => setModalState(false)}
+            open={modalState}
+            ref={ref}
+          />
+        </ConditionalComponent>
       </>
     )
   }

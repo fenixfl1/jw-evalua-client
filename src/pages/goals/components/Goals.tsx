@@ -8,7 +8,6 @@ import ModuleGoalForm from './ModuleGoalForm'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import CustomProgress from 'src/components/custom/CustomProgress'
-import CustomDivider from 'src/components/custom/CustomDivider'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import { useCreateGoalMutation } from 'src/services/goals/useCreateGoalMutation'
 import { useGetModuleSummaryPaginationMutation } from 'src/services/goals/useGetModuleSummaryPaginationMutation'
@@ -248,12 +247,22 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     return Math.max(0, Math.min(normalized, 100))
   }, [moduleSummary, period, currentPeriod])
 
+  const columnsMap = {
+    GOAL_ID: 'ID',
+    DESCRIPTION: 'Descripción',
+    PERIOD: 'Periodo',
+    TARGET_VALUE: 'Objetivo',
+    ACTUAL_VALUE: 'Valor Actual',
+    WEIGHT: 'Peso %',
+    COMPLIANCE: 'Progreso %',
+  }
+
   return (
     <CustomSpin spinning={isGetSummaryPending}>
       <CustomSpace>
-        <GoalActions module={module} />
-
-        <CustomDivider />
+        <CustomCard>
+          <GoalActions module={module} />
+        </CustomCard>
         <CustomCard shadow>
           <CustomSpace size={'small'}>
             <CustomText strong>
@@ -283,6 +292,8 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
           rowKey={'GOAL_ID'}
           searchPlaceholder={'Buscar metas...'}
           showActions={false}
+          exportable
+          columnsMap={columnsMap}
         />
       </CustomSpace>
 

@@ -3,7 +3,7 @@ export interface Staff {
   NAME: string
   LAST_NAME: string
   EMAIL: string
-  BIRTH_DATA: Date
+  BIRTH_DATE: Date
   PHONE: string
   GENDER: string
   IDENTITY_DOCUMENT: string
@@ -11,5 +11,5 @@ export interface Staff {
   CREATED_AT?: Date
   CREATED_BY?: number
   STATE?: string
-  HAS_USER?: 'S' | 'N'
+  USER_ID?: number
 }

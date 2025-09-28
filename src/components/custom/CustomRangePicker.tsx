@@ -4,7 +4,7 @@ import { DatePicker } from 'antd'
 import { RangePickerProps } from 'antd/es/date-picker'
 
 import 'dayjs/locale/es'
-import { DATE_FORMAT } from 'src/utils/data-utils'
+import { DATE_FORMAT } from 'src/utils/date-utils'
 
 const { RangePicker } = DatePicker
 

@@ -1,6 +1,6 @@
 export interface EvaluationDetailPayload {
   COMPETENCY_ID: number
-  GOAL_ID?: number | null
+  GOAL_STAFF_ID?: number | null
   WEIGHT?: number | null
   SCORE?: number | null
   COMMENT?: string | null
@@ -17,6 +17,17 @@ export interface EvaluationDetail extends Omit<EvaluationDetailPayload, '_ACTION
     DESCRIPTION?: string | null
     WEIGHT?: number | null
   }
+  GOAL_ASSIGNMENT?: {
+    GOAL_STAFF_ID: number
+    GOAL_ID: number
+    PERIOD: number
+    TARGET_VALUE: number
+    WEIGHT: number
+    GOAL?: {
+      GOAL_ID: number
+      DESCRIPTION: string
+    }
+  } | null
 }
 
 export interface Evaluation {
@@ -27,9 +38,6 @@ export interface Evaluation {
   STAFF_NAME?: string
   EVALUATOR_ID?: number | null
   EVALUATOR_NAME?: string | null
-  GOAL_ID?: number | null
-  GOAL_DESCRIPTION?: string | null
-  GOAL_STAFF_ID?: number | null
   PERIOD: number
   OVERALL_SCORE?: number | null
   COMMENTS?: string | null
@@ -42,8 +50,6 @@ export interface CreateEvaluationPayload {
   MODULE_ID: number
   STAFF_ID: number
   EVALUATOR_ID?: number | null
-  GOAL_ID?: number | null
-  GOAL_STAFF_ID?: number | null
   PERIOD: number
   OVERALL_SCORE?: number | null
   COMMENTS?: string | null
@@ -54,8 +60,6 @@ export interface UpdateEvaluationPayload {
   MODULE_ID?: number
   STAFF_ID?: number
   EVALUATOR_ID?: number | null
-  GOAL_ID?: number | null
-  GOAL_STAFF_ID?: number | null
   PERIOD?: number
   OVERALL_SCORE?: number | null
   COMMENTS?: string | null

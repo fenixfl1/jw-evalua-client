@@ -24,6 +24,7 @@ import { CustomText } from 'src/components/custom/CustomParagraph'
 import CustomButton from 'src/components/custom/CustomButton'
 import { DeleteOutlined } from '@ant-design/icons'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
+import { ColumnsMap } from 'src/components/custom/CustomTable'
 
 const ListContainer = styled.div`
   max-height: 300px;
@@ -148,6 +149,19 @@ const Page: React.FC = () => {
     )
   }
 
+  const columnsMap: ColumnsMap = {
+    MODULE_ID: 'ID',
+    DESCRIPTION: 'Descripción',
+    SUPERVISOR_NAME: 'Supervisor',
+    MEMBERS: {
+      header: 'Miembros',
+      children: [
+        { key: 'NAME', header: 'Nombre' },
+        { key: 'LASTA_NAME', header: 'Apellido' },
+      ],
+    },
+  }
+
   const expandable: TableProps['expandable'] = {
     indentSize: 100,
     rowExpandable: (record: WorkModule) => !!record.MEMBERS?.length,
@@ -182,6 +196,8 @@ const Page: React.FC = () => {
         onSearch={setSearchKey}
         searchPlaceholder={'Buscar módulos...'}
         onCreate={toggleModalState}
+        columnsMap={columnsMap}
+        exportable
         onEdit={(record: WorkModule) => {
           setRecord(record)
           toggleModalState()

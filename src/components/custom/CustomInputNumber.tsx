@@ -19,7 +19,7 @@ const regExp = /\B(?=(\d{3})+(?!\d)\.?)/g
 
 const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
   format = { format: '', currency: '' },
-  precision = 2,
+  precision,
   style,
   width,
   max,

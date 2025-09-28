@@ -11,7 +11,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from '@ant-design/icons'
-import CustomTable from './custom/CustomTable'
+import CustomTable, { ColumnsMap } from './custom/CustomTable'
 import { getTablePagination } from 'src/utils/table-pagination'
 import CustomCard from './custom/CustomCard'
 import CustomCol from './custom/CustomCol'
@@ -44,13 +44,17 @@ interface SmartTableProps {
   showActions?: boolean
   rowKey?: string
   showStates?: boolean
+  exportable?: boolean
+  columnsMap?: ColumnsMap
 }
 
 const SmartTable: React.FC<SmartTableProps> = ({
   columns: _columns,
+  columnsMap,
   createText = 'Crear',
   dataSource,
   expandable,
+  exportable = false,
   filter,
   form,
   initialFilter,
@@ -183,6 +187,8 @@ const SmartTable: React.FC<SmartTableProps> = ({
               expandable={expandable}
               onChange={onChange}
               pagination={getTablePagination(metadata)}
+              exportable={exportable}
+              columnsMap={columnsMap}
               rowClassName={(record) =>
                 record.STATE === 'I' ? 'custom-table-row-disabled' : undefined
               }

@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { DATE_FORMAT, LOG_DATE_FORMAT } from './data-utils'
+import { DATE_FORMAT, LOG_DATE_FORMAT } from './date-utils'
 
 export interface Formatter {
   value: string | number | undefined

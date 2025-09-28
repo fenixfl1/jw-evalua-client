@@ -263,7 +263,10 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                     align={'middle'}
                   >
                     <CustomCol xs={12}>
-                      <CustomTitle level={3} style={{ margin: 'auto' }}>
+                      <CustomTitle
+                        level={3}
+                        style={{ margin: 'auto', color: 'white' }}
+                      >
                         {currenMenuOption?.DESCRIPTION}
                       </CustomTitle>
                     </CustomCol>
