@@ -47,7 +47,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
     useUpdateStaffMutation()
 
   useEffect(() => {
-    form.setFieldsValue({ ...record, BIRTH_DATE: moment(record.BIRTH_DATE) })
+    form.setFieldsValue({ ...record, BIRTH_DATE: moment(record?.BIRTH_DATE) })
   }, [record])
 
   const handleOnFinish = async () => {
