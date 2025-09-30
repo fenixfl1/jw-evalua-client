@@ -48,7 +48,6 @@ const CustomTable = React.forwardRef<any, CustomTableProps>(
       expandable,
       bordered = false,
       onChange,
-      exportable = false,
       columnsMap,
       ...props
     },
@@ -59,7 +58,7 @@ const CustomTable = React.forwardRef<any, CustomTableProps>(
     return (
       <>
         <Container>
-          <ConditionalComponent condition={exportable}>
+          <ConditionalComponent condition={!!columnsMap}>
             <CustomTooltip title={'Exportar'}>
               <CustomButton
                 className={'btn-export-table'}

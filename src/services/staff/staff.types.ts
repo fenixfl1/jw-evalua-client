@@ -13,3 +13,9 @@ export interface Staff {
   STATE?: string
   USER_ID?: number
 }
+
+export interface IdentityDocumentValidationResult {
+  identityDocument: string
+  isValidFormat: boolean
+  isInUse: boolean
+}

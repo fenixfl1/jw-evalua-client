@@ -20,9 +20,14 @@ import { Staff } from 'src/services/staff/staff.types'
 import { useAppNotification } from 'src/context/NotificationContext'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import CustomSelect from 'src/components/custom/CustomSelect'
-import moment from 'moment'
 import { useUpdateStaffMutation } from 'src/services/staff/useUpdateStaffMutation'
 import queryClient from 'src/lib/query-client'
+import CustomMaskedInput from 'src/components/custom/CustomMaskedInput'
+import { useValidateIdentityDocumentMutation } from 'src/services/staff/useValidateIdentityDocumentMutation'
+import { normalizeIdentityDocument } from 'src/utils/identity-document'
+import { PhoneOutlined } from '@ant-design/icons'
+import { throwError } from '../../../../../server/src/errors/base.error'
+import dayjs from 'dayjs'
 
 interface EmployeesFormProps {
   open?: boolean
@@ -41,29 +46,40 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
 
   const isEditing = !!record?.STAFF_ID
 
+  const { mutateAsync: validateDocument } =
+    useValidateIdentityDocumentMutation()
+
   const { mutateAsync: createStaff, isPending: isCreateStaffPending } =
     useCreateStaffMutation()
   const { mutateAsync: updateStaff, isPending: isUpdatePending } =
     useUpdateStaffMutation()
 
   useEffect(() => {
-    form.setFieldsValue({ ...record, BIRTH_DATE: moment(record?.BIRTH_DATE) })
+    if (!record?.STAFF_ID) return
+    form.setFieldsValue({
+      ...record,
+      BIRTH_DATE: dayjs(record.BIRTH_DATE),
+    })
   }, [record])
 
   const handleOnFinish = async () => {
     try {
       const data = await form.validateFields()
+      const payload = {
+        ...data,
+        IDENTITY_DOCUMENT: normalizeIdentityDocument(data.IDENTITY_DOCUMENT),
+      }
 
       let message = 'Empleado Registrado exitosamente.'
 
       if (isEditing) {
-        await updateStaff({ ...data })
+        await updateStaff({ ...payload })
         message = 'Empleado actualizado exitosamente.'
         queryClient.invalidateQueries({
-          queryKey: ['staff', 'get-one-staff', data.STAFF_ID],
+          queryKey: ['staff', 'get-one-staff', payload.STAFF_ID],
         })
       } else {
-        await createStaff(data)
+        await createStaff(payload)
       }
       notification({
         message: 'Operación exitosa',
@@ -92,12 +108,46 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
             <CustomFormItem hidden name={'STAFF_ID'} />
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
-                label={'Cédula'}
+                label={'Cedula'}
                 name={'IDENTITY_DOCUMENT'}
-                rules={[{ required: true }]}
+                initialValue={''}
+                validateTrigger={'onBlur'}
+                getValueFromEvent={normalizeIdentityDocument}
+                rules={[
+                  { required: true },
+                  () => ({
+                    async validator(_, value) {
+                      try {
+                        if (!isEditing) {
+                          const { isValidFormat, isInUse } =
+                            await validateDocument(value)
+
+                          if (!isValidFormat) {
+                            throwError('Documento de identidad no valida')
+                          }
+
+                          if (isInUse) {
+                            throwError(
+                              'El documento de identidad digitado ya esta en nuestro sistema'
+                            )
+                          }
+                        }
+
+                        return Promise.resolve()
+                      } catch (error) {
+                        errorHandler(error)
+
+                        return Promise.reject(error.message)
+                      }
+                    },
+                  }),
+                ]}
               >
-                {/* <CustomMaskedInput mask={'999-9999999-9'} /> */}
-                <CustomInput placeholder={''} />
+                <CustomMaskedInput
+                  disabled={isEditing}
+                  placeholder={'Doc. Identidad'}
+                  type={'cedula'}
+                />
               </CustomFormItem>
             </CustomCol>
             <CustomCol {...defaultBreakpoints}>
@@ -139,8 +189,11 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                 name={'PHONE'}
                 rules={[{ required: false }]}
               >
-                {/* <CustomMaskedInput mask={'(999) 999-999'} /> */}
-                <CustomInput placeholder={''} />
+                <CustomMaskedInput
+                  suffix={<PhoneOutlined />}
+                  type={'phone'}
+                  placeholder={'Teléfono'}
+                />
               </CustomFormItem>
             </CustomCol>
             <CustomCol {...defaultBreakpoints}>

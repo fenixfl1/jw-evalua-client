@@ -63,6 +63,15 @@ const DetailContainer = styled.div`
   width: 100%;
   max-height: 18rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  margin: 0;
+`
+
+const Container = styled.div`
+  width: 100%;
+  max-height: 380px;
+  overflow-y: auto;
 `
 
 const emptyDetail: Partial<EvaluationDetailPayload> = {
@@ -410,7 +419,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
   return (
     <CustomModal
-      width={'50%'}
+      width={'55%'}
       open={open}
       title={mode === 'create' ? 'Registrar evaluación' : 'Editar evaluación'}
       onCancel={onClose}
@@ -508,115 +517,119 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                 }
               />
             </CustomCol>
-            <CustomFormList name={'DETAILS'}>
-              {(fields, { add, remove }) => (
-                <CustomSpace size={'small'}>
-                  <CustomCol xs={24}>
-                    <DetailContainer>
-                      <CustomCollapse
-                        accordion
-                        activeKey={activeKey}
-                        onChange={setActiveKey}
-                        items={fields.map(({ name, ...restField }) => ({
-                          label: getItemLabel(name),
-                          key: `${name}`,
-                          extra: (
-                            <CustomTooltip title={''}>
-                              <CustomButton
-                                type={'text'}
-                                danger
-                                icon={<CloseOutlined />}
-                                onClick={() => handleRemoveDetail(name, remove)}
-                              />
-                            </CustomTooltip>
-                          ),
-                          children: (
-                            <CustomRow justify={'start'} gutter={[16, 1]}>
-                              <CustomCol {...defaultBreakpoints}>
-                                <CustomFormItem
-                                  {...restField}
-                                  label={'Competencia'}
-                                  name={[name, 'COMPETENCY_ID']}
-                                  rules={[{ required: true }]}
-                                  labelCol={{ span: 8 }}
-                                >
-                                  <CustomSelect
-                                    options={competencyOptions}
-                                    placeholder={'Selecciona la competencia'}
-                                    loading={isFetchingCompetencies}
-                                    allowClear
-                                    onSelect={(value) => {
-                                      const item = competencies.find(
-                                        (item) => item.COMPETENCY_ID === value
-                                      )
+            <Container>
+              <CustomFormList name={'DETAILS'}>
+                {(fields, { add, remove }) => (
+                  <CustomSpace size={'small'}>
+                    <CustomCol xs={24}>
+                      <DetailContainer>
+                        <CustomCollapse
+                          accordion
+                          activeKey={activeKey}
+                          onChange={setActiveKey}
+                          items={fields.map(({ name, ...restField }) => ({
+                            label: getItemLabel(name),
+                            key: `${name}`,
+                            extra: (
+                              <CustomTooltip title={''}>
+                                <CustomButton
+                                  type={'text'}
+                                  danger
+                                  icon={<CloseOutlined />}
+                                  onClick={() =>
+                                    handleRemoveDetail(name, remove)
+                                  }
+                                />
+                              </CustomTooltip>
+                            ),
+                            children: (
+                              <CustomRow justify={'start'} gutter={[16, 1]}>
+                                <CustomCol {...defaultBreakpoints}>
+                                  <CustomFormItem
+                                    {...restField}
+                                    label={'Competencia'}
+                                    name={[name, 'COMPETENCY_ID']}
+                                    rules={[{ required: true }]}
+                                    labelCol={{ span: 8 }}
+                                  >
+                                    <CustomSelect
+                                      options={competencyOptions}
+                                      placeholder={'Selecciona la competencia'}
+                                      loading={isFetchingCompetencies}
+                                      allowClear
+                                      onSelect={(value) => {
+                                        const item = competencies.find(
+                                          (item) => item.COMPETENCY_ID === value
+                                        )
 
-                                      form.setFieldValue(
-                                        [name, 'WEIGHT'] as never,
-                                        item.WEIGHT
-                                      )
-                                    }}
-                                  />
-                                </CustomFormItem>
-                              </CustomCol>
-                              <CustomCol {...defaultBreakpoints}>
-                                <CustomFormItem
-                                  {...restField}
-                                  label="Peso (%)"
-                                  name={[name, 'WEIGHT']}
-                                >
-                                  <CustomInputNumber
-                                    format={{ format: 'percent' }}
-                                    min={0}
-                                    max={100}
-                                    placeholder="ID de asignación (opcional)"
-                                  />
-                                </CustomFormItem>
-                              </CustomCol>
-                              <CustomCol {...defaultBreakpoints}>
-                                <CustomFormItem
-                                  {...restField}
-                                  label="Calificación"
-                                  name={[name, 'SCORE']}
-                                >
-                                  <CustomInputNumber
-                                    min={0}
-                                    max={100}
-                                    placeholder="0 - 100"
-                                  />
-                                </CustomFormItem>
-                              </CustomCol>
-                              <CustomCol xs={24}>
-                                <CustomFormItem
-                                  {...restField}
-                                  label="Comentario"
-                                  name={[name, 'COMMENT']}
-                                  {...labelColFullWidth}
-                                >
-                                  <CustomInput placeholder="Comentario" />
-                                </CustomFormItem>
-                              </CustomCol>
-                            </CustomRow>
-                          ),
-                        }))}
-                      />
-                    </DetailContainer>
-                  </CustomCol>
+                                        form.setFieldValue(
+                                          [name, 'WEIGHT'] as never,
+                                          item.WEIGHT
+                                        )
+                                      }}
+                                    />
+                                  </CustomFormItem>
+                                </CustomCol>
+                                <CustomCol {...defaultBreakpoints}>
+                                  <CustomFormItem
+                                    {...restField}
+                                    label="Peso (%)"
+                                    name={[name, 'WEIGHT']}
+                                  >
+                                    <CustomInputNumber
+                                      format={{ format: 'percent' }}
+                                      min={0}
+                                      max={100}
+                                      placeholder="ID de asignación (opcional)"
+                                    />
+                                  </CustomFormItem>
+                                </CustomCol>
+                                <CustomCol {...defaultBreakpoints}>
+                                  <CustomFormItem
+                                    {...restField}
+                                    label="Calificación"
+                                    name={[name, 'SCORE']}
+                                  >
+                                    <CustomInputNumber
+                                      min={0}
+                                      max={100}
+                                      placeholder="0 - 100"
+                                    />
+                                  </CustomFormItem>
+                                </CustomCol>
+                                <CustomCol xs={24}>
+                                  <CustomFormItem
+                                    {...restField}
+                                    label="Comentario"
+                                    name={[name, 'COMMENT']}
+                                    {...labelColFullWidth}
+                                  >
+                                    <CustomInput placeholder="Comentario" />
+                                  </CustomFormItem>
+                                </CustomCol>
+                              </CustomRow>
+                            ),
+                          }))}
+                        />
+                      </DetailContainer>
+                    </CustomCol>
 
-                  <CustomButton
-                    icon={<PlusOutlined />}
-                    type="dashed"
-                    block
-                    size={'small'}
-                    onClick={() => {
-                      add({ ...emptyDetail } as EvaluationDetailPayload)
-                      setActiveKey([`${details?.length}`])
-                    }}
-                  >
-                    Agregar competencia
-                  </CustomButton>
-                </CustomSpace>
-              )}
-            </CustomFormList>
+                    <CustomButton
+                      icon={<PlusOutlined />}
+                      type="dashed"
+                      block
+                      size={'small'}
+                      onClick={() => {
+                        add({ ...emptyDetail } as EvaluationDetailPayload)
+                        setActiveKey([`${details?.length}`])
+                      }}
+                    >
+                      Agregar competencia
+                    </CustomButton>
+                  </CustomSpace>
+                )}
+              </CustomFormList>
+            </Container>
           </CustomSpace>
         </CustomRow>
       </CustomForm>

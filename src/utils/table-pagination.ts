@@ -9,6 +9,7 @@ export const getTablePagination = (
   if (!metadata) return false
 
   return {
+    showSizeChanger: true,
     current: metadata.currentPage,
     pageSize: metadata.pageSize,
     pageSizeOptions: [10, 15, 20, 25, 50, 75, 100],

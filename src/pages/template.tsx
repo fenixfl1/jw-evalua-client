@@ -283,7 +283,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
                         icon={<UserOutlined />}
                         src={getAvatarLink()}
                       />
-                      <CustomText strong>
+                      <CustomText strong style={{ color: '#ffffff' }}>
                         {capitalize(
                           getSessionInfo().name ||
                             getSessionInfo().username ||

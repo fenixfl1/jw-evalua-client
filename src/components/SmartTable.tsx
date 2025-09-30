@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnsType } from 'antd/lib/table'
 import React, { useMemo } from 'react'
 import { Metadata } from 'src/types/general'
@@ -25,7 +26,6 @@ import FilterTemplate from './FilterTemplate'
 import CustomDivider from './custom/CustomDivider'
 
 interface SmartTableProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns?: ColumnsType<any>
   createText?: string
   dataSource?: unknown[]
@@ -37,9 +37,9 @@ interface SmartTableProps {
   metadata?: Metadata
   onChange?: (current?: number, size?: number) => void
   onCreate?: () => void
-  onEdit?: (record: unknown) => void
+  onEdit?: (record: any) => void
   onSearch?: (value: string) => void
-  onUpdate?: (record: unknown) => void
+  onUpdate?: (record: any) => void
   searchPlaceholder?: string
   showActions?: boolean
   rowKey?: string
@@ -54,7 +54,6 @@ const SmartTable: React.FC<SmartTableProps> = ({
   createText = 'Crear',
   dataSource,
   expandable,
-  exportable = false,
   filter,
   form,
   initialFilter,
@@ -187,7 +186,6 @@ const SmartTable: React.FC<SmartTableProps> = ({
               expandable={expandable}
               onChange={onChange}
               pagination={getTablePagination(metadata)}
-              exportable={exportable}
               columnsMap={columnsMap}
               rowClassName={(record) =>
                 record.STATE === 'I' ? 'custom-table-row-disabled' : undefined

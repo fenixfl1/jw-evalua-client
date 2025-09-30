@@ -19,6 +19,13 @@ import { AdvancedCondition } from 'src/types/general'
 import { errorHandler } from 'src/utils/error-handler'
 import { useCreateRoleMutation } from 'src/services/roles/useCreateRoleMutation'
 import CustomSpin from 'src/components/custom/CustomSpin'
+import styled from 'styled-components'
+
+const Container = styled.div`
+  max-height: 300px;
+  width: 100%;
+  overflow-y: auto;
+`
 interface RolesFormProps {
   open?: boolean
   onClose?: () => void
@@ -125,25 +132,27 @@ const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
                 />
               </CustomFormItem>
             </CustomCol>
-            <CustomCol xs={24}>
-              <CustomFormItem
-                label={' '}
-                colon={false}
-                name={'PERMISSIONS'}
-                {...labelColFullWidth}
-              >
-                <CustomTree
-                  treeData={treeData}
-                  onCheck={(keys: React.Key[]) => {
-                    form.setFieldsValue({
-                      PERMISSIONS: keys.filter(
-                        (key) => typeof key === 'number'
-                      ),
-                    })
-                  }}
-                />
-              </CustomFormItem>
-            </CustomCol>
+            <Container>
+              <CustomCol xs={24}>
+                <CustomFormItem
+                  label={' '}
+                  colon={false}
+                  name={'PERMISSIONS'}
+                  {...labelColFullWidth}
+                >
+                  <CustomTree
+                    treeData={treeData}
+                    onCheck={(keys: React.Key[]) => {
+                      form.setFieldsValue({
+                        PERMISSIONS: keys.filter(
+                          (key) => typeof key === 'number'
+                        ),
+                      })
+                    }}
+                  />
+                </CustomFormItem>
+              </CustomCol>
+            </Container>
           </CustomRow>
         </CustomForm>
       </CustomSpin>

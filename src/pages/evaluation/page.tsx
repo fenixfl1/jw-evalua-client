@@ -215,10 +215,12 @@ const EvaluationPage: React.FC = () => {
           metadata={metadata}
           onChange={handleSearch}
           onCreate={handleOpenCreate}
-          onEdit={(record) => handleOpenEdit(record as Evaluation)}
-          onUpdate={(record) => handleToggleState(record as Evaluation)}
+          onEdit={handleOpenEdit}
+          onUpdate={handleToggleState}
           onSearch={setSearchKey}
           rowKey={'EVALUATION_ID'}
+          columnsMap={undefined}
+          expandable={undefined}
         />
       </CustomSpin>
 

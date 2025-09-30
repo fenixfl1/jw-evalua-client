@@ -1,9 +1,17 @@
 import { AxiosError, AxiosResponse } from 'axios'
+import { Mask } from 'react-text-mask'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type LoaderReturnType<T = string> = Record<string, T>
 
 export type ErroMessageMode = 'notification' | 'modal'
+
+export type MaskType = {
+  pasaporte: Mask
+  cedula: Mask
+  phone: Mask
+  rnc: Mask
+}
 
 export interface Metadata {
   currentPage: number
