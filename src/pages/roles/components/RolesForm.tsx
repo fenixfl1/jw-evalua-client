@@ -6,7 +6,7 @@ import CustomCol from 'src/components/custom/CustomCol'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
 import CustomInput from 'src/components/custom/CustomInput'
 import CustomModal from 'src/components/custom/CustomModal'
-import { Form } from 'antd'
+import { App, Form } from 'antd'
 import CustomDivider from 'src/components/custom/CustomDivider'
 import { CustomTitle } from 'src/components/custom/CustomParagraph'
 import { useGetMenuOptionsWithPermissions } from 'src/services/menu-options/useGetMenuOptionsWithPermissionsMutation'
@@ -20,6 +20,10 @@ import { errorHandler } from 'src/utils/error-handler'
 import { useCreateRoleMutation } from 'src/services/roles/useCreateRoleMutation'
 import CustomSpin from 'src/components/custom/CustomSpin'
 import styled from 'styled-components'
+import CustomCard from 'src/components/custom/CustomCard'
+import { useRoleStore } from 'src/store/role.store'
+import { useUpdateRoleMutation } from 'src/services/roles/useUpdateRoleMutation'
+import queryClient from 'src/lib/query-client'
 
 const Container = styled.div`
   max-height: 300px;
@@ -32,14 +36,19 @@ interface RolesFormProps {
 }
 
 const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
+  const { notification } = App.useApp()
   const [form] = Form.useForm()
+  const [checkedKeys, setCheckedKeys] = useState<number[]>()
   const [searchKey, setSearchKey] = useState('')
   const debounce = useDebounce(searchKey)
   const { mutate: getOptionsWithPermissions } =
     useGetMenuOptionsWithPermissions()
   const { mutateAsync: createRole, isPending: isCreatePending } =
     useCreateRoleMutation()
+  const { mutateAsync: updateRole, isPending: isUpdatePending } =
+    useUpdateRoleMutation()
 
+  const { role } = useRoleStore()
   const { menuOptionsWithPermissions } = useMenuOptionStore()
 
   const handleSearchOptWithPerm = useCallback(() => {
@@ -64,6 +73,13 @@ const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
 
   useEffect(handleSearchOptWithPerm, [handleSearchOptWithPerm])
 
+  useEffect(() => {
+    if (role?.ROLE_ID) {
+      setCheckedKeys(role.PERMISSIONS)
+      form.setFieldsValue({ ...role })
+    }
+  }, [role])
+
   const treeData: DataNode[] = useMemo(() => {
     if (!menuOptionsWithPermissions?.length) return []
 
@@ -81,7 +97,24 @@ const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
     try {
       const data = await form.validateFields()
 
-      await createRole(data)
+      let description = 'Rol creado exitosamente'
+      if (role?.ROLE_ID) {
+        await updateRole({ ...data, ROLE_ID: role.ROLE_ID })
+        description = `Rol '${role.ROLE_ID}' actualizado exitosamente.`
+      } else {
+        await createRole(data)
+      }
+
+      onClose?.()
+      form.resetFields()
+      queryClient.invalidateQueries({
+        queryKey: ['get-one-role', role.ROLE_ID],
+      })
+
+      notification.success({
+        message: 'Operación exitosa',
+        description,
+      })
     } catch (error) {
       errorHandler(error)
     }
@@ -96,7 +129,7 @@ const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
       onCancel={onClose}
       onOk={handleFinish}
     >
-      <CustomSpin spinning={isCreatePending}>
+      <CustomSpin spinning={isCreatePending || isUpdatePending}>
         <CustomDivider />
         <CustomForm form={form} {...formItemLayout}>
           <CustomRow justify={'start'}>
@@ -133,25 +166,26 @@ const RolesForm: React.FC<RolesFormProps> = ({ open, onClose }) => {
               </CustomFormItem>
             </CustomCol>
             <Container>
-              <CustomCol xs={24}>
-                <CustomFormItem
-                  label={' '}
-                  colon={false}
-                  name={'PERMISSIONS'}
-                  {...labelColFullWidth}
-                >
-                  <CustomTree
-                    treeData={treeData}
-                    onCheck={(keys: React.Key[]) => {
-                      form.setFieldsValue({
-                        PERMISSIONS: keys.filter(
-                          (key) => typeof key === 'number'
-                        ),
-                      })
-                    }}
-                  />
-                </CustomFormItem>
-              </CustomCol>
+              <CustomFormItem label={' '} colon={false} {...labelColFullWidth}>
+                <CustomCard>
+                  <CustomCol xs={24}>
+                    <CustomFormItem noStyle name={'PERMISSIONS'}>
+                      <CustomTree
+                        checkedKeys={checkedKeys}
+                        treeData={treeData}
+                        onCheck={(keys: React.Key[]) => {
+                          setCheckedKeys(keys as number[])
+                          form.setFieldsValue({
+                            PERMISSIONS: keys.filter(
+                              (key) => typeof key === 'number'
+                            ),
+                          })
+                        }}
+                      />
+                    </CustomFormItem>
+                  </CustomCol>
+                </CustomCard>
+              </CustomFormItem>
             </Container>
           </CustomRow>
         </CustomForm>

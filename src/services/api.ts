@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError } from 'axios'
 import { BASE_API_PATH } from 'src/constants/routes'
 import { getSessionToken } from 'src/lib/session'
@@ -34,7 +35,13 @@ export const putRequest = async <T, TData = unknown>(
   return api.put(url, data)
 }
 
-export const getRequest = async <T>(url: string): Promise<ApiResponse<T>> => {
+export const getRequest = async <T>(
+  url: string,
+  ...args: any[]
+): Promise<ApiResponse<T>> => {
+  if (args) {
+    url += args.join('/')
+  }
   return api.get(url)
 }
 

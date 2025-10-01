@@ -127,6 +127,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
   const handleSearch = useCallback(
     (page = metadata.currentPage, size = metadata.pageSize) => {
+      if (createServerModal) return
       try {
         const data = form.getFieldsValue()
         const { FILTER } = Object.keys(data ?? {}).length ? data : initialFilter
@@ -158,7 +159,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
         errorHandler(error)
       }
     },
-    [debounce, shouldUpdate, searchParams]
+    [debounce, shouldUpdate, searchParams, createServerModal]
   )
 
   useEffect(handleSearch, [handleSearch])
@@ -261,7 +262,11 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     <CustomSpin spinning={isGetSummaryPending}>
       <CustomSpace>
         <CustomCard>
-          <GoalActions module={module} />
+          <GoalActions
+            module={module}
+            shouldUpdate={createServerModal}
+            onFinish={() => setShouldUpdate(!shouldUpdate)}
+          />
         </CustomCard>
         <CustomCard shadow>
           <CustomSpace size={'small'}>

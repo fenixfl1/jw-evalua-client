@@ -4,12 +4,15 @@ import { create } from 'zustand'
 
 interface UseRoleStore {
   roleList: Role[]
+  role: Role
   metadata: Metadata
+  setRole: (role: Role) => void
   setRoleList: (payload: ReturnPayload<Role>) => void
 }
 
 export const useRoleStore = create<UseRoleStore>((set) => ({
   roleList: [],
+  role: <Role>{},
   metadata: {
     currentPage: 1,
     pageSize: 15,
@@ -18,6 +21,7 @@ export const useRoleStore = create<UseRoleStore>((set) => ({
     totalRows: 0,
     links: undefined,
   },
+  setRole: (role) => set({ role }),
   setRoleList: ({ data, metadata }) =>
     set({ roleList: data, metadata: metadata.pagination }),
 }))

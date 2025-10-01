@@ -23,9 +23,14 @@ import { AdvancedCondition } from 'src/types/general'
 interface GoalActionsProps {
   module: WorkModule
   onFinish?: () => void
+  shouldUpdate?: boolean
 }
 
-const GoalActions: React.FC<GoalActionsProps> = ({ module, onFinish }) => {
+const GoalActions: React.FC<GoalActionsProps> = ({
+  module,
+  onFinish,
+  shouldUpdate,
+}) => {
   const { message } = App.useApp()
   const [searchParams] = useSearchParams()
   const [errorHandler] = useErrorHandler()
@@ -62,7 +67,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, onFinish }) => {
     }
 
     getGoals({ condition, page: metadata.currentPage, size: metadata.pageSize })
-  }, [debounce])
+  }, [debounce, shouldUpdate])
 
   useEffect(handleGetGoals, [handleGetGoals])
 
@@ -134,7 +139,10 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, onFinish }) => {
                             ...values,
                           })
                           message.success('Asignación registrada')
-                          form.resetFields(['MODULE'])
+                          form.resetFields([
+                            ['MODULE', 'TARGET_VALUE'],
+                            ['MODULE', 'GOAL_ID'],
+                          ])
                           onFinish?.()
                         } catch (error) {
                           errorHandler(error)
@@ -154,7 +162,10 @@ const GoalActions: React.FC<GoalActionsProps> = ({ module, onFinish }) => {
                     try {
                       await postProgress(values)
                       message.success('Progreso registrado')
-                      form.resetFields(['PROGRESS'])
+                      form.resetFields([
+                        ['PROGRESS', 'GOAL_ID'],
+                        ['PROGRESS', 'ACTUAL_VALUE'],
+                      ])
                       onFinish?.()
                     } catch (error) {
                       errorHandler(error)

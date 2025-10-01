@@ -3,4 +3,5 @@ export interface Role {
   NAME: string
   DESCRIPTION: string
   STATE: string
+  PERMISSIONS: number[]
 }
