@@ -206,7 +206,7 @@ const EvaluationPage: React.FC = () => {
       <CustomSpin spinning={isFetchingEvaluations || isUpdatingEvaluation}>
         <SmartTable
           columns={tableColumns}
-          createText={'Nueva evaluation'}
+          createText={'Nueva evaluación'}
           dataSource={evaluations}
           filter={filterContent}
           form={form}
