@@ -26,7 +26,6 @@ import CustomMaskedInput from 'src/components/custom/CustomMaskedInput'
 import { useValidateIdentityDocumentMutation } from 'src/services/staff/useValidateIdentityDocumentMutation'
 import { normalizeIdentityDocument } from 'src/utils/identity-document'
 import { PhoneOutlined } from '@ant-design/icons'
-import { throwError } from '../../../../../server/src/errors/base.error'
 import dayjs from 'dayjs'
 
 interface EmployeesFormProps {
@@ -123,11 +122,11 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
                             await validateDocument(value)
 
                           if (!isValidFormat) {
-                            throwError('Documento de identidad no valida')
+                            throw new Error('Documento de identidad no valida')
                           }
 
                           if (isInUse) {
-                            throwError(
+                            throw new Error(
                               'El documento de identidad digitado ya esta en nuestro sistema'
                             )
                           }
