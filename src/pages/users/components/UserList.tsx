@@ -1,4 +1,4 @@
-import { DeleteOutlined, StopOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, StopOutlined } from '@ant-design/icons'
 import { ListProps } from 'antd'
 import React from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -22,9 +22,10 @@ import { getTablePagination } from 'src/utils/table-pagination'
 
 interface UserListProps {
   onUpdate?: (user: User) => void
+  onEdit?: (record: User) => void
 }
 
-const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
+const UserList: React.FC<UserListProps> = ({ onUpdate, onEdit }) => {
   const [, setSearchParam] = useSearchParams()
   const { userList, metadata } = useUserStore()
 
@@ -56,6 +57,14 @@ const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
   const renderItem: ListProps<User>['renderItem'] = (item) => (
     <CustomListItem
       actions={[
+        <CustomTooltip title={'Editar'}>
+          <CustomButton
+            type={'link'}
+            icon={<EditOutlined />}
+            disabled={item.STATE === 'I'}
+            onClick={() => onEdit(item)}
+          />
+        </CustomTooltip>,
         <CustomTooltip title={item.STATE === 'A' ? 'Inhabilitar' : 'Habilitar'}>
           <CustomButton
             onClick={() => onUpdate(item)}

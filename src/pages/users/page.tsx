@@ -28,6 +28,7 @@ const UserPage: React.FC = () => {
   const [errorHandler] = useErrorHandler()
   const { modal, notification } = App.useApp()
   const [form] = Form.useForm()
+  const [selectedUser, setSelectedUser] = useState<User>()
   const [userModalState, setUserModalState] = useState<boolean>()
   const [searchKey, setSearchKey] = useState<string>('')
   const debounce = useDebounce(searchKey)
@@ -125,11 +126,21 @@ const UserPage: React.FC = () => {
             onFilter={() => handleSearch()}
           />
 
-          <UserList onUpdate={handleChangeState} />
+          <UserList
+            onUpdate={handleChangeState}
+            onEdit={(record) => {
+              toggleModalState()
+              setSelectedUser(record)
+            }}
+          />
         </CustomCard>
       </CustomSpin>
       <ConditionalComponent condition={userModalState}>
-        <UserForm open={userModalState} onClose={toggleModalState} />
+        <UserForm
+          user={selectedUser}
+          open={userModalState}
+          onClose={toggleModalState}
+        />
       </ConditionalComponent>
     </>
   )

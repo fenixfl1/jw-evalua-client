@@ -24,13 +24,16 @@ import { useCreateUserMutation } from 'src/services/users/useCreateUserMutation'
 import CustomSpin from 'src/components/custom/CustomSpin'
 import { useAppNotification } from 'src/context/NotificationContext'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
+import { User } from 'src/services/users/users.types'
+import { useUpdateUserMutation } from 'src/services/users/useUpdateUserMutation'
 
 interface UserFormProps {
   open?: boolean
   onClose?: () => void
+  user?: User
 }
 
-const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
+const UserForm: React.FC<UserFormProps> = ({ open, onClose, user }) => {
   const notification = useAppNotification()
   const [errorHandler] = useErrorHandler()
   const [modal, contextHolder] = Modal.useModal()
@@ -49,6 +52,18 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
     useGetPaginatedStaffMutation()
   const { mutate: getRoles, isPending: isGetRolesPending } =
     useGetRolePaginationMutation()
+  const { mutateAsync: updateUser, isPending: isUpdatePending } =
+    useUpdateUserMutation()
+
+  useEffect(() => {
+    if (user) {
+      form.setFieldsValue({
+        ...user,
+        STAFF_ID: Number(user?.STAFF_ID),
+        ROLE_ID: Number(user?.ROLE_ID),
+      })
+    }
+  }, [user])
 
   const handleSearchRole = useCallback(() => {
     const condition: AdvancedCondition<Role>[] = [
@@ -77,11 +92,6 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
         operator: '=',
         field: 'STATE',
       },
-      {
-        value: true,
-        field: 'USER_ID',
-        operator: 'IS NULL',
-      },
     ]
 
     if (debounce) {
@@ -92,8 +102,22 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
       })
     }
 
+    if (user?.STAFF_ID) {
+      condition.push({
+        value: user.STAFF_ID,
+        field: 'STAFF_ID',
+        operator: '=',
+      })
+    } else {
+      condition.push({
+        value: true,
+        field: 'USER_ID',
+        operator: 'IS NULL',
+      })
+    }
+
     getStaffPagination({ page: 1, size: 15, condition })
-  }, [debounce])
+  }, [debounce, user])
 
   useEffect(handleSearch, [handleSearch])
   useEffect(handleSearchRole, [handleSearchRole])
@@ -102,11 +126,22 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
     try {
       const data = await form.validateFields()
 
-      await createUser(data)
+      let description =
+        'Usuario creado exitosamente, se le ha enviado sus credenciales a su correo electrónico.'
+      if (user) {
+        await updateUser({
+          ROLE_ID: Number(data.ROLE_ID),
+          USER_ID: user.USER_ID,
+          USERNAME: user.USERNAME,
+        })
+        description = 'Usuario actualizado exitosamente.'
+      } else {
+        await createUser(data)
+      }
+
       notification({
         message: 'Operación exitosa',
-        description:
-          'Usuario creado exitosamente, se le ha enviado sus credenciales a su correo electrónico.',
+        description,
       })
       form.resetFields()
       onClose?.()
@@ -133,7 +168,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
         onCancel={handleClose}
         onOk={handleFinish}
       >
-        <CustomSpin spinning={isCreateUserPending}>
+        <CustomSpin spinning={isCreateUserPending || isUpdatePending}>
           <CustomForm form={form} {...formItemLayout}>
             <CustomRow>
               <CustomCol xs={24}>
@@ -144,6 +179,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
                   {...labelColFullWidth}
                 >
                   <CustomSelect
+                    // disabled={!!user}
                     onSearch={setSearchKey}
                     loading={isGetStaffPending}
                     placeholder={'Seleccionar empleado'}
@@ -161,7 +197,10 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose }) => {
                   noSpaces
                   rules={[{ required: true }]}
                 >
-                  <CustomInput placeholder={'Nombre de usuario'} />
+                  <CustomInput
+                    disabled={!!user}
+                    placeholder={'Nombre de usuario'}
+                  />
                 </CustomFormItem>
               </CustomCol>
               <CustomCol {...defaultBreakpoints}>

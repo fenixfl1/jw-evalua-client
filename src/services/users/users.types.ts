@@ -14,6 +14,8 @@ export interface User {
   BIRTH_DATE: string
   GENDER: string
   ADDRESS: string
+  STAFF_ID: number
+  ROLE_ID: number
 }
 
 export interface Business {
