@@ -12,13 +12,19 @@ import CustomCol from './custom/CustomCol'
 import CustomFormItem from './custom/CustomFormItem'
 import CustomForm from './custom/CustomFrom'
 import CustomInput from './custom/CustomInput'
+import CustomTextArea from './custom/CustomTextArea'
 import CustomModal from './custom/CustomModal'
 import CustomPopover from './custom/CustomPopover'
 import CustomRow from './custom/CustomRow'
 import CustomSelect from './custom/CustomSelect'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { exportToPDF, exportToExcel, exportToCSV } from 'src/utils/report-utils'
-import { ColumnsMap } from './custom/CustomTable'
+import type {
+  ColumnMapValue,
+  ColumnsMap,
+  GroupCol,
+  SimpleColumn,
+} from './custom/CustomTable'
 
 const options = [
   {
@@ -35,12 +41,61 @@ const options = [
   },
 ]
 
+type ColumnDefinition = ColumnMapValue<any>
+
+const isGroupColumn = (value: ColumnDefinition): value is GroupCol<any> =>
+  typeof value === 'object' &&
+  value !== null &&
+  'children' in value &&
+  Array.isArray((value as GroupCol<any>).children)
+
+const isSimpleColumnObject = (
+  value: ColumnDefinition
+): value is SimpleColumn<any> =>
+  typeof value === 'object' && value !== null && !isGroupColumn(value)
+
+const getSimpleLabel = (value: ColumnDefinition): string | undefined => {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (isSimpleColumnObject(value)) {
+    return value.header
+  }
+  return undefined
+}
+
+const collectColumnValues = (map?: ColumnsMap): string[] => {
+  if (!map) return []
+  const values: string[] = []
+  Object.entries(map).forEach(([key, definition]) => {
+    if (isGroupColumn(definition)) {
+      definition.children?.forEach((child) => {
+        if (child.key) {
+          values.push(`${key}.${child.key}`)
+        }
+      })
+    } else {
+      values.push(key)
+    }
+  })
+  return values
+}
+
+export interface ExportFormValue {
+  format?: 'pdf' | 'xlsx' | 'csv'
+  orientation?: 'landscape' | 'portrait'
+  title?: string
+  filename?: string
+  showHead?: boolean
+  extraHeaderHtml?: string
+}
 interface ExportOptionsProps<T = any> {
   dataSource: readonly T[]
   open: boolean
   onCancel: () => void
   ref: React.ForwardedRef<any> | null
   columnsMap?: ColumnsMap
+  initialValues?: Partial<ExportFormValue>
 }
 
 const ExportOptions: React.FC<ExportOptionsProps> = ({
@@ -48,6 +103,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   open,
   onCancel,
   ref,
+  initialValues,
   columnsMap = {},
 }) => {
   const [errorHandler] = useErrorHandler()
@@ -56,9 +112,12 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
   const reportFormat = Form.useWatch('format', form)
 
   const [selectedColumns, setSelectedColumns] = useState<string[]>(() =>
-    Object.keys(columnsMap).map((col) => col)
+    collectColumnValues(columnsMap)
   )
 
+  useEffect(() => {
+    setSelectedColumns(collectColumnValues(columnsMap))
+  }, [columnsMap])
   const inputRef = useRef<InputRef>(null)
 
   useEffect(() => {
@@ -85,9 +144,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       values.columnsMap = columnsMap
       values.data = dataSource
 
-      // eslint-disable-next-line no-console
-      console.log({ values })
-
       switch (values.format) {
         case 'pdf':
           await exportToPDF(values)
@@ -104,24 +160,22 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
 
       onCancel?.()
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log({ error })
       errorHandler(error)
     }
   }
 
   const columnOptions = Object.entries(columnsMap ?? {}).flatMap(
-    ([key, def]) => {
-      if (typeof def === 'string') {
-        // Columna simple
-        return [{ label: def, value: key, style: { width: '100%' } }]
+    ([key, definition]) => {
+      if (isGroupColumn(definition)) {
+        return (definition.children ?? []).map((child) => ({
+          label: `${definition.header} - ${child.header}`,
+          value: `${key}.${child.key}`,
+          style: { width: '100%' },
+        }))
       }
-      // Columna agrupada: una opción por cada subcolumna
-      return (def.children ?? []).map((child) => ({
-        label: `${def.header} · ${child.header}`,
-        value: `${key}.${child.key}`, // valor compuesto
-        style: { width: '100%' },
-      }))
+
+      const label = getSimpleLabel(definition)
+      return label ? [{ label, value: key, style: { width: '100%' } }] : []
     }
   )
 
@@ -146,7 +200,18 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
       okButtonProps={{ icon: <DownloadOutlined /> }}
       width={'550px'}
     >
-      <CustomForm form={form} {...formItemLayout}>
+      <CustomForm
+        form={form}
+        initialValues={{
+          format: 'pdf',
+          orientation: 'portrait',
+          showHead: true,
+          filename: 'Reporte',
+          extraHeaderHtml: '',
+          ...initialValues,
+        }}
+        {...formItemLayout}
+      >
         <CustomRow>
           <CustomCol {...defaultBreakpoints}>
             <CustomFormItem
@@ -166,7 +231,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
               label={'Orientación'}
               name={'orientation'}
               rules={[{ required: true }]}
-              initialValue={'portrait'}
               labelCol={{ xs: 10 }}
             >
               <CustomSelect
@@ -198,11 +262,25 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
             <CustomFormItem
               label={'Nombre Archivo'}
               name={'filename'}
-              initialValue={'reporte'}
               rules={[{ required: true }]}
               labelCol={{ xs: 5 }}
             >
               <CustomInput ref={inputRef} placeholder={'Nombre del archivo'} />
+            </CustomFormItem>
+          </CustomCol>
+          <CustomCol xs={24}>
+            <CustomFormItem
+              label={'Encabezado extra'}
+              name={'extraHeaderHtml'}
+              labelCol={{ xs: 5 }}
+              hidden
+            >
+              <CustomTextArea
+                rows={4}
+                maxLength={1500}
+                showCount={false}
+                placeholder={'<div>Contenido adicional del reporte</div>'}
+              />
             </CustomFormItem>
           </CustomCol>
           <CustomCol {...defaultBreakpoints}>
@@ -227,7 +305,6 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({
               name={'showHead'}
               valuePropName={'checked'}
               labelCol={{ xs: 10 }}
-              initialValue={true}
             >
               <CustomCheckbox>¿Incluir Cabeceras?</CustomCheckbox>
             </CustomFormItem>

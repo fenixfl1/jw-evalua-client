@@ -66,7 +66,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, StateProps> {
 
   static getDerivedStateFromError(error: Error): Partial<StateProps> {
     // eslint-disable-next-line no-console
-    console.log({ error })
+    console.error({ error })
     return { hasError: true, error }
   }
 

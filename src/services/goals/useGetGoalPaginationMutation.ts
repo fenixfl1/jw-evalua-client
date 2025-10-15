@@ -22,7 +22,7 @@ const initialData = {
 export function useGetGoalPaginationMutation() {
   const { setGoals } = useGoalStore()
 
-  return useCustomMutation<ReturnPayload<Goal>, GetPayload>({
+  return useCustomMutation<ReturnPayload<Goal>, GetPayload<Goal>>({
     initialData,
     mutationKey: ['goals', 'get-goals-pagination'],
     onSuccess: setGoals,

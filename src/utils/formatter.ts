@@ -2,7 +2,7 @@ import moment from 'moment'
 import { DATE_FORMAT, LOG_DATE_FORMAT } from './date-utils'
 
 export interface Formatter {
-  value: string | number | undefined
+  value: string | number | undefined | unknown
   format:
     | 'phone'
     | 'document'

@@ -49,7 +49,7 @@ const RouteErrorElement = () => {
 
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log({ error })
+    console.error({ error })
   }, [error])
 
   return (

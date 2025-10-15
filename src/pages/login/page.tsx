@@ -13,13 +13,14 @@ import styled from 'styled-components'
 import { useErrorHandler } from '../../hooks/use-error-handler'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
 import CustomCard from 'src/components/custom/CustomCard'
+import { useNavigate } from 'react-router-dom'
 
 const Layout = styled.div`
   height: 100vh !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('assets/background2.jpg');
+  background-image: url('assets/main-background.webp');
   background-repeat: no-repeat;
   background-size: cover;
 `
@@ -41,6 +42,7 @@ type LoginForm = {
 }
 
 const Login = () => {
+  const navigate = useNavigate()
   const [errorHandler] = useErrorHandler()
   const [form] = useForm<LoginForm>()
   const [remember, setRemember] = useState<boolean>()
@@ -101,7 +103,10 @@ const Login = () => {
                     </CustomFormItem>
 
                     <CustomFormItem>
-                      <CustomButton type={'link'}>
+                      <CustomButton
+                        type={'link'}
+                        onClick={() => navigate('/reset_password')}
+                      >
                         Olvide mi contraseña
                       </CustomButton>
                     </CustomFormItem>

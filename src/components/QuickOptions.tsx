@@ -6,7 +6,6 @@ import {
   CircleOff,
   SlidersHorizontal,
 } from 'lucide-react'
-import { useParams } from 'react-router'
 import CustomCol from './custom/CustomCol'
 import CustomCard from './custom/CustomCard'
 import CustomFlex from './custom/CustomFlex'
@@ -22,13 +21,6 @@ const Text = styled(CustomText)`
 `
 
 const QuickOptions: React.FC = () => {
-  const { name } = useParams()
-
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log({ name })
-  }, [name])
-
   const quickOptions = [
     {
       key: '0',

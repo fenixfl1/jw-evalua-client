@@ -1,5 +1,5 @@
 import React from 'react'
-import CustomTable from 'src/components/custom/CustomTable'
+import CustomTable, { ColumnsMap } from 'src/components/custom/CustomTable'
 import { ColumnsType } from 'antd/lib/table'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import CustomDivider from 'src/components/custom/CustomDivider'
@@ -71,12 +71,24 @@ const RolesTable: React.FC<RolesTableProps> = ({ onChange }) => {
     },
   ]
 
+  const columnsMap: ColumnsMap = {
+    ROLE_ID: 'Código',
+    NAME: 'Nombre',
+    DESCRIPTION: 'Descripción',
+    CREATED_AT: 'F. Creación',
+    STATE: {
+      header: 'Estado',
+      render: (value) => (value === 'A' ? 'Activo' : 'Inactivo'),
+    },
+  }
+
   return (
     <CustomTable
       columns={columns}
       dataSource={roleList}
       pagination={getTablePagination(metadata)}
       onChange={onChange}
+      columnsMap={columnsMap}
     />
   )
 }

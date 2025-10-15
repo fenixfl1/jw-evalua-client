@@ -4,9 +4,8 @@ import { API_PATH_GET_GOAL_SUMMARY_MODULE } from 'src/constants/routes'
 import { ModuleSummary } from './types'
 
 export function useGetModuleSummaryQuery(moduleId?: number, periodId?: number) {
-  return useQuery({
+  return useQuery<ModuleSummary | undefined>({
     enabled: !!moduleId && !!periodId,
-    initialData: undefined as unknown as ModuleSummary,
     queryKey: ['goals', 'summary', 'module', moduleId, periodId],
     queryFn: async () => {
       const {
@@ -18,4 +17,3 @@ export function useGetModuleSummaryQuery(moduleId?: number, periodId?: number) {
     },
   })
 }
-

@@ -113,6 +113,12 @@ export type ErrorCode =
   | 403
   | 401
 
+export interface SimpleCondition<T = any> {
+  condition: Partial<T>
+  select?: (keyof T)[]
+  sort?: Record<keyof T, 'ASC' | 'DESC'>
+}
+
 export interface AdvancedCondition<T = any> {
   value: string | number | boolean | (string | number)[]
   field: keyof T | (keyof T)[]

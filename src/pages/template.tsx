@@ -113,7 +113,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   } = useMenuOptionStore()
 
   React.useEffect(() => {
-    if (!menuOptions.length) refetch()
+    if (!menuOptions.length && getSessionInfo().username) refetch()
   }, [])
 
   useEffect(() => {
@@ -231,7 +231,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
             <Sider width={240}>
               <CustomRow justify={'center'} style={{ height: '100px' }}>
                 <LogoContainer>
-                  <img src={'/assets/logo3.png'} />
+                  <img src={'/assets/logo.png'} />
                 </LogoContainer>
               </CustomRow>
               <CustomDivider />

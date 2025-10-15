@@ -4,8 +4,6 @@ import { Staff } from './staff.types'
 import { API_PATH_GET_ONE_STAFF } from 'src/constants/routes'
 
 export function useGetOneStaffQuery(staffId: number) {
-  // eslint-disable-next-line no-console
-  console.log({ staffId })
   return useQuery({
     queryKey: ['staff', 'get-one-staff', staffId],
     enabled: !!staffId,

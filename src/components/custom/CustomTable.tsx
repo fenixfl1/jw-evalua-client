@@ -8,7 +8,7 @@ import { DownloadOutlined } from '@ant-design/icons'
 import ConditionalComponent from '../ConditionalComponent'
 import CustomButton from './CustomButton'
 import CustomTooltip from './CustomTooltip'
-import ExportOptions from '../ExportOptions'
+import ExportOptions, { ExportFormValue } from '../ExportOptions'
 
 const Container = styled.div`
   position: relative;
@@ -21,20 +21,45 @@ const Container = styled.div`
   }
 `
 
-type SimpleCol = string
-type ChildDef = { key: string; header: string }
-export type GroupCol = {
+export interface ColumnRenderContext {
+  dataIndex: string
+  groupKey?: string
+  index?: number
+  item?: unknown
+}
+
+export type ColumnRender<T = any> = (
+  value: unknown,
+  record: T,
+  context?: ColumnRenderContext
+) => React.ReactNode
+
+export interface SimpleColumn<T = any> {
   header: string
-  children: ChildDef[]
+  render?: ColumnRender<T>
+}
+
+export interface GroupColumnChild<T = any> {
+  key: string
+  header: string
+  render?: ColumnRender<T>
+}
+
+export interface GroupCol<T = any> {
+  header: string
+  children: GroupColumnChild<T>[]
   maxItems?: number
 }
 
-export type ColumnsMap = Record<string, SimpleCol | GroupCol>
+export type ColumnMapValue<T = any> = string | SimpleColumn<T> | GroupCol<T>
+
+export type ColumnsMap<T = any> = Record<string, ColumnMapValue<T>>
 
 interface CustomTableProps extends Omit<TableProps<any>, 'onChange'> {
   onChange?: (page: number, size: number) => void
   exportable?: boolean
   columnsMap?: ColumnsMap
+  exportInitialValues?: Partial<ExportFormValue>
 }
 
 export interface CustomColumnType<T> extends ColumnType<T> {
@@ -49,6 +74,7 @@ const CustomTable = React.forwardRef<any, CustomTableProps>(
       bordered = false,
       onChange,
       columnsMap,
+      exportInitialValues,
       ...props
     },
     ref
@@ -100,6 +126,7 @@ const CustomTable = React.forwardRef<any, CustomTableProps>(
             onCancel={() => setModalState(false)}
             open={modalState}
             ref={ref}
+            initialValues={exportInitialValues}
           />
         </ConditionalComponent>
       </>

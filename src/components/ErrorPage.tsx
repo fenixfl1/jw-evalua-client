@@ -11,17 +11,11 @@ import CustomCollapse from './custom/CustomCollapse'
 import { CustomParagraph } from './custom/CustomParagraph'
 import CustomResult from './custom/CustomResult'
 import { assert } from 'src/utils/assert'
-import { useEffect } from 'react'
 
 export default function ErrorPage() {
   const error = useRouteError()
 
   assert<Error>(error)
-
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log({ error })
-  }, [error])
 
   if (isRouteErrorResponse(error)) {
     return (

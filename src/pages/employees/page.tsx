@@ -24,7 +24,7 @@ import { getConditionFromForm } from 'src/utils/get-condition-from-form'
 
 const initialFilter = {
   FILTER: {
-    STATE__EQ: 'A',
+    STATE__IN: ['A'],
     CREATED_AT__BETWEEN: undefined,
   },
 }
@@ -143,6 +143,12 @@ const EmployeesPage: React.FC = () => {
       title: 'Correo',
     },
     {
+      dataIndex: 'CREATED_AT',
+      key: 'CREATED_AT',
+      title: 'Fecha de Registro',
+      render: (value) => formatter({ value, format: 'date' }),
+    },
+    {
       dataIndex: 'STATE',
       key: 'STATE',
       title: 'Estado',
@@ -155,14 +161,18 @@ const EmployeesPage: React.FC = () => {
   const filter = (
     <CustomRow>
       <CustomCol xs={24}>
-        <CustomFormItem label={'Estado'} labelCol={{ span: 24 }}>
+        <CustomFormItem
+          label={'Estado'}
+          name={['FILTER', 'STATE__IN']}
+          labelCol={{ span: 24 }}
+        >
           <StateSelector />
         </CustomFormItem>
       </CustomCol>
       <CustomCol xs={24}>
         <CustomFormItem
           label={'Fecha de Registro'}
-          name={'CREATED_AT__BETWEEN'}
+          name={['FILTER', 'CREATED_AT__BETWEEN']}
           labelCol={{ span: 24 }}
         >
           <CustomRangePicker width={'100%'} maxDate={dayjs()} />

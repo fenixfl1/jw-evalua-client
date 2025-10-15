@@ -2,7 +2,7 @@ import React from 'react'
 import { InputNumberProps } from 'antd/lib/input-number'
 import { InputNumber } from 'antd'
 
-type FormatType = 'currency' | 'percent' | 'range'
+type FormatType = 'currency' | 'percent' | 'default'
 export type CurrencyType = 'RD' | 'UE' | 'US'
 
 export type InputFormat = {
@@ -28,15 +28,16 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
 }) => {
   const isPercent = format.format === 'percent'
   const isCurrency = format.format === 'currency'
-  const isRange = format.format === 'range'
+  const isDefault = format.format === 'default'
 
   const formatterFn = isCurrency
     ? (value?: string | number) =>
         `${format.currency}$ ${value ?? ''}`.replace(regExp, ',')
     : isPercent
     ? (value?: string | number) => `${value ?? ''}%`
-    : isRange
-    ? (value?: string | number) => `${Math.trunc(Number(value ?? ''))}`
+    : isDefault
+    ? (value?: string | number) =>
+        `${Math.trunc(Number(value ?? ''))}`.replace(regExp, ',')
     : undefined
 
   const parserFn = isCurrency
@@ -47,7 +48,7 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
           .replace(/\$\s?|(,*)/g, '')
     : isPercent
     ? (value?: string) => `${value ?? ''}`.replace('%', '')
-    : isRange
+    : isDefault
     ? (value?: string) => `${value ?? ''}`.replace('%', '')
     : undefined
 

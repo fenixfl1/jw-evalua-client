@@ -13,6 +13,13 @@ import ConditionalComponent from 'src/components/ConditionalComponent'
 import Fallback from 'src/components/Fallback'
 import queryClient from 'src/lib/query-client'
 import { NotificationProvider } from 'src/context/NotificationContext'
+import moment from 'moment'
+import dayjs from 'dayjs'
+import 'moment/locale/es'
+import 'dayjs/locale/es'
+
+moment.locale('es')
+dayjs.locale('es')
 
 const { defaultAlgorithm, darkAlgorithm, compactAlgorithm, defaultConfig } =
   theme

@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { App, Form } from 'antd'
 import dayjs from 'dayjs'
 import SmartTable from 'src/components/SmartTable'
 import CustomSpin from 'src/components/custom/CustomSpin'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
-import CustomSelect from 'src/components/custom/CustomSelect'
 import StateSelector from 'src/components/StateSelector'
 import { useGetEvaluationPaginationMutation } from 'src/services/evaluations/useGetEvaluationPaginationMutation'
 import { useEvaluationStore } from 'src/store/evaluation.store'
@@ -14,15 +13,20 @@ import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { AdvancedCondition } from 'src/types/general'
 import useDebounce from 'src/hooks/use-debounce'
 import { getConditionFromForm } from 'src/utils/get-condition-from-form'
-import { useGetPeriods } from 'src/hooks/use-get-periods'
 import { ColumnsType } from 'antd/es/table'
 import { Evaluation } from 'src/services/evaluations/evaluation.types'
 import EvaluationForm from './components/EvaluationForm'
+import { ColumnsMap } from 'src/components/custom/CustomTable'
+import PeriodSelector from 'src/components/PeriodSelector'
+
+const current = Number(
+  `${dayjs().year()}${String(dayjs().week()).padStart(2, '0')}`
+)
 
 const initialFilter = {
   FILTER: {
-    STATE__IN: ['A', 'I'],
-    PERIOD__EQ: '',
+    STATE__IN: ['A'],
+    PERIOD__EQ: current,
   },
 }
 
@@ -39,7 +43,6 @@ const EvaluationPage: React.FC = () => {
     (state) => state.setSelectedEvaluation
   )
   const { evaluations, metadata } = useEvaluationStore()
-  const [periodOptions] = useGetPeriods()
 
   const { mutate: getEvaluations, isPending: isFetchingEvaluations } =
     useGetEvaluationPaginationMutation()
@@ -126,54 +129,51 @@ const EvaluationPage: React.FC = () => {
     setSelectedEvaluation(null)
   }
 
-  const tableColumns: ColumnsType<Evaluation> = useMemo(
-    () => [
-      {
-        title: 'ID',
-        dataIndex: 'EVALUATION_ID',
-        key: 'EVALUATION_ID',
-        width: 90,
-      },
-      {
-        title: 'Modulo',
-        dataIndex: 'MODULE_NAME',
-        key: 'MODULE_NAME',
-      },
-      {
-        title: 'Colaborador',
-        dataIndex: 'STAFF_NAME',
-        key: 'STAFF_NAME',
-      },
-      {
-        title: 'Evaluador',
-        dataIndex: 'EVALUATOR_NAME',
-        key: 'EVALUATOR_NAME',
-        render: (value?: string) => value || 'N/A',
-      },
-      {
-        title: 'Periodo',
-        dataIndex: 'PERIOD',
-        key: 'PERIOD',
-      },
-      {
-        title: 'Calificación (%)',
-        dataIndex: 'OVERALL_SCORE',
-        key: 'OVERALL_SCORE',
-        render: (value?: number) =>
-          value === undefined || value === null
-            ? 'N/A'
-            : `${Number(value).toFixed(1)}%`,
-      },
-      {
-        title: 'Actualizado',
-        dataIndex: 'UPDATED_AT',
-        key: 'UPDATED_AT',
-        render: (value?: string) =>
-          value ? dayjs(value).format('DD/MM/YYYY HH:mm') : 'N/A',
-      },
-    ],
-    []
-  )
+  const columns: ColumnsType<Evaluation> = [
+    {
+      title: 'ID',
+      dataIndex: 'EVALUATION_ID',
+      key: 'EVALUATION_ID',
+      width: 90,
+    },
+    {
+      title: 'Modulo',
+      dataIndex: 'MODULE_NAME',
+      key: 'MODULE_NAME',
+    },
+    {
+      title: 'Colaborador',
+      dataIndex: 'STAFF_NAME',
+      key: 'STAFF_NAME',
+    },
+    {
+      title: 'Evaluador',
+      dataIndex: 'EVALUATOR_NAME',
+      key: 'EVALUATOR_NAME',
+      render: (value?: string) => value || 'N/A',
+    },
+    {
+      title: 'Periodo',
+      dataIndex: 'PERIOD',
+      key: 'PERIOD',
+    },
+    {
+      title: 'Calificación (%)',
+      dataIndex: 'OVERALL_SCORE',
+      key: 'OVERALL_SCORE',
+      render: (value?: number) =>
+        value === undefined || value === null
+          ? 'N/A'
+          : `${Number(value).toFixed(1)}%`,
+    },
+    {
+      title: 'Actualizado',
+      dataIndex: 'UPDATED_AT',
+      key: 'UPDATED_AT',
+      render: (value?: string) =>
+        value ? dayjs(value).format('DD/MM/YYYY HH:mm') : 'N/A',
+    },
+  ]
 
   const filterContent = (
     <>
@@ -189,23 +189,23 @@ const EvaluationPage: React.FC = () => {
         name={['FILTER', 'PERIOD__EQ']}
         labelCol={{ span: 24 }}
       >
-        <CustomSelect
-          allowClear
-          placeholder={'Periodo (YYYYWW)'}
-          options={periodOptions.map((period) => ({
-            label: period.label,
-            value: period.value,
-          }))}
-        />
+        <PeriodSelector />
       </CustomFormItem>
     </>
   )
+
+  const columnsMap = columns.reduce((acc, curr) => {
+    return {
+      ...acc,
+      [curr['dataIndex']]: { header: curr.title, render: curr.render },
+    }
+  }, {} as ColumnsMap)
 
   return (
     <>
       <CustomSpin spinning={isFetchingEvaluations || isUpdatingEvaluation}>
         <SmartTable
-          columns={tableColumns}
+          columns={columns}
           createText={'Nueva evaluación'}
           dataSource={evaluations}
           filter={filterContent}
@@ -219,8 +219,7 @@ const EvaluationPage: React.FC = () => {
           onUpdate={handleToggleState}
           onSearch={setSearchKey}
           rowKey={'EVALUATION_ID'}
-          columnsMap={undefined}
-          expandable={undefined}
+          columnsMap={columnsMap}
         />
       </CustomSpin>
 

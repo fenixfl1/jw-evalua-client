@@ -5,7 +5,9 @@ export interface Goal {
   START_DATE: string
   END_DATE: string
   WEIGHT: number
+  STATE: string
   SCOPE: 'individual' | 'module'
+  TARGET_VALUE: number
 }
 
 export interface CreateGoalPayload {
@@ -15,6 +17,7 @@ export interface CreateGoalPayload {
   END_DATE: string
   WEIGHT: number
   SCOPE: 'individual' | 'module'
+  DAILY_TARGETS?: GoalDailyTargetPayload[]
 }
 
 export interface AssignGoalToModulePayload {
@@ -22,6 +25,12 @@ export interface AssignGoalToModulePayload {
   MODULE_ID: number
   PERIOD: number
   TARGET_VALUE: number
+  DAILY_TARGETS?: GoalDailyTargetPayload[]
+}
+
+export interface GoalProgressContribution {
+  STAFF_ID: number
+  ACTUAL_VALUE: number
 }
 
 export interface PostGoalProgressPayload {
@@ -31,6 +40,12 @@ export interface PostGoalProgressPayload {
   ACTUAL_VALUE: number
   MODULE_ID?: number
   STAFF_ID?: number
+  CONTRIBUTIONS?: GoalProgressContribution[]
+}
+
+export interface GoalDailyTargetPayload {
+  TARGET_DATE: string
+  TARGET_VALUE: number
 }
 
 export interface ModuleSummaryDetail {
@@ -39,11 +54,14 @@ export interface ModuleSummaryDetail {
   ACTUAL_VALUE: number
   WEIGHT: number
   COMPLIANCE: number
-  UPDATED_AT?: string
+  UPDATED_AT?: string | null
   DESCRIPTION?: string
-  PERIOD?: number
   STATE?: string
-  MODULE_ID?: number
+  PROGRESS_LOGS?: GoalProgressLog[]
+  DAILY_TARGETS?: GoalDailyTargetPayload[]
+  TARGET_DATE: string
+  TARGET_VALUE_ACC: number
+  ACTUAL_VALUE_ACC: number
 }
 
 export interface ModuleSummary {
@@ -51,4 +69,11 @@ export interface ModuleSummary {
   PERIOD: number
   TOTAL_COMPLIANCE: number
   DETAILS: ModuleSummaryDetail[]
+}
+
+export interface GoalProgressLog {
+  GOAL_PROGRESS_ID: number
+  ACTUAL_VALUE: number
+  CREATED_AT: string | null
+  UPDATED_AT: string | null
 }

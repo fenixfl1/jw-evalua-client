@@ -3,14 +3,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGetPeriods } from 'src/hooks/use-get-periods'
 import { useEvaluationStore } from 'src/store/evaluation.store'
 import { useModuleStore } from 'src/store/module.store'
-import { useStaffStore } from 'src/store/staff.store'
 import { AdvancedCondition } from 'src/types/general'
 import { useGetPaginatedModulesMutation } from 'src/services/work_modules/useGetPaginatedModulesMutation'
-import { useGetPaginatedStaffMutation } from 'src/services/staff/userGetPaginatedStaffMutation'
 import { useGetCompetenciesQuery } from 'src/services/competencies/useGetCompetenciesQuery'
 import { useCreateEvaluationMutation } from 'src/services/evaluations/useCreateEvaluationMutation'
 import { useUpdateEvaluationMutation } from 'src/services/evaluations/useUpdateEvaluationMutation'
 import { useGetEvaluationQuery } from 'src/services/evaluations/useGetEvaluationQuery'
+import { useCheckEvaluationAvailabilityQuery } from 'src/services/evaluations/useCheckEvaluationAvailabilityQuery'
 import {
   CreateEvaluationPayload,
   EvaluationDetailPayload,
@@ -42,8 +41,8 @@ import CustomCollapse from 'src/components/custom/CustomCollapse'
 import CustomInput from 'src/components/custom/CustomInput'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import styled from 'styled-components'
-import useDebounce from 'src/hooks/use-debounce'
 import { getSessionInfo } from 'src/lib/session'
+import { useGetModuleMembersMutation } from 'src/services/work_modules/useGetModuleMembersMutation'
 
 type EvaluationFormMode = 'create' | 'edit'
 
@@ -92,8 +91,8 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   const [form] = Form.useForm<FormValues>()
   const details = Form.useWatch('DETAILS', form)
   const module = Form.useWatch('MODULE_ID', form)
-  const [searchStaffKey, setSearchStaffKey] = useState('')
-  const staffDebounce = useDebounce(searchStaffKey)
+  const staffId = Form.useWatch('STAFF_ID', form)
+  const period = Form.useWatch('PERIOD', form)
   const [activeKey, setActiveKey] = useState<string[]>(['0'])
   const [deletedDetails, setDeletedDetails] = useState<
     EvaluationDetailPayload[]
@@ -103,7 +102,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
   const { selectedEvaluation, setSelectedEvaluation } = useEvaluationStore()
   const { workModules } = useModuleStore()
-  const { staffList, setStaffList } = useStaffStore()
+  const { members } = useModuleStore()
   const { data: competencies = [], isFetching: isFetchingCompetencies } =
     useGetCompetenciesQuery(open)
   const competencyOptions = useMemo(
@@ -116,7 +115,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   )
 
   const { mutateAsync: fetchModules } = useGetPaginatedModulesMutation()
-  const { mutateAsync: fetchStaff } = useGetPaginatedStaffMutation()
+  const { mutateAsync: getMembers } = useGetModuleMembersMutation()
   const { mutateAsync: createEvaluation, isPending: isCreating } =
     useCreateEvaluationMutation()
   const { mutateAsync: updateEvaluation, isPending: isUpdating } =
@@ -125,54 +124,25 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
   const { isFetching: isFetchingEvaluation } = useGetEvaluationQuery(
     mode === 'edit' ? evaluationId : undefined
   )
+  const { data: evaluationAvailability, isFetching: isCheckingAvailability } =
+    useCheckEvaluationAvailabilityQuery({
+      staffId,
+      period,
+      excludeEvaluationId: mode === 'edit' ? evaluationId : undefined,
+      enabled: open,
+    })
 
   const handleSearchStaff = useCallback(() => {
-    const condition: AdvancedCondition[] = [
-      {
-        field: 'STATE',
-        operator: '=',
-        value: 'A',
+    if (!module) return
+
+    getMembers({
+      condition: {
+        MODULE_ID: module,
       },
-    ]
-
-    if (module) {
-      condition.push({
-        value: module,
-        operator: '=',
-        field: 'MODULE',
-      })
-    }
-
-    if (staffDebounce) {
-      condition.push({
-        value: staffDebounce,
-        field: 'FILTER',
-        operator: 'LIKE',
-      })
-    }
-
-    fetchStaff({ condition, page: 1, size: 50 })
-  }, [staffDebounce, module])
+    })
+  }, [module])
 
   useEffect(handleSearchStaff, [handleSearchStaff])
-
-  useEffect(() => {
-    return () => {
-      setStaffList({
-        data: [],
-        metadata: {
-          pagination: {
-            currentPage: 1,
-            totalPages: 0,
-            totalRows: 0,
-            count: 0,
-            pageSize: 0,
-            links: undefined,
-          },
-        },
-      })
-    }
-  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -180,7 +150,7 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
     const condition: AdvancedCondition[] = []
 
     fetchModules({ condition, page: 1, size: 100 }).catch(() => undefined)
-  }, [open, fetchModules, fetchStaff])
+  }, [open, fetchModules])
 
   useEffect(() => {
     const parsedDetails = (details ?? [])
@@ -289,13 +259,13 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
   const staffOptions = useMemo(
     () =>
-      staffList
+      members
         .filter((item) => item.USER_ID !== Number(getSessionInfo().userId))
         .map((staff) => ({
           value: staff.STAFF_ID,
           label: `${staff.STAFF_ID} - ${staff.NAME} ${staff.LAST_NAME}`,
         })),
-    [staffList]
+    [members]
   )
 
   const periodSelectOptions = useMemo(
@@ -306,6 +276,45 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
       })),
     [periodOptions]
   )
+
+  const evaluationAvailabilityAlert = useMemo(() => {
+    if (!staffId || !period) {
+      return null
+    }
+
+    if (isCheckingAvailability) {
+      return (
+        <CustomCol xs={24}>
+          <CustomFormItem label={' '} colon={false} {...labelColFullWidth}>
+            <CustomAlert
+              type="info"
+              message="Validando disponibilidad para el periodo seleccionado..."
+            />
+          </CustomFormItem>
+        </CustomCol>
+      )
+    }
+
+    if (!evaluationAvailability) {
+      return null
+    }
+
+    if (evaluationAvailability.available) {
+      return (
+        <CustomAlert
+          type="success"
+          message="Puedes continuar con la evaluación para este colaborador en el periodo seleccionado."
+        />
+      )
+    }
+
+    return (
+      <CustomAlert
+        type="error"
+        message="El colaborador ya cuenta con una evaluación registrada en el periodo seleccionado. No puedes continuar."
+      />
+    )
+  }, [staffId, period, isCheckingAvailability, evaluationAvailability])
 
   const loading = isCreating || isUpdating || isFetchingEvaluation
 
@@ -342,11 +351,11 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
     details: EvaluationDetailPayload[] = []
   ): EvaluationDetailPayload[] => {
     return details
-      .filter(
+      ?.filter(
         (detail) =>
           detail?.COMPETENCY_ID !== undefined && detail?.COMPETENCY_ID !== null
       )
-      .map((detail) => ({
+      ?.map((detail) => ({
         COMPETENCY_ID: Number(detail.COMPETENCY_ID),
         GOAL_STAFF_ID:
           detail.GOAL_STAFF_ID !== undefined && detail.GOAL_STAFF_ID !== null
@@ -408,13 +417,17 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
 
   const getItemLabel = useCallback(
     (name: number) => {
-      const item = competencies?.find(
-        (item) => item.COMPETENCY_ID === details[name].COMPETENCY_ID
-      )
+      try {
+        const record = competencies?.find(
+          (item) => item.COMPETENCY_ID === details?.[name]?.COMPETENCY_ID
+        )
 
-      return item?.NAME
+        return record?.NAME
+      } catch (error) {
+        errorHandler(error)
+      }
     },
-    [details]
+    [details, competencies]
   )
 
   return (
@@ -425,6 +438,13 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
       onCancel={onClose}
       onOk={handleSubmit}
       okText={mode === 'create' ? 'Crear evaluación' : 'Guardar cambios'}
+      okButtonProps={{
+        disabled:
+          !!staffId &&
+          !!period &&
+          (isCheckingAvailability ||
+            evaluationAvailability?.available === false),
+      }}
       confirmLoading={loading}
     >
       <CustomForm
@@ -459,7 +479,6 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
               rules={[{ required: true }]}
             >
               <CustomSelect
-                onSearch={setSearchStaffKey}
                 options={staffOptions}
                 placeholder={'Seleccionar Empleado'}
               />
@@ -478,8 +497,13 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
             </CustomFormItem>
           </CustomCol>
 
+          {evaluationAvailabilityAlert && (
+            <CustomCol xs={24}>{evaluationAvailabilityAlert}</CustomCol>
+          )}
+
           <CustomCol {...defaultBreakpoints}>
             <CustomFormItem
+              hidden
               label={'Calificación'}
               name={'OVERALL_SCORE'}
               initialValue={0}
@@ -558,13 +582,13 @@ const EvaluationForm: React.FC<EvaluationFormProps> = ({
                                       loading={isFetchingCompetencies}
                                       allowClear
                                       onSelect={(value) => {
-                                        const item = competencies.find(
+                                        const item = competencies?.find(
                                           (item) => item.COMPETENCY_ID === value
                                         )
 
                                         form.setFieldValue(
                                           [name, 'WEIGHT'] as never,
-                                          item.WEIGHT
+                                          item?.WEIGHT
                                         )
                                       }}
                                     />

@@ -16,7 +16,6 @@ import useDebounce from 'src/hooks/use-debounce'
 import { useGetPaginatedStaffMutation } from '../../../services/staff/userGetPaginatedStaffMutation'
 import { useStaffStore } from 'src/store/staff.store'
 import { AdvancedCondition, TransferData } from 'src/types/general'
-import { getTablePagination } from 'src/utils/table-pagination'
 import { useGetUserPaginationMutation } from 'src/services/users/useGetUserPaginationMutation'
 import { useUserStore } from 'src/store/user.store'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
@@ -38,13 +37,11 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
   const { modal, notification } = App.useApp()
   const [form] = Form.useForm()
   const [targetKeys, setTargetKeys] = useState<TransferProps['targetKeys']>([])
-  const [searchKey, setSearchKey] = useState('')
   const [searchUserKey, setSearchKeyUser] = useState('')
 
-  const debounceStaff = useDebounce(searchKey)
   const debounceUser = useDebounce(searchUserKey)
 
-  const { staffList, metadata: staffMetadata } = useStaffStore()
+  const { staffList } = useStaffStore()
   const { userList } = useUserStore()
 
   const { mutateAsync: createOrUpdateMembers } =
@@ -66,19 +63,14 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
         operator: '=',
       },
       {
-        value: debounceStaff,
-        field: 'FILTER',
-        operator: 'LIKE',
-      },
-      {
         value: true,
         field: 'USER_ID',
         operator: 'IS NULL',
       },
     ]
 
-    getStaff({ page: 1, size: 15, condition })
-  }, [debounceStaff])
+    getStaff({ page: 1, size: 200, condition })
+  }, [])
 
   const handleGetUser = useCallback(() => {
     const condition: AdvancedCondition[] = [
@@ -152,7 +144,6 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
     _dir,
     value
   ) => {
-    setSearchKey(value)
     form.setFieldsValue({ MEMBERS: value })
   }
 
@@ -162,8 +153,6 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
     moveKeys: TransferKey[]
   ) => {
     try {
-      // eslint-disable-next-line no-console
-      console.log({ targetKeys, direction, moveKeys })
       if (isEditing) {
         await createOrUpdateMembers({
           MODULE_ID: record.MODULE_ID,
@@ -185,6 +174,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
       open={open}
       onCancel={handleClose}
       onOk={handleFinish}
+      width={'550px'}
     >
       <CustomSpin spinning={isCreateModulePending || isUpdatePending}>
         <CustomDivider />
@@ -229,7 +219,10 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
                   targetKeys={targetKeys}
                   onChange={handleChangeMember}
                   onSearch={handleTransferSearch}
-                  pagination={getTablePagination(staffMetadata)}
+                  pagination={{
+                    pageSize: 7,
+                    showSizeChanger: true,
+                  }}
                 />
               </CustomFormItem>
             </CustomCol>

@@ -36,11 +36,7 @@ const Fallback: React.FC<FallbackProp> = ({
         height={height}
         justify={'center'}
       >
-        <CustomSpin
-          spinning
-          size={'large'}
-          tip={<img width={'90%'} src={'/assets/text.svg'} />}
-        />
+        <CustomSpin spinning size={'large'} />
       </CustomRow>
     </FallbackContainer>
   )

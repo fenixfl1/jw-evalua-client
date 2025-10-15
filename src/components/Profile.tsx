@@ -31,6 +31,7 @@ import queryClient from 'src/lib/query-client'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { useGetUserQuery } from 'src/services/users/useGetUserQuery'
 import { useUserStore } from 'src/store/user.store'
+import { useAppContext } from 'src/context/AppContext'
 
 const states: Record<string, { label: string; color: string }> = {
   A: { label: 'Activo', color: 'green' },
@@ -38,15 +39,23 @@ const states: Record<string, { label: string; color: string }> = {
   P: { label: 'Pendiente', color: 'blue' },
 }
 
-const AvatarContainer = styled(CustomCard)`
+const AvatarContainer = styled(CustomCard)<{ isDark: boolean }>`
   height: 150px;
   min-height: 150px;
   width: 100% !important;
   background-color: ${({ theme }) => theme.baseBgColor} !important;
-  background-image: url('/assets/logo3.png') !important;
+  background-image: url('/assets/profile-background.avif') !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
+
+  .ant-typography {
+    color: ${({ isDark }) => (isDark ? '#333' : undefined)};
+  }
+
+  .ant-typography-secondary {
+    color: ${({ isDark }) => (isDark ? 'rgba(157, 159, 160, .8)' : undefined)};
+  }
 
   .button-container {
     position: absolute;
@@ -66,6 +75,7 @@ const UserProfile: React.FC = () => {
     useState(false)
   const { user, setUser, profileVisibilityState, setProfileVisibilitySate } =
     useUserStore()
+  const { theme } = useAppContext()
 
   const { mutateAsync: changePassword, isPending: changePasswordIsPending } =
     useChangePasswordMutation()
@@ -257,7 +267,7 @@ const UserProfile: React.FC = () => {
       >
         <CustomSpin spinning={isUpdateUserPending}>
           <CustomRow width={'100%'} gap={10}>
-            <AvatarContainer>
+            <AvatarContainer isDark={theme === 'dark'}>
               <CustomRow gap={10} justify={'start'} align={'middle'}>
                 <CustomAvatar
                   shape={'square'}
@@ -266,7 +276,7 @@ const UserProfile: React.FC = () => {
                   src={getAvatarLink(user)}
                 />
                 <CustomSpace width={'max-content'} size={2}>
-                  <CustomText strong color="#000">
+                  <CustomText strong>
                     {user?.NAME} {user?.LAST_NAME}
                   </CustomText>
                   <CustomText type={'secondary'}>@{user?.USERNAME}</CustomText>

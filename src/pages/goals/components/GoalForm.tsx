@@ -1,132 +1,154 @@
 import React, { useEffect } from 'react'
-import { Modal, Form, Input, InputNumber, DatePicker, Select } from 'antd'
+import { Form } from 'antd'
+import CustomModal from 'src/components/custom/CustomModal'
+import CustomSpin from 'src/components/custom/CustomSpin'
+import CustomForm from 'src/components/custom/CustomFrom'
+import {
+  defaultBreakpoints,
+  formItemLayout,
+  labelColFullWidth,
+} from 'src/config/breakpoints'
+import CustomRow from 'src/components/custom/CustomRow'
+import CustomCol from 'src/components/custom/CustomCol'
+import CustomFormItem from 'src/components/custom/CustomFormItem'
+import CustomInput from 'src/components/custom/CustomInput'
+import { useErrorHandler } from 'src/hooks/use-error-handler'
+import { useCreateGoalMutation } from 'src/services/goals/useCreateGoalMutation'
+import { Goal } from 'src/services/goals/types'
+import CustomInputNumber from 'src/components/custom/CustomInputNumber'
+import CustomRangePicker from 'src/components/custom/CustomRangePicker'
 import dayjs from 'dayjs'
-import { TeamGoal } from './Goals'
+import { useCustomNotifications } from 'src/hooks/use-custom-notifications'
+import { useUpdateGoalMutation } from 'src/services/goals/useUpdateGoalMutation'
+import ConditionalComponent from 'src/components/ConditionalComponent'
 
-type Props = {
+interface GoalFormProps {
   open: boolean
-  initial?: TeamGoal
+  record?: Goal
   onCancel: () => void
-  onSubmit: (
-    values: Omit<TeamGoal, 'id' | 'groupId' | 'updatedAt' | 'periodName'> & {
-      id?: number
-    }
-  ) => void
 }
 
-const GoalForm: React.FC<Props> = ({ open, initial, onCancel, onSubmit }) => {
+const GoalForm: React.FC<GoalFormProps> = ({ open, record, onCancel }) => {
   const [form] = Form.useForm()
 
+  const { mutateAsync: createGoal, isPending: isCreatePending } =
+    useCreateGoalMutation()
+  const { mutateAsync: updateGoal, isPending: isUpdatePending } =
+    useUpdateGoalMutation()
+
+  const [errorHandler] = useErrorHandler()
+  const { successNotification } = useCustomNotifications()
+
   useEffect(() => {
-    if (initial) {
+    if (record) {
       form.setFieldsValue({
-        id: initial.id,
-        name: initial.name,
-        unit: initial.unit,
-        weight: initial.weight,
-        target: initial.target,
-        actual: initial.actual ?? 0,
-        owner: initial.owner,
-        periodId: initial.periodId,
-        status: initial.status,
-        dueDate: initial.dueDate ? dayjs(initial.dueDate) : undefined,
-        description: initial.description,
+        ...record,
+        FECHAS: [dayjs(record.START_DATE), dayjs(record.END_DATE)],
       })
-    } else {
-      form.resetFields()
     }
-  }, [initial, form])
+  }, [record])
+
+  const handleFinish = async () => {
+    try {
+      const values = await form.validateFields()
+
+      delete values.FECHAS
+
+      let description = 'Meta creada con éxito'
+      if (record?.GOAL_ID) {
+        await updateGoal({ ...values })
+        description = `Meta con id '${values.GOAL_ID}' actualizada con éxito`
+      } else {
+        await createGoal(values)
+      }
+      successNotification({
+        message: 'Operación exitosa',
+        description,
+      })
+      onCancel?.()
+    } catch (error) {
+      errorHandler(error)
+    }
+  }
 
   return (
-    <Modal
+    <CustomModal
       open={open}
-      title={initial ? 'Editar meta de equipo' : 'Nueva meta de equipo'}
+      title={record ? 'Editar meta de equipo' : 'Nueva meta de equipo'}
       onCancel={onCancel}
-      onOk={() => form.submit()}
-      okText="Guardar"
-      destroyOnClose
+      onOk={handleFinish}
+      okText={'Guardar'}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={(values) =>
-          onSubmit({
-            ...values,
-            dueDate: values.dueDate?.format('YYYY-MM-DD'),
-          })
-        }
-      >
-        <Form.Item name="id" hidden>
-          <input />
-        </Form.Item>
-
-        <Form.Item
-          label="Nombre de la meta"
-          name="name"
-          rules={[{ required: true, message: 'Ingresa el nombre' }]}
-        >
-          <Input placeholder="Ej. Aumentar producción mensual" />
-        </Form.Item>
-
-        <Form.Item label="Unidad" name="unit">
-          <Input placeholder="% / pzas / $" />
-        </Form.Item>
-
-        <Form.Item
-          label="Objetivo (target)"
-          name="target"
-          rules={[{ required: true, message: 'Ingresa el objetivo' }]}
-        >
-          <InputNumber min={0} step={0.01} style={{ width: '100%' }} />
-        </Form.Item>
-
-        <Form.Item label="Valor actual" name="actual" initialValue={0}>
-          <InputNumber min={0} step={0.01} style={{ width: '100%' }} />
-        </Form.Item>
-
-        <Form.Item label="Peso (%)" name="weight" initialValue={0}>
-          <InputNumber min={0} max={100} step={1} style={{ width: '100%' }} />
-        </Form.Item>
-
-        <Form.Item
-          label="Periodo"
-          name="periodId"
-          rules={[{ required: true, message: 'Selecciona el periodo' }]}
-        >
-          <Select
-            options={[
-              { value: 1, label: 'Q1 2025' },
-              { value: 2, label: 'Q2 2025' },
-            ]}
-            placeholder="Selecciona un periodo"
-          />
-        </Form.Item>
-
-        <Form.Item label="Responsable" name="owner">
-          <Input />
-        </Form.Item>
-
-        <Form.Item label="Fecha límite" name="dueDate">
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
-
-        <Form.Item label="Estado" name="status" initialValue="Activa">
-          <Select
-            options={[
-              { value: 'Activa', label: 'Activa' },
-              { value: 'En curso', label: 'En curso' },
-              { value: 'Atrasada', label: 'Atrasada' },
-              { value: 'Completada', label: 'Completada' },
-              { value: 'Archivada', label: 'Archivada' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item label="Descripción" name="description">
-          <Input.TextArea rows={3} />
-        </Form.Item>
-      </Form>
-    </Modal>
+      <CustomSpin spinning={isCreatePending || isUpdatePending}>
+        <CustomForm form={form} {...formItemLayout}>
+          <CustomRow justify={'end'}>
+            <ConditionalComponent condition={!!record?.GOAL_ID}>
+              <CustomFormItem label={'ID'} name={'GOAL_ID'}>
+                <CustomInput readOnly />
+              </CustomFormItem>
+            </ConditionalComponent>
+            <CustomFormItem
+              hidden
+              name={'START_DATE'}
+              rules={[{ required: true }]}
+            />
+            <CustomFormItem
+              hidden
+              name={'END_DATE'}
+              rules={[{ required: true }]}
+            />
+            <CustomCol xs={24}>
+              <CustomFormItem
+                label={'Descripción'}
+                name={'DESCRIPTION'}
+                rules={[{ required: true }]}
+                {...labelColFullWidth}
+              >
+                <CustomInput placeholder={'Descripción'} />
+              </CustomFormItem>
+            </CustomCol>
+            <CustomCol xs={24}>
+              <CustomFormItem
+                label={'Rango Fecha'}
+                name={'FECHAS'}
+                rules={[{ required: true }]}
+                {...labelColFullWidth}
+              >
+                <CustomRangePicker
+                  minDate={dayjs()}
+                  width={'100%'}
+                  placeholder={['Fecha inicio', 'Fecha Fin']}
+                  onChange={([start, end]) =>
+                    form.setFieldsValue({ START_DATE: start, END_DATE: end })
+                  }
+                />
+              </CustomFormItem>
+            </CustomCol>
+            <CustomCol {...defaultBreakpoints}>
+              <CustomFormItem
+                label={'Objetivo'}
+                name={'TARGET_VALUE'}
+                rules={[{ required: true }]}
+              >
+                <CustomInputNumber
+                  width={'100%'}
+                  format={{ format: 'default' }}
+                  placeholder={'Objetivo'}
+                />
+              </CustomFormItem>
+            </CustomCol>
+            <CustomCol {...defaultBreakpoints}>
+              <CustomFormItem label={'Peso %'} name={'WEIGHT'}>
+                <CustomInputNumber
+                  width={'100%'}
+                  format={{ format: 'percent' }}
+                />
+              </CustomFormItem>
+            </CustomCol>
+          </CustomRow>
+        </CustomForm>
+      </CustomSpin>
+    </CustomModal>
   )
 }
 

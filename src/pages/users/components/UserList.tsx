@@ -10,11 +10,13 @@ import CustomListItem from 'src/components/custom/CustomListItem'
 import CustomListItemMeta from 'src/components/custom/CustomListItemMeta'
 import { CustomLink, CustomText } from 'src/components/custom/CustomParagraph'
 import CustomSpace from 'src/components/custom/CustomSpace'
+import { ColumnsMap } from 'src/components/custom/CustomTable'
 import CustomTag from 'src/components/custom/CustomTag'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import { DISABLED_COLOR } from 'src/constants/colors'
 import { User } from 'src/services/users/users.types'
 import { useUserStore } from 'src/store/user.store'
+import formatter from 'src/utils/formatter'
 import { getAvatarLink } from 'src/utils/get-avatar-link'
 import { getTablePagination } from 'src/utils/table-pagination'
 
@@ -25,6 +27,31 @@ interface UserListProps {
 const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
   const [, setSearchParam] = useSearchParams()
   const { userList, metadata } = useUserStore()
+
+  const columnsMap: ColumnsMap<User> = {
+    USER_ID: 'Código',
+    USERNAME: {
+      header: 'Usuario',
+      render: (value) => `@${value}`,
+    },
+    NAME: 'Nombre',
+    LAST_NAME: 'Apellido',
+    EMAIL: 'Correo',
+    PHONE: {
+      header: 'Teléfono',
+      render: (value: string) => formatter({ value, format: 'phone' }),
+    },
+    ROLES: 'Rol',
+    CREATED_AT: 'F.Registro',
+    CREATED_BY: 'Creado por',
+    STATE: {
+      header: 'Estado',
+      render: (value) => {
+        const state = typeof value === 'string' ? value : ''
+        return state === 'A' ? 'Activo' : 'Inactivo'
+      },
+    },
+  }
 
   const renderItem: ListProps<User>['renderItem'] = (item) => (
     <CustomListItem
@@ -51,6 +78,7 @@ const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
         title={
           <CustomText disabled={item.STATE === 'I'}>
             <CustomLink
+              disabled={item.STATE === 'I'}
               delete={item.STATE === 'I'}
               onClick={() => setSearchParam({ username: item.USERNAME })}
             >{`${item.NAME} ${item.LAST_NAME}`}</CustomLink>
@@ -61,10 +89,24 @@ const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
             direction={'horizontal'}
             split={item.ROLES ? <CustomDivider type={'vertical'} /> : undefined}
           >
-            <span>@{item.USERNAME}</span>
+            <CustomText
+              style={{ fontSize: 12 }}
+              disabled={item.STATE === 'I'}
+              delete={item.STATE === 'I'}
+            >
+              @{item.USERNAME}
+            </CustomText>
             <CustomSpace direction={'horizontal'}>
               {item.ROLES?.split(',').map((rol) => (
-                <CustomTag>{rol}</CustomTag>
+                <CustomTag>
+                  <CustomText
+                    style={{ fontSize: 12 }}
+                    disabled={item.STATE === 'I'}
+                    delete={item.STATE === 'I'}
+                  >
+                    {rol}
+                  </CustomText>
+                </CustomTag>
               ))}
             </CustomSpace>
           </CustomSpace>
@@ -75,6 +117,8 @@ const UserList: React.FC<UserListProps> = ({ onUpdate }) => {
 
   return (
     <CustomList
+      columnsMap={columnsMap}
+      exportOptions={{ title: 'Lista de usuarios', orientation: 'landscape' }}
       dataSource={userList}
       renderItem={renderItem}
       pagination={getTablePagination(metadata)}

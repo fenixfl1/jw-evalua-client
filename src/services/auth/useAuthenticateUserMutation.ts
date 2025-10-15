@@ -34,7 +34,7 @@ export function useAuthenticateUserMutation(applyNextUrl = true) {
 
   return useCustomMutation<UserData, LoginPayload>({
     initialData: <UserData>{},
-    mutationKey: ['login-user'],
+    mutationKey: ['auth', 'login-user'],
     onSuccess: handleOnSuccess,
     mutationFn: async (payload) => {
       const {

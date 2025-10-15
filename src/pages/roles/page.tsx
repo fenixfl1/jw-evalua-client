@@ -17,6 +17,7 @@ import { getConditionFromForm } from 'src/utils/get-condition-from-form'
 import { useUpdateRoleMutation } from 'src/services/roles/useUpdateRoleMutation'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { useGetOneRoleQuery } from 'src/services/roles/useGetOneRoleQuery'
+import { ColumnsMap } from 'src/components/custom/CustomTable'
 
 const initialFilter = {
   FILTER: {
@@ -116,6 +117,18 @@ const RolesPage: React.FC = () => {
     },
   ]
 
+  const columnsMap: ColumnsMap = {
+    ROLE_ID: 'Código',
+    NAME: 'Nombre',
+    DESCRIPTION: 'Descripción',
+    CREATED_AT: 'F. Creación',
+    CREATOR: 'Creador',
+    STATE: {
+      header: 'Estado',
+      render: (value) => (value === 'A' ? 'Activo' : 'Inactivo'),
+    },
+  }
+
   const filter = (
     <CustomRow>
       <CustomCol xs={24}>
@@ -147,6 +160,7 @@ const RolesPage: React.FC = () => {
         onUpdate={handleChangeState}
         filter={filter}
         initialFilter={initialFilter}
+        columnsMap={columnsMap}
       />
       <ConditionalComponent condition={rolesModalState}>
         <RolesForm

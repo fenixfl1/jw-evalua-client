@@ -13,6 +13,7 @@ import {
   StopOutlined,
 } from '@ant-design/icons'
 import CustomTable, { ColumnsMap } from './custom/CustomTable'
+import { ExportFormValue } from './ExportOptions'
 import { getTablePagination } from 'src/utils/table-pagination'
 import CustomCard from './custom/CustomCard'
 import CustomCol from './custom/CustomCol'
@@ -24,12 +25,16 @@ import CustomSpin from './custom/CustomSpin'
 import CustomPopover from './custom/CustomPopover'
 import FilterTemplate from './FilterTemplate'
 import CustomDivider from './custom/CustomDivider'
+import { useAppContext } from 'src/context/AppContext'
 
 interface SmartTableProps {
+  bordered?: boolean
   columns?: ColumnsType<any>
+  columnsMap?: ColumnsMap
   createText?: string
   dataSource?: unknown[]
   expandable?: TableProps['expandable']
+  exportable?: boolean
   filter?: React.ReactNode
   form?: FormInstance
   initialFilter?: Record<string, unknown>
@@ -40,15 +45,16 @@ interface SmartTableProps {
   onEdit?: (record: any) => void
   onSearch?: (value: string) => void
   onUpdate?: (record: any) => void
+  rowKey?: string
   searchPlaceholder?: string
   showActions?: boolean
-  rowKey?: string
   showStates?: boolean
-  exportable?: boolean
-  columnsMap?: ColumnsMap
+  exportInitialValues?: Partial<ExportFormValue>
+  header?: React.ReactNode
 }
 
 const SmartTable: React.FC<SmartTableProps> = ({
+  bordered = false,
   columns: _columns,
   columnsMap,
   createText = 'Crear',
@@ -68,7 +74,10 @@ const SmartTable: React.FC<SmartTableProps> = ({
   searchPlaceholder = 'Buscar...',
   showActions = true,
   showStates = true,
+  exportInitialValues,
+  header,
 }) => {
+  const { theme } = useAppContext()
   const actions: ColumnsType<unknown> = [
     {
       width: '5%',
@@ -160,22 +169,31 @@ const SmartTable: React.FC<SmartTableProps> = ({
                     </CustomPopover>
                   </CustomTooltip>
                 </ConditionalComponent>
-                <CustomCol xs={14}>
-                  <CustomRow justify={'end'} gap={5} wrap={false}>
-                    <CustomSearch
-                      width={'80%'}
-                      placeholder={searchPlaceholder}
-                      onChange={(e) => onSearch?.(e.target.value)}
-                    />
-                    <CustomButton
-                      icon={<PlusOutlined />}
-                      type={'primary'}
-                      onClick={onCreate}
-                    >
-                      {createText}
-                    </CustomButton>
-                  </CustomRow>
-                </CustomCol>
+                <ConditionalComponent
+                  condition={!!header}
+                  fallback={
+                    <CustomCol xs={14}>
+                      <CustomRow justify={'end'} gap={5} wrap={false}>
+                        <CustomSearch
+                          width={'80%'}
+                          placeholder={searchPlaceholder}
+                          onChange={(e) => onSearch?.(e.target.value)}
+                        />
+                        <ConditionalComponent condition={!!onCreate}>
+                          <CustomButton
+                            icon={<PlusOutlined />}
+                            type={'primary'}
+                            onClick={onCreate}
+                          >
+                            {createText}
+                          </CustomButton>
+                        </ConditionalComponent>
+                      </CustomRow>
+                    </CustomCol>
+                  }
+                >
+                  <>{header}</>
+                </ConditionalComponent>
               </CustomRow>
             </CustomCol>
 
@@ -187,8 +205,12 @@ const SmartTable: React.FC<SmartTableProps> = ({
               onChange={onChange}
               pagination={getTablePagination(metadata)}
               columnsMap={columnsMap}
+              bordered={bordered}
+              exportInitialValues={exportInitialValues}
               rowClassName={(record) =>
-                record.STATE === 'I' ? 'custom-table-row-disabled' : undefined
+                record.STATE === 'I'
+                  ? `custom-table-row-disabled-${theme}`
+                  : undefined
               }
             />
           </CustomSpace>

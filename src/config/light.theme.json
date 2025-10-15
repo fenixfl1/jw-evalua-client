@@ -1,7 +1,7 @@
 {
   "token": {
     "borderRadius": 5,
-    "colorPrimary": "#1564bf",
+    "colorPrimary": "#1890ff",
     "colorBgLayout": "#f8faff",
     "boxShadow": "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)",
     "colorBgContainer": "#ffffff"
@@ -10,19 +10,15 @@
     "Menu": {
       "lineWidth": 0,
       "fontSize": 14,
-      "itemSelectedBg": "rgba(22,119,255,0.49)",
-      "itemColor": "rgb(255,255,255)",
-      "itemBg": "rgb(21,100,191)",
-      "itemSelectedColor": "rgb(255,255,255)",
-      "groupTitleColor": "rgba(0,0,0,0.95)"
+      "itemBg": "#f7faff"
     },
     "Typography": {
       "fontSize": 14,
       "colorText": "rgb(0,0,0)"
     },
     "Layout": {
-      "headerBg": "#1564bf",
-      "siderBg": "#1564bf"
+      "headerBg": "#1890ff",
+      "siderBg": "#f7faff"
     },
     "Form": {
       "itemMarginBottom": 12

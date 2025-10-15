@@ -45,9 +45,6 @@ export function useGetDashboardActivityMutation() {
           metadata: { pagination: Metadata }
         }>(url)
 
-        // eslint-disable-next-line no-console
-        console.log({ response })
-
         const items = response.data?.data?.['items'] ?? []
         const metadata = response.data?.metadata ?? emptyActivity.metadata
 

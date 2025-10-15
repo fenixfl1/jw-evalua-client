@@ -1,12 +1,17 @@
 import { AdvancedCondition } from 'src/types/general'
 
 export const operatorAlias = {
-  EQ: '=',
   BETWEEN: 'BETWEEN',
-  NULL: 'IS NULL',
-  LIKE: 'LIKE',
+  EQ: '=',
+  EXCLUDE: '!=',
+  GT: '>',
+  GTE: '>=',
   IN: 'IN',
+  LIKE: 'LIKE',
+  LT: '<',
+  LTE: '<=',
   NOT_IN: 'NOT INT',
+  NULL: 'IS NULL',
 }
 
 export function getConditionFromForm<
@@ -15,8 +20,13 @@ export function getConditionFromForm<
   const condition: AdvancedCondition[] = []
 
   Object.entries(record).forEach(([key, value]) => {
-    const [field, flag] = key.split('__')
+    const [fields, flag] = key.split('__')
     const operator = operatorAlias[flag]
+
+    let field: string | string[] = fields
+    if (fields.includes('&')) {
+      field = fields.split('&')
+    }
 
     if (value) {
       condition.push({
