@@ -179,7 +179,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, user }) => {
                   {...labelColFullWidth}
                 >
                   <CustomSelect
-                    // disabled={!!user}
+                    disabled={!!user}
                     onSearch={setSearchKey}
                     loading={isGetStaffPending}
                     placeholder={'Seleccionar empleado'}
