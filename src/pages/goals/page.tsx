@@ -145,6 +145,7 @@ const Page: React.FC = () => {
       dataIndex: 'GOAL_ID',
       key: 'GOAL_ID',
       title: 'ID',
+      align: 'center',
     },
     {
       dataIndex: 'DESCRIPTION',

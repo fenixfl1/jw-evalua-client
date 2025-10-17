@@ -33,6 +33,12 @@ const DonutWrapper = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+
+  .recharts-responsive-container,
+  .recharts-wrapper,
+  .recharts-surface {
+    overflow: visible !important;
+  }
 `
 
 const ContentWrapper = styled.div`
@@ -149,7 +155,7 @@ const renderActiveShape = ({
         textAnchor={textAnchor}
         fill="#999"
       >
-        {`Participaci\u00f3n: ${participation}`}
+        {`Participación: ${participation}`}
       </text>
     </g>
   )

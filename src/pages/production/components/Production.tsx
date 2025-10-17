@@ -419,7 +419,9 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
       key: 'TARGET_DATE',
       title: 'Día',
       width: '13%',
-      render: dayFormat,
+      render: (value) => (
+        <span style={{ marginLeft: '10px' }}>{dayFormat(value)}</span>
+      ),
     },
     {
       dataIndex: 'DESCRIPTION',

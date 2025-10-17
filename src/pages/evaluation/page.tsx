@@ -134,7 +134,7 @@ const EvaluationPage: React.FC = () => {
       title: 'ID',
       dataIndex: 'EVALUATION_ID',
       key: 'EVALUATION_ID',
-      width: 90,
+      align: 'center',
     },
     {
       title: 'Modulo',

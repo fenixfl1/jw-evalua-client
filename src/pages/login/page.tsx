@@ -14,23 +14,22 @@ import { useErrorHandler } from '../../hooks/use-error-handler'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
 import CustomCard from 'src/components/custom/CustomCard'
 import { useNavigate } from 'react-router-dom'
+import { useAppContext } from 'src/context/AppContext'
 
-const Layout = styled.div`
+const Layout = styled.div<{ isDark: boolean }>`
   height: 100vh !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(
+  background: ${({ isDark }) =>
+    isDark
+      ? '#333'
+      : `radial-gradient(
     circle at 30% 30%,
     #ffe0ec,
     #e9f7ff 50%,
     #eaf7ef 100%
-  );
-  /* background: linear-gradient(135deg, #dff9e5, #e4f4ff, #ece6ff); */
-  /* background: linear-gradient(135deg, #ffd6e7, #e6d9ff, #d6f0ff); */
-  /* background-image: url('assets/main-background.webp');
-  background-repeat: no-repeat;
-  background-size: cover; */
+  )`};
 `
 
 const Card = styled(CustomCard)`
@@ -55,6 +54,8 @@ const Login = () => {
   const [form] = useForm<LoginForm>()
   const [remember, setRemember] = useState<boolean>()
 
+  const { theme } = useAppContext()
+
   const { reset } = useMenuOptionStore()
 
   const { mutateAsync: authenticateUser, isPending } =
@@ -71,7 +72,7 @@ const Login = () => {
   }
 
   return (
-    <Layout>
+    <Layout isDark={theme === 'dark'}>
       <CustomCol xs={24} sm={14} md={10} lg={8} xl={6}>
         <Card>
           <CustomRow justify={'center'} align={'middle'} height={'100%'}>

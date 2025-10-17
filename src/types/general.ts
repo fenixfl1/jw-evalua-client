@@ -142,4 +142,5 @@ export interface TransferData {
   title: string
   description: string
   chosen: boolean
+  moduleId?: string
 }

@@ -28,6 +28,7 @@ import { useGetPaginatedModulesMutation } from 'src/services/work_modules/useGet
 const initialFilter = {
   FILTER: {
     STATE__IN: ['A'],
+    MODULE_ID__EQ: undefined,
     CREATED_AT__BETWEEN: undefined,
   },
 }
@@ -60,8 +61,8 @@ const EmployeesPage: React.FC = () => {
       value: item.MODULE_ID,
     }))
 
-    arr.push({ label: 'TODOS', value: false } as never)
-    arr.push({ label: 'SIN MÓDULO', value: true } as never)
+    arr.push({ label: 'Todos lo módulos', value: false } as never)
+    arr.push({ label: 'Sí módulo', value: true } as never)
 
     return arr
   }, workModules)
@@ -159,9 +160,8 @@ const EmployeesPage: React.FC = () => {
     {
       dataIndex: 'STAFF_ID',
       key: 'STAFF_ID',
-      title: 'Código',
+      title: 'ID',
       align: 'center',
-      width: '5%',
     },
     {
       dataIndex: 'NAME',
@@ -183,6 +183,11 @@ const EmployeesPage: React.FC = () => {
       dataIndex: 'EMAIL',
       key: 'EMAIL',
       title: 'Correo',
+    },
+    {
+      dataIndex: 'DESC_MODULE',
+      key: 'DESC_MODULE',
+      title: 'Módulo',
     },
     {
       dataIndex: 'CREATED_AT',

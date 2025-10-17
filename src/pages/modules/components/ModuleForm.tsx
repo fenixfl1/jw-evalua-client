@@ -25,6 +25,7 @@ import { useCreateOrUpdateModuleMemberMutation } from 'src/services/work_modules
 import { TransferKey } from 'antd/lib/transfer/interface'
 import { TransferDirection } from 'antd/lib/transfer'
 import { useUpdateModuleMutation } from 'src/services/work_modules/useUpdateModuleMutation'
+import CustomCheckbox from 'src/components/custom/CustomCheckbox'
 
 interface ModuleFormProps {
   open: boolean
@@ -36,6 +37,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
   const [errorHandler] = useErrorHandler()
   const { modal, notification } = App.useApp()
   const [form] = Form.useForm()
+  const withoutModule = Form.useWatch('WITHOUT_MODULE', form) ?? true
   const [targetKeys, setTargetKeys] = useState<TransferProps['targetKeys']>([])
   const [searchUserKey, setSearchKeyUser] = useState('')
 
@@ -98,21 +100,102 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
     setTargetKeys(record.MEMBERS?.map((m) => String(m.STAFF_ID)))
   }, [record])
 
+  const availableStaff = useMemo(() => {
+    if (!withoutModule) {
+      return staffList
+    }
+
+    return staffList.filter((staff) => {
+      if (staff.MODULE_ID == null) {
+        return true
+      }
+      if (!isEditing) {
+        return false
+      }
+
+      return staff.MODULE_ID === record?.MODULE_ID
+    })
+  }, [staffList, withoutModule, isEditing, record?.MODULE_ID])
+
   const dataSource: TransferData[] = useMemo(() => {
-    return staffList.map(
-      (staff): TransferData => ({
-        chosen: targetKeys?.includes(staff.STAFF_ID),
-        key: staff.STAFF_ID?.toString(),
-        description: staff?.['FILTER'],
+    const map = new Map<string, TransferData>()
+
+    availableStaff.forEach((staff) => {
+      const key = staff.STAFF_ID?.toString()
+
+      if (!key) {
+        return
+      }
+
+      map.set(key, {
+        chosen: targetKeys?.includes(key) ?? false,
+        key,
+        description: staff?.['FILTER'] ?? '',
         title: `${staff.NAME} ${staff.LAST_NAME}`,
+        moduleId: staff.MODULE_ID != null ? String(staff.MODULE_ID) : undefined,
       })
-    )
-  }, [staffList, targetKeys])
+    })
+
+    if (isEditing) {
+      record?.MEMBERS?.forEach((member) => {
+        const key = member.STAFF_ID?.toString()
+        if (!key || map.has(key)) {
+          return
+        }
+
+        map.set(key, {
+          chosen: targetKeys?.includes(key) ?? false,
+          key,
+          description: '',
+          title: `${member.NAME} ${member.LAST_NAME}`,
+          moduleId:
+            record?.MODULE_ID != null ? String(record.MODULE_ID) : undefined,
+        })
+      })
+    }
+
+    return Array.from(map.values())
+  }, [
+    availableStaff,
+    isEditing,
+    record?.MEMBERS,
+    record?.MODULE_ID,
+    targetKeys,
+  ])
+
+  const filterTransferOption = useCallback<
+    NonNullable<TransferProps['filterOption']>
+  >(
+    (inputValue, option) => {
+      const search = inputValue.trim().toLowerCase()
+      if (!search) {
+        return true
+      }
+
+      const item = option as TransferData
+      const title = item.title?.toLowerCase?.() ?? ''
+      const description = item.description?.toLowerCase?.() ?? ''
+
+      if (title.includes(search) || description.includes(search)) {
+        return true
+      }
+
+      const isInLeftList = !(targetKeys ?? []).includes(item.key)
+      if (!isInLeftList) {
+        return false
+      }
+
+      return item.moduleId?.toLowerCase?.().includes(search) ?? false
+    },
+    [targetKeys]
+  )
 
   const handleFinish = async () => {
     try {
       const data = await form.validateFields()
       let message = ''
+
+      delete data.WITHOUT_MODULE
 
       if (isEditing) {
         delete data.MEMBERS
@@ -215,6 +298,25 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
             <CustomCol xs={24}>
               <CustomFormItem label={' '} colon={false} name={'MEMBERS'}>
                 <CustomTransfer
+                  filterOption={filterTransferOption}
+                  titles={[
+                    <CustomFormItem
+                      initialValue={true}
+                      name={'WITHOUT_MODULE'}
+                      valuePropName="checked"
+                      getValueFromEvent={(event) => {
+                        if (event.target) {
+                          return event.target.checked
+                        }
+
+                        return event
+                      }}
+                    >
+                      <CustomCheckbox checked={withoutModule}>
+                        Sin módulo
+                      </CustomCheckbox>
+                    </CustomFormItem>,
+                  ]}
                   dataSource={dataSource}
                   targetKeys={targetKeys}
                   onChange={handleChangeMember}

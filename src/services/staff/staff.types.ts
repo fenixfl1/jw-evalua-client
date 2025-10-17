@@ -12,6 +12,7 @@ export interface Staff {
   CREATED_BY?: number
   STATE?: string
   USER_ID?: number
+  MODULE_ID?: number | null
 }
 
 export interface IdentityDocumentValidationResult {
