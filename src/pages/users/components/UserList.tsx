@@ -107,9 +107,9 @@ const UserList: React.FC<UserListProps> = ({ onUpdate, onEdit }) => {
             </CustomText>
             <CustomSpace direction={'horizontal'}>
               {item.ROLES?.split(',').map((rol) => (
-                <CustomTag>
+                <CustomTag color={'success'}>
                   <CustomText
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 12, color: '#fffff' }}
                     disabled={item.STATE === 'I'}
                     delete={item.STATE === 'I'}
                   >

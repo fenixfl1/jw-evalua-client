@@ -21,11 +21,15 @@ export function getConditionFromForm<
 
   Object.entries(record).forEach(([key, value]) => {
     const [fields, flag] = key.split('__')
-    const operator = operatorAlias[flag]
+    let operator = operatorAlias[flag]
 
     let field: string | string[] = fields
     if (fields.includes('&')) {
       field = fields.split('&')
+    }
+
+    if (typeof value === 'boolean' && flag !== 'NULL') {
+      operator = 'IS NULL'
     }
 
     if (value) {

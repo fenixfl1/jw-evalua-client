@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Form } from 'antd'
 import useDebounce from 'src/hooks/use-debounce'
 import ConditionalComponent from 'src/components/ConditionalComponent'
@@ -21,6 +21,9 @@ import CustomRangePicker from 'src/components/custom/CustomRangePicker'
 import CustomCol from 'src/components/custom/CustomCol'
 import dayjs from 'dayjs'
 import { getConditionFromForm } from 'src/utils/get-condition-from-form'
+import CustomSelect from 'src/components/custom/CustomSelect'
+import { useModuleStore } from 'src/store/module.store'
+import { useGetPaginatedModulesMutation } from 'src/services/work_modules/useGetPaginatedModulesMutation'
 
 const initialFilter = {
   FILTER: {
@@ -37,6 +40,8 @@ const EmployeesPage: React.FC = () => {
   const [employeesModalState, setEmployeesModalState] = useState<boolean>()
   const [searchKey, setSearchKey] = useState<string>('')
   const debounce = useDebounce(searchKey)
+  const [searchModuleKey, setSearchModuleKey] = useState('')
+  const debounceModule = useDebounce(searchModuleKey)
 
   const { metadata, staffList } = useStaffStore()
 
@@ -45,6 +50,43 @@ const EmployeesPage: React.FC = () => {
   const { data: staff } = useGetOneStaffQuery(staffId)
   const { mutateAsync: updateStaff, isPending: isUpdatePending } =
     useUpdateStaffMutation()
+  const { mutate: getModules } = useGetPaginatedModulesMutation()
+
+  const { workModules } = useModuleStore()
+
+  const moduleOptions = useMemo(() => {
+    const arr = workModules.map((item) => ({
+      label: item.DESCRIPTION,
+      value: item.MODULE_ID,
+    }))
+
+    arr.push({ label: 'TODOS', value: false } as never)
+    arr.push({ label: 'SIN MÓDULO', value: true } as never)
+
+    return arr
+  }, workModules)
+
+  const handleGetModules = useCallback(() => {
+    const condition: AdvancedCondition[] = [
+      { value: 'A', field: 'STATE', operator: '=' },
+    ]
+
+    if (debounceModule) {
+      condition.push({
+        value: debounceModule,
+        field: 'FILTER',
+        operator: 'LIKE',
+      })
+    }
+
+    getModules({
+      page: 1,
+      size: 10,
+      condition,
+    })
+  }, [debounceModule])
+
+  useEffect(handleGetModules, [handleGetModules])
 
   const handleSearch = useCallback(
     (page = metadata.currentPage, size = metadata.pageSize) => {
@@ -166,7 +208,7 @@ const EmployeesPage: React.FC = () => {
           name={['FILTER', 'STATE__IN']}
           labelCol={{ span: 24 }}
         >
-          <StateSelector />
+          <StateSelector allowClear={false} />
         </CustomFormItem>
       </CustomCol>
       <CustomCol xs={24}>
@@ -176,6 +218,19 @@ const EmployeesPage: React.FC = () => {
           labelCol={{ span: 24 }}
         >
           <CustomRangePicker width={'100%'} maxDate={dayjs()} />
+        </CustomFormItem>
+      </CustomCol>
+      <CustomCol xs={24}>
+        <CustomFormItem
+          label={'Módulo'}
+          name={['FILTER', 'MODULE_ID__EQ']}
+          labelCol={{ span: 24 }}
+        >
+          <CustomSelect
+            onSearch={setSearchModuleKey}
+            placeholder={'Seleccionar Módulo'}
+            options={moduleOptions}
+          />
         </CustomFormItem>
       </CustomCol>
     </CustomRow>

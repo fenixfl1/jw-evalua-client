@@ -20,9 +20,17 @@ const Layout = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('assets/main-background.webp');
+  background: radial-gradient(
+    circle at 30% 30%,
+    #ffe0ec,
+    #e9f7ff 50%,
+    #eaf7ef 100%
+  );
+  /* background: linear-gradient(135deg, #dff9e5, #e4f4ff, #ece6ff); */
+  /* background: linear-gradient(135deg, #ffd6e7, #e6d9ff, #d6f0ff); */
+  /* background-image: url('assets/main-background.webp');
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: cover; */
 `
 
 const Card = styled(CustomCard)`

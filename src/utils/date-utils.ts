@@ -18,7 +18,7 @@ type StrDate = string | undefined
 
 export const logDate = (date: StrDate): string => {
   if (!date) return ''
-  return capitalize(moment(date).format(LOG_DATE_FORMAT))
+  return capitalize(dayjs(date).format(LOG_DATE_FORMAT))
 }
 
 export const dateTime = (date: StrDate): string => {
