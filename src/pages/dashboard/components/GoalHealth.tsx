@@ -14,6 +14,13 @@ import styled from 'styled-components'
 
 const formatNumber = (value: number): string => value.toLocaleString('es-DO')
 
+const formatHours = (value?: number | null): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/D'
+  }
+  return `${Number(value).toFixed(1)} h`
+}
+
 const GOAL_GAUGE_COLORS = ['#52c41a', '#d9d9d9']
 
 const DonutCenter = styled.div`
@@ -22,18 +29,30 @@ const DonutCenter = styled.div`
   pointer-events: none;
 `
 
+const GoalHealthContainer = styled.div`
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`
+
 const DonutWrapper = styled.div`
   position: relative;
-  height: 260px;
+  height: 280px;
+  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 `
 
 const LegendList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 8px;
 `
 
 interface GoalHealthProps {
@@ -44,119 +63,141 @@ interface GoalHealthProps {
   }[]
 }
 
-const GoalHealth: React.FC<GoalHealthProps> = ({ dataSource, summary }) => {
-  const goalCompliance = useMemo(
-    () => summary.goalComplianceByModule,
-    [summary.goalComplianceByModule]
-  )
+const GoalHealth: React.FC<GoalHealthProps> = ({
+  dataSource = [],
+  summary,
+}) => {
+  const totals = summary.goalProductivity.totals
 
-  const goalComplianceRanking = useMemo(
+  const gaugeData = useMemo(
     () =>
-      goalCompliance
-        .map((item) => ({
-          module: item.moduleName || 'Sin módulo',
-          compliance: item.compliance ?? 0,
-          target: Number(item.targetValue ?? 0),
-          actual: Number(item.actualValue ?? 0),
-        }))
-        .sort((a, b) => (b.compliance ?? 0) - (a.compliance ?? 0))
-        .slice(0, 5),
-    [goalCompliance]
+      dataSource && dataSource.length
+        ? dataSource
+        : [
+            { name: 'Completadas', value: totals.completedGoals },
+            {
+              name: 'Pendientes',
+              value: Math.max(0, totals.totalGoals - totals.completedGoals),
+            },
+          ],
+    [dataSource, totals.completedGoals, totals.totalGoals]
   )
 
-  const goalComplianceAverageValue = useMemo(
-    () =>
-      Math.max(
-        0,
-        Math.min(100, Number(summary.kpis.goalComplianceAverage ?? 0))
-      ),
-    [summary.kpis.goalComplianceAverage]
-  )
-
-  const goalComplianceAverageLabel =
-    summary.kpis.goalComplianceAverage !== null
+  const completionRateLabel =
+    totals.completionRate !== null
       ? formatter({
-          value: summary.kpis.goalComplianceAverage,
+          value: totals.completionRate,
           format: 'percentage',
           fix: 1,
         })
       : 'N/D'
+
+  const moduleRanking = useMemo(
+    () =>
+      summary.goalComplianceByModule
+        .map((item) => ({
+          module: item.moduleName || 'Sin modulo',
+          completionRate: item.completionRate ?? 0,
+          goalsCompleted: item.goalsCompleted,
+          goalsAssigned: item.goalsAssigned,
+          timeEfficiency: item.timeEfficiency,
+        }))
+        .sort((a, b) => (b.completionRate ?? 0) - (a.completionRate ?? 0))
+        .slice(0, 5),
+    [summary.goalComplianceByModule]
+  )
+
+  const hasGoalData = totals.totalGoals > 0 || moduleRanking.length > 0
+
   return (
     <>
       <CustomDivider>
         <CustomTitle level={5}>Salud de metas</CustomTitle>
       </CustomDivider>
       <ConditionalComponent
-        condition={
-          summary.kpis.activeGoals > 0 || goalComplianceRanking.length > 0
-        }
+        condition={hasGoalData}
         fallback={<Empty description="Sin metas registradas" />}
       >
-        <CustomRow gutter={[16, 16]} align="middle">
-          <CustomCol xs={24} md={12}>
-            <DonutWrapper>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={dataSource}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius="70%"
-                    outerRadius="90%"
-                    startAngle={90}
-                    endAngle={450}
-                    paddingAngle={2}
+        <GoalHealthContainer>
+          <CustomRow gutter={[16, 16]} align="middle" style={{ height: '100%' }}>
+            <CustomCol xs={24} md={12}>
+              <DonutWrapper>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={gaugeData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="70%"
+                      outerRadius="90%"
+                      startAngle={90}
+                      endAngle={450}
+                      paddingAngle={2}
+                    >
+                      {gaugeData.map((entry, index) => (
+                        <Cell
+                          key={entry.name}
+                          fill={GOAL_GAUGE_COLORS[index] || '#d9d9d9'}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <DonutCenter>
+                  <CustomTitle level={3}>{completionRateLabel}</CustomTitle>
+                  <CustomText type="secondary">
+                    {formatNumber(totals.completedGoals)} /{' '}
+                    {formatNumber(totals.totalGoals)} metas
+                  </CustomText>
+                  <CustomText type="secondary">
+                    Tiempo real prom. {formatHours(totals.averageActualTime)}
+                  </CustomText>
+                </DonutCenter>
+              </DonutWrapper>
+            </CustomCol>
+            <CustomCol xs={24} md={12}>
+              <LegendList>
+                {moduleRanking.map((item) => (
+                  <CustomSpace
+                    key={item.module}
+                    direction="vertical"
+                    size={1}
+                    style={{ width: '100%' }}
                   >
-                    {dataSource.map((entry, index) => (
-                      <Cell
-                        key={entry.name}
-                        fill={GOAL_GAUGE_COLORS[index] || '#d9d9d9'}
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <DonutCenter>
-                <CustomTitle level={3}>
-                  {goalComplianceAverageValue.toFixed(1)}%
-                </CustomTitle>
-                <CustomText type="secondary">
-                  {goalComplianceAverageLabel}
-                </CustomText>
-                <CustomText type="secondary">
-                  {formatNumber(summary.kpis.activeGoals)} metas activas
-                </CustomText>
-              </DonutCenter>
-            </DonutWrapper>
-          </CustomCol>
-          <CustomCol xs={24} md={12}>
-            <LegendList>
-              {goalComplianceRanking.map((item) => (
-                <CustomSpace
-                  key={item.module}
-                  direction="vertical"
-                  size={0}
-                  style={{ width: '100%' }}
-                >
-                  <CustomSpace direction="horizontal" align="center">
-                    <CustomText strong>{item.module}</CustomText>
+                    <CustomSpace direction="horizontal" align="center" wrap>
+                      <CustomText strong>{item.module}</CustomText>
+                      <CustomText type="secondary">
+                        {formatter({
+                          value: item.completionRate ?? 0,
+                          format: 'percentage',
+                          fix: 1,
+                        })}
+                      </CustomText>
+                    </CustomSpace>
                     <CustomText type="secondary">
-                      {formatter({
-                        value: item.compliance ?? 0,
-                        format: 'percentage',
-                        fix: 1,
-                      })}
+                      Metas {formatNumber(item.goalsCompleted)} /{' '}
+                      {formatNumber(item.goalsAssigned)}
                     </CustomText>
+                    <CustomText type="secondary">
+                      Tiempo vs objetivo{' '}
+                      {item.timeEfficiency !== null
+                        ? formatter({
+                            value: item.timeEfficiency,
+                            format: 'percentage',
+                            fix: 1,
+                          })
+                        : 'N/D'}
+                    </CustomText>
+                    <CustomProgress
+                      percent={Math.min(item.completionRate ?? 0, 150)}
+                      showInfo={false}
+                    />
                   </CustomSpace>
-                  <CustomProgress
-                    percent={Math.min(item.compliance ?? 0, 100)}
-                    showInfo={false}
-                  />
-                </CustomSpace>
-              ))}
-            </LegendList>
-          </CustomCol>
-        </CustomRow>
+                ))}
+              </LegendList>
+            </CustomCol>
+          </CustomRow>
+        </GoalHealthContainer>
       </ConditionalComponent>
     </>
   )

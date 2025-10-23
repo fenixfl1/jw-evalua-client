@@ -54,7 +54,7 @@ interface ActivityHistoryProps {
 }
 
 const ActivityHistory: React.FC<ActivityHistoryProps> = ({
-  dataSource,
+  dataSource = {} as DashboardActivityResponse,
   metadata,
   loading,
   onOpenSearch,

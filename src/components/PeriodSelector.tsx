@@ -14,6 +14,8 @@ interface PeriodSelectorProps {
   onYearChange?: (year: number) => void
   /** compat: si ya usabas onSelect */
   onSelect?: (value: number) => void
+  onClear?: () => void
+  width?: string | number
 }
 
 const PeriodSelector: React.FC<PeriodSelectorProps> = ({
@@ -21,6 +23,8 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   onChange,
   onYearChange,
   onSelect,
+  onClear,
+  width = '100%',
 }) => {
   const [yearValue, setYearValue] = useState<number | undefined>(
     Number(`${value}`.slice(0, 4))
@@ -46,8 +50,13 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
     onSelect?.(value)
   }
 
+  const handleClear = () => {
+    setYearValue(undefined)
+    onClear?.()
+  }
+
   return (
-    <CustomSpaceCompact>
+    <CustomSpaceCompact style={{ width }}>
       <CustomDatePicker
         suffixIcon={null}
         value={yearValue ? dayjs(String(yearValue), 'YYYY') : undefined}
@@ -60,9 +69,8 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({
       <CustomSelect
         disabled={!yearValue}
         allowClear
-        onClear={() => setYearValue(undefined)}
+        onClear={handleClear}
         width={'50%'}
-        style={{ maxWidth: '80px' }}
         value={value ? value : undefined}
         placeholder={'Seleccionar periodo'}
         onChange={handlePeriodChange}

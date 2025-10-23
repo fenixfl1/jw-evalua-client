@@ -14,7 +14,11 @@ import CustomDivider from 'src/components/custom/CustomDivider'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import { CustomText } from 'src/components/custom/CustomParagraph'
 import PeriodSelector from 'src/components/PeriodSelector'
-import { defaultBreakpoints, formItemLayout } from 'src/config/breakpoints'
+import {
+  defaultBreakpoints,
+  formItemLayout,
+  labelColFullWidth,
+} from 'src/config/breakpoints'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { useGetPeriods } from 'src/hooks/use-get-periods'
 import { useGetModuleGoalsQuery } from 'src/services/goals/useGetModuleGoalsQuery'
@@ -25,6 +29,10 @@ import { useGetModuleMembersMutation } from 'src/services/work_modules/useGetMod
 import { useModuleStore } from 'src/store/module.store'
 import CustomFormList from 'src/components/custom/CustomFormList'
 import CustomInput from 'src/components/custom/CustomInput'
+import CustomDatePicker from 'src/components/custom/CustomDatePicker'
+import ConditionalComponent from 'src/components/ConditionalComponent'
+import dayjs from 'dayjs'
+import moment from 'moment'
 
 interface StaffContribution {
   STAFF_ID: number
@@ -137,66 +145,57 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
 
   const hasStaff = members.length > 0
 
-  const handleSubmit = useCallback(
-    async (
-      values: PostGoalProgressPayload & { CONTRIBUTIONS?: StaffContribution[] }
-    ) => {
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields()
+
       if (!parsedModuleId) {
         message.warning('No se ha seleccionado un módulo válido.')
         return
       }
 
-      try {
-        const sanitizedContributions =
-          values.CONTRIBUTIONS?.map((item) => ({
-            STAFF_ID: Number(item?.STAFF_ID),
-            ACTUAL_VALUE: Number(item?.ACTUAL_VALUE ?? 0),
-          })).filter(
-            (item) =>
-              Number.isInteger(item.ACTUAL_VALUE) &&
-              item.STAFF_ID &&
-              item.ACTUAL_VALUE >= 0
-          ) ?? []
-
-        const payload: PostGoalProgressPayload = {
-          GOAL_ID: Number(values.GOAL_ID),
-          SCOPE: 'module',
-          PERIOD: Number(values.PERIOD),
-          ACTUAL_VALUE: Number(values.ACTUAL_VALUE ?? 0),
-          MODULE_ID: parsedModuleId,
-          CONTRIBUTIONS: hasStaff ? sanitizedContributions : undefined,
-        }
-
-        await postProgress(payload)
-
-        await queryClient.invalidateQueries({
-          queryKey: [
-            'goals',
-            'summary',
-            'module',
-            parsedModuleId,
-            payload.PERIOD,
-          ],
-        })
-
-        message.success('Progreso registrado con éxito.')
-        form.resetFields(['GOAL_ID', 'ACTUAL_VALUE', 'CONTRIBUTIONS'])
-        onCancel?.()
-      } catch (error) {
-        errorHandler(error)
+      if (values.ACTUAL_VALUE < contributionTotal) {
+        throw new Error('La suma de los aportes debe coincidir con el total.')
       }
-    },
-    [
-      parsedModuleId,
-      message,
-      postProgress,
-      queryClient,
-      form,
-      onCancel,
-      errorHandler,
-      hasStaff,
-    ]
-  )
+      const sanitizedContributions =
+        values.CONTRIBUTIONS?.map((item) => ({
+          STAFF_ID: Number(item?.STAFF_ID),
+          ACTUAL_VALUE: Number(item?.ACTUAL_VALUE ?? 0),
+        })).filter(
+          (item) =>
+            Number.isInteger(item.ACTUAL_VALUE) &&
+            item.STAFF_ID &&
+            item.ACTUAL_VALUE >= 0
+        ) ?? []
+
+      const payload: PostGoalProgressPayload = {
+        GOAL_ID: Number(values.GOAL_ID),
+        SCOPE: 'module',
+        PERIOD: Number(values.PERIOD),
+        ACTUAL_VALUE: Number(values.ACTUAL_VALUE ?? 0),
+        MODULE_ID: parsedModuleId,
+        CONTRIBUTIONS: hasStaff ? sanitizedContributions : undefined,
+      }
+
+      await postProgress(payload)
+
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'goals',
+          'summary',
+          'module',
+          parsedModuleId,
+          payload.PERIOD,
+        ],
+      })
+
+      message.success('Progreso registrado con éxito.')
+      form.resetFields(['GOAL_ID', 'ACTUAL_VALUE', 'CONTRIBUTIONS'])
+      onCancel?.()
+    } catch (error) {
+      errorHandler(error)
+    }
+  }
 
   return (
     <CustomModal
@@ -204,7 +203,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
       width={'40%'}
       open={open}
       onCancel={onCancel}
-      onOk={() => form.submit()}
+      onOk={handleSubmit}
       okText={'Registrar'}
       okButtonProps={{ loading: isPosting }}
       destroyOnHidden
@@ -212,25 +211,19 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
       <CustomSpin spinning={isGetMembersLoading || isPosting}>
         <CustomForm
           form={form}
-          {...formItemLayout}
-          layout="vertical"
-          onFinish={handleSubmit}
           initialValues={{
             SCOPE: 'module',
             MODULE_ID: parsedModuleId,
             PERIOD: period ?? currentPeriod,
           }}
+          {...formItemLayout}
         >
-          <CustomFormItem name={'SCOPE'} hidden initialValue={'module'}>
-            <input />
-          </CustomFormItem>
+          <CustomFormItem name={'SCOPE'} hidden initialValue={'module'} />
           <CustomFormItem
             name={'MODULE_ID'}
             hidden
             initialValue={parsedModuleId}
-          >
-            <input />
-          </CustomFormItem>
+          />
           <CustomRow justify={'start'}>
             <CustomCol {...defaultBreakpoints}>
               <CustomFormItem
@@ -261,31 +254,10 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
               <CustomFormItem
                 label={'Valor total'}
                 name={'ACTUAL_VALUE'}
-                rules={[
-                  { required: true },
-                  {
-                    validator: (_, value) => {
-                      if (value === undefined || value === null) {
-                        return Promise.resolve()
-                      }
-                      if (!Number.isInteger(Number(value))) {
-                        return Promise.reject(
-                          new Error('El valor debe ser un número entero.')
-                        )
-                      }
-                      if (hasStaff && difference !== 0) {
-                        return Promise.reject(
-                          new Error(
-                            'La suma de los aportes debe coincidir con el total.'
-                          )
-                        )
-                      }
-                      return Promise.resolve()
-                    },
-                  },
-                ]}
+                rules={[{ required: true }]}
               >
                 <CustomInputNumber
+                  width={'100%'}
                   min={0}
                   precision={0}
                   format={{ format: 'default' }}
@@ -299,63 +271,83 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
               No se encontraron colaboradores activos para este módulo.
             </CustomText>
           )}
-          <CustomFormList name={'CONTRIBUTIONS'}>
-            {(fields) => (
-              <CustomSpace direction="horizontal" wrap>
-                {fields.map((field) => {
-                  const fieldValue = form.getFieldValue([
-                    'CONTRIBUTIONS',
-                    field.name,
-                  ]) as StaffContribution
-                  const fallbackStaff = members.find(
-                    (item) => item.STAFF_ID === fieldValue?.STAFF_ID
-                  )
+          <CustomCol xs={24}>
+            <CustomFormItem label={' '} colon={false} {...labelColFullWidth}>
+              <CustomFormList name={'CONTRIBUTIONS'}>
+                {(fields) => (
+                  <CustomSpace direction="horizontal" wrap>
+                    {fields.map((field) => {
+                      const fieldValue = form.getFieldValue([
+                        'CONTRIBUTIONS',
+                        field.name,
+                      ]) as StaffContribution
+                      const fallbackStaff = members.find(
+                        (item) => item.STAFF_ID === fieldValue?.STAFF_ID
+                      )
 
-                  return (
-                    <CustomCol span={24} key={field.key}>
-                      <CustomSpace width={'max-content'} direction="horizontal">
-                        <CustomFormItem>
-                          <CustomInput
-                            tabIndex={-1}
-                            value={formatStaffName(fieldValue, fallbackStaff)}
-                            variant={'filled'}
-                            readOnly
+                      return (
+                        <CustomCol span={24} key={field.key}>
+                          <CustomSpace
+                            width={'max-content'}
+                            direction="horizontal"
+                          >
+                            <CustomFormItem>
+                              <CustomInput
+                                tabIndex={-1}
+                                value={formatStaffName(
+                                  fieldValue,
+                                  fallbackStaff
+                                )}
+                                variant={'filled'}
+                                readOnly
+                              />
+                            </CustomFormItem>
+
+                            <CustomFormItem
+                              name={[field.name, 'ACTUAL_VALUE']}
+                              rules={[
+                                {
+                                  type: 'number',
+                                  min: 0,
+                                  message: 'Ingresa un valor válido.',
+                                },
+                              ]}
+                            >
+                              <CustomInputNumber
+                                min={0}
+                                precision={0}
+                                placeholder="Cantidad"
+                                style={{ width: 140 }}
+                              />
+                            </CustomFormItem>
+                            <CustomFormItem
+                              name={[field.name, 'ACTUAL_TIME']}
+                              initialValue={dayjs(
+                                moment().format('YYYY-MM-DD HH:mm:ss')
+                              )}
+                            >
+                              <CustomDatePicker
+                                width={'150px'}
+                                placeholder={'Tiempo estimado'}
+                                picker={'time'}
+                                format={null}
+                              />
+                            </CustomFormItem>
+                          </CustomSpace>
+                          <CustomFormItem
+                            name={[field.name, 'STAFF_ID']}
+                            hidden
+                            initialValue={fieldValue?.STAFF_ID}
                           />
-                        </CustomFormItem>
-
-                        <CustomFormItem
-                          name={[field.name, 'ACTUAL_VALUE']}
-                          rules={[
-                            {
-                              type: 'number',
-                              min: 0,
-                              message: 'Ingresa un valor válido.',
-                            },
-                          ]}
-                        >
-                          <CustomInputNumber
-                            min={0}
-                            precision={0}
-                            placeholder="Cantidad"
-                            style={{ width: 140 }}
-                          />
-                        </CustomFormItem>
-                      </CustomSpace>
-                      <CustomFormItem
-                        name={[field.name, 'STAFF_ID']}
-                        hidden
-                        initialValue={fieldValue?.STAFF_ID}
-                      >
-                        <input />
-                      </CustomFormItem>
-                    </CustomCol>
-                  )
-                })}
-              </CustomSpace>
-            )}
-          </CustomFormList>
-
-          {hasStaff && (
+                        </CustomCol>
+                      )
+                    })}
+                  </CustomSpace>
+                )}
+              </CustomFormList>
+            </CustomFormItem>
+          </CustomCol>
+          <ConditionalComponent condition={hasStaff}>
             <CustomSpace direction="vertical" size={4}>
               <CustomText type="secondary">
                 Total aportado por el equipo: {contributionTotal}
@@ -364,7 +356,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
                 Diferencia con el total: {difference}
               </CustomText>
             </CustomSpace>
-          )}
+          </ConditionalComponent>
         </CustomForm>
       </CustomSpin>
     </CustomModal>

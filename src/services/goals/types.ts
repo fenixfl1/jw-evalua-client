@@ -46,6 +46,7 @@ export interface PostGoalProgressPayload {
 export interface GoalDailyTargetPayload {
   TARGET_DATE: string
   TARGET_VALUE: number
+  TARGET_TIME?: string
 }
 
 export interface ModuleSummaryDetail {

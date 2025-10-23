@@ -39,7 +39,7 @@ interface ModulePerformanceProps {
 }
 
 const ModulePerformance: React.FC<ModulePerformanceProps> = ({
-  dataSource,
+  dataSource = [],
 }) => {
   return (
     <CustomCol xs={24}>

@@ -1,10 +1,11 @@
 import { App, Form } from 'antd'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import moment from 'moment'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CustomButton from 'src/components/custom/CustomButton'
 import CustomCol from 'src/components/custom/CustomCol'
+import CustomDatePicker from 'src/components/custom/CustomDatePicker'
 import CustomDivider from 'src/components/custom/CustomDivider'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
 import CustomFormList from 'src/components/custom/CustomFormList'
@@ -83,6 +84,51 @@ const distributeTargets = (rawTotal: number, weights: number[]) => {
   return baseShares
 }
 
+const WEEKDAY_TARGET_HOURS = 8
+const SATURDAY_TARGET_HOURS = 4
+
+const createDefaultTargetTime = (isSaturday: boolean): Dayjs =>
+  dayjs('1970-01-01 00:00:00').add(
+    isSaturday ? SATURDAY_TARGET_HOURS : WEEKDAY_TARGET_HOURS,
+    'hour'
+  )
+
+const parseTargetTime = (value: unknown): Dayjs | undefined => {
+  if (!value) return undefined
+
+  if (dayjs.isDayjs(value)) {
+    return value as Dayjs
+  }
+
+  if (typeof value === 'string') {
+    const direct = dayjs(value)
+    if (direct.isValid()) {
+      return direct
+    }
+
+    const withDatePrefix = dayjs(`1970-01-01 ${value}`)
+    if (withDatePrefix.isValid()) {
+      return withDatePrefix
+    }
+  }
+
+  return undefined
+}
+
+const toTargetTimeString = (value?: Dayjs): string | undefined =>
+  value ? value.format('HH:mm:ss') : undefined
+
+const toTargetTimeNumber = (value: Dayjs): number | undefined => {
+  if (!value || !value.isValid()) return undefined
+
+  const hours = value.hour()
+  const minutes = value.minute()
+  const seconds = value.second()
+
+  const decimalHours = hours + minutes / 60 + seconds / 3600
+  return Number(decimalHours.toFixed(2))
+}
+
 const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
   const [errorHandler] = useErrorHandler()
   const { confirmModal } = useCustomModal()
@@ -134,6 +180,7 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
         label: current.format('ddd DD MMM'),
         date: current.format('YYYY-MM-DD'),
         weight: isSaturday ? 0.5 : 1,
+        isSaturday,
       }
     })
   }, [selectedPeriod])
@@ -233,9 +280,12 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       return
     }
 
-    const dailyTarget = form.getFieldValue('DAILY_TARGETS') ?? {}
-    const existingRaw: { TARGET_DATE?: string; TARGET_VALUE?: number }[] =
-      Array.isArray(dailyTarget) ? dailyTarget : []
+    const dailyTargetField = form.getFieldValue('DAILY_TARGETS')
+    const existingRaw: {
+      TARGET_DATE?: string
+      TARGET_VALUE?: number
+      TARGET_TIME?: Dayjs | string | null
+    }[] = Array.isArray(dailyTargetField) ? dailyTargetField : []
 
     const existing = existingRaw.filter(Boolean)
     const numericTarget = Math.max(0, Math.round(Number(targetValue ?? 0)))
@@ -262,17 +312,26 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       const stored = existing.find((item) => item?.TARGET_DATE === day.date)
       const storedValue = Number(stored?.TARGET_VALUE)
       const hasStoredValue = Number.isFinite(storedValue)
-      let computedValue = 0
+      const storedTime = parseTargetTime(stored?.TARGET_TIME)
+      const defaultTime = createDefaultTargetTime(Boolean(day.isSaturday))
 
+      let computedValue = 0
       if (shouldAutofillValues) {
         computedValue = distribution[index] ?? 0
       } else if (hasStoredValue) {
         computedValue = storedValue
       }
 
+      const computedTime =
+        shouldAutofillValues || !storedTime ? defaultTime : storedTime
+
+      const storedTimeString = toTargetTimeString(storedTime)
+      const computedTimeString = toTargetTimeString(computedTime)
+
       if (
         stored?.TARGET_DATE !== day.date ||
-        Number(stored?.TARGET_VALUE ?? 0) !== computedValue
+        Number(stored?.TARGET_VALUE ?? 0) !== computedValue ||
+        storedTimeString !== computedTimeString
       ) {
         shouldUpdate = true
       }
@@ -280,14 +339,19 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       return {
         TARGET_DATE: day.date,
         TARGET_VALUE: computedValue,
+        TARGET_TIME: computedTime,
       }
     })
 
     if (shouldUpdate || shouldAutofillValues) {
-      form.setFieldsValue({
-        ...dailyTarget,
-        DAILY_TARGETS: nextDaily,
-      })
+      const nextValues = Array.isArray(dailyTargetField)
+        ? { DAILY_TARGETS: nextDaily }
+        : {
+            ...(dailyTargetField ?? {}),
+            DAILY_TARGETS: nextDaily,
+          }
+
+      form.setFieldsValue(nextValues)
     }
 
     if (autoFillDailyRef.current) {
@@ -316,13 +380,29 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
         throw new Error('Los datos del formulario no son validos.')
       }
 
-      const nextDaily: { TARGET_DATE: string; TARGET_VALUE: number }[] = (
-        values.DAILY_TARGETS ?? []
+      const nextDaily: {
+        TARGET_DATE: string
+        TARGET_VALUE: number
+        TARGET_TIME?: string
+      }[] = (
+        values.DAILY_TARGETS?.filter((item) => item.TARGET_VALUE > 0) ?? []
       )
-        .map((item: { TARGET_DATE?: string; TARGET_VALUE?: number }) => ({
-          TARGET_DATE: item?.TARGET_DATE ?? '',
-          TARGET_VALUE: Number(item?.TARGET_VALUE ?? 0),
-        }))
+        .map(
+          (item: {
+            TARGET_DATE?: string
+            TARGET_VALUE?: number
+            TARGET_TIME?: Dayjs | string | null
+          }) => {
+            const parsedTime = parseTargetTime(item?.TARGET_TIME)
+            return {
+              TARGET_DATE: item?.TARGET_DATE ?? '',
+              TARGET_VALUE: Number(item?.TARGET_VALUE ?? 0),
+              ...(parsedTime
+                ? { TARGET_TIME: toTargetTimeNumber(parsedTime) }
+                : {}),
+            }
+          }
+        )
         .filter((item) => Boolean(item.TARGET_DATE))
 
       const totalTarget = Number(values.TARGET_VALUE ?? 0)
@@ -459,54 +539,66 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
             </CustomDivider>
 
             <CustomCol xs={24}>
-              <CustomFormList name={'DAILY_TARGETS'}>
-                {(fields) => (
-                  <CustomSpace direction={'horizontal'} wrap>
-                    {fields.map((field, index) => {
-                      const dayMeta = weekDays[index]
-                      if (!dayMeta) return null
-                      return (
-                        <CustomSpace
-                          key={field.key}
-                          direction={'horizontal'}
-                          width={'max-content'}
-                          size={4}
-                        >
-                          <CustomFormItem>
-                            <CustomInput
-                              readOnly
-                              tabIndex={-1}
-                              variant={'filled'}
-                              value={dayMeta.label}
-                            />
-                          </CustomFormItem>
-                          <CustomFormItem
-                            name={[field.name, 'TARGET_DATE']}
-                            hidden
+              <CustomFormItem label={' '} colon={false} {...labelColFullWidth}>
+                <CustomFormList name={'DAILY_TARGETS'}>
+                  {(fields) => (
+                    <CustomSpace direction={'horizontal'} wrap>
+                      {fields.map((field, index) => {
+                        const dayMeta = weekDays[index]
+                        if (!dayMeta) return null
+
+                        return (
+                          <CustomSpace
+                            key={field.key}
+                            direction={'horizontal'}
+                            width={'max-content'}
+                            size={4}
                           >
-                            <input />
-                          </CustomFormItem>
-                          <CustomFormItem
-                            name={[field.name, 'TARGET_VALUE']}
-                            rules={[
-                              {
-                                required: true,
-                                message: 'Ingresa el objetivo diario',
-                              },
-                            ]}
-                          >
-                            <CustomInputNumber
-                              min={0}
-                              precision={0}
-                              placeholder="Cantidad"
+                            <CustomFormItem>
+                              <CustomInput
+                                readOnly
+                                tabIndex={-1}
+                                variant={'filled'}
+                                value={dayMeta.label}
+                              />
+                            </CustomFormItem>
+                            <CustomFormItem
+                              name={[field.name, 'TARGET_DATE']}
+                              hidden
                             />
-                          </CustomFormItem>
-                        </CustomSpace>
-                      )
-                    })}
-                  </CustomSpace>
-                )}
-              </CustomFormList>
+                            <CustomFormItem
+                              name={[field.name, 'TARGET_VALUE']}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: 'Ingresa el objetivo diario',
+                                },
+                              ]}
+                            >
+                              <CustomInputNumber
+                                min={0}
+                                precision={0}
+                                placeholder="Cantidad"
+                              />
+                            </CustomFormItem>
+                            <CustomFormItem
+                              name={[field.name, 'TARGET_TIME']}
+                              rules={[{ required: true }]}
+                            >
+                              <CustomDatePicker
+                                width={'150px'}
+                                placeholder={'Tiempo estimado'}
+                                picker={'time'}
+                                format={null}
+                              />
+                            </CustomFormItem>
+                          </CustomSpace>
+                        )
+                      })}
+                    </CustomSpace>
+                  )}
+                </CustomFormList>
+              </CustomFormItem>
               <CustomText type="secondary">
                 Total diario: {dailyTotal} / Objetivo semanal:{' '}
                 {Number(targetValue ?? 0)}

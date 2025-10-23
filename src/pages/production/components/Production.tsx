@@ -33,6 +33,9 @@ import CustomButton from 'src/components/custom/CustomButton'
 import { FlagOutlined, LineChartOutlined } from '@ant-design/icons'
 import ProgressForm from './ProgressForm'
 import PeriodSelector from 'src/components/PeriodSelector'
+import CustomSelect from 'src/components/custom/CustomSelect'
+import capitalize from 'src/utils/capitalize'
+import { useGetModuleGoalsQuery } from 'src/services/goals/useGetModuleGoalsQuery'
 
 const getIsoWeekStart = (period: number) => {
   const year = Math.floor(period / 100)
@@ -132,6 +135,7 @@ const initialFilter = {
   FILTER: {
     STATE__IN: ['A'],
     PERIOD__EQ: current,
+    TARGET_DATE__IN: [dayjs()],
   },
 }
 
@@ -155,7 +159,12 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
   const [periodOptions, currentPeriod] = useGetPeriods()
   const period = Form.useWatch(['FILTER', 'PERIOD__EQ'], form) ?? currentPeriod
   const stateFilter = Form.useWatch(['FILTER', 'STATE__IN'], form)
+  const currentValue: string | undefined = Form.useWatch(
+    ['FILTER', 'TARGET_DATE__IN'],
+    form
+  )
 
+  const { data: goalModules } = useGetModuleGoalsQuery(module.MODULE_ID, period)
   const { mutate: getModuleSummary, isPending: isGetSummaryPending } =
     useGetModuleSummaryPaginationMutation()
 
@@ -166,10 +175,10 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     )
 
   const { workModules } = useModuleStore()
-  const { moduleSummary } = useGoalStore()
+  const { moduleSummary, metadata } = useGoalStore()
 
   const handleSearch = useCallback(
-    (page = 1, size = 6) => {
+    (page = metadata.currentPage, size = metadata.pageSize) => {
       if (progressModalState || modalState) return
       const { FILTER = initialFilter.FILTER } = form.getFieldsValue()
       const filterConditions = getConditionFromForm(FILTER)
@@ -197,6 +206,28 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
   }, [workModules])
 
   const weekDays = useMemo(() => getWeekDays(period), [period])
+
+  const defaultTargetDate = useMemo(() => {
+    const today = dayjs()
+    // ¿today cae dentro de la semana del período?
+    const inWeek = weekDays.some((d) => d.isSame(today, 'day'))
+    // si sí, usamos hoy; si no, usamos el primer día de la semana (lunes ISO)
+    const chosen = inWeek ? today : weekDays[0] ?? dayjs()
+    return chosen.format('YYYY-MM-DD')
+  }, [weekDays])
+
+  useEffect(() => {
+    const values = form.getFieldsValue()
+    const sel = currentValue ?? values?.FILTER?.TARGET_DATE__IN
+
+    // si no hay selección o la selección no está en la nueva semana, seteamos el default
+    const inWeek = weekDays.some((d) => d.format('YYYY-MM-DD') === sel)
+    if (!inWeek) {
+      form.setFields([
+        { name: ['FILTER', 'TARGET_DATE__IN'], value: defaultTargetDate },
+      ])
+    }
+  }, [weekDays, defaultTargetDate, form])
 
   const timeline = useMemo(() => {
     if (!summaryData) {
@@ -408,7 +439,38 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
         initialValue={currentPeriod}
         label={'Periodo'}
       >
-        <PeriodSelector />
+        <PeriodSelector
+          onClear={() => {
+            form.resetFields(['FILTER', 'TARGET_DATE__IN'])
+          }}
+        />
+      </CustomFormItem>
+      <CustomFormItem
+        label={'Días'}
+        labelCol={{ span: 24 }}
+        name={['FILTER', 'TARGET_DATE__IN']}
+      >
+        <CustomSelect
+          showSearch
+          mode={'multiple'}
+          options={weekDays.map((d) => ({
+            value: d.format('YYYY-MM-DD'),
+            label: `${capitalize(d.format('dddd'))} ${d.format('DD')}`,
+          }))}
+        />
+      </CustomFormItem>
+      <CustomFormItem
+        label={'Meta'}
+        name={['FILTER', 'GOAL_ID__EQ']}
+        labelCol={{ span: 24 }}
+      >
+        <CustomSelect
+          placeholder={'Seleccionar Meta'}
+          options={goalModules?.map((goal) => ({
+            label: goal.DESCRIPTION,
+            value: goal.GOAL_ID,
+          }))}
+        />
       </CustomFormItem>
     </>
   )

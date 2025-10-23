@@ -41,7 +41,7 @@ interface PerformanceEvaluationProps {
 }
 
 const PerformanceEvaluation: React.FC<PerformanceEvaluationProps> = ({
-  dataSource,
+  dataSource = [],
 }) => {
   return (
     <CustomCol xs={24}>

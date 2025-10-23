@@ -1,8 +1,8 @@
 import {
-  TeamOutlined,
-  AppstoreOutlined,
   CheckCircleOutlined,
-  AimOutlined,
+  ClockCircleOutlined,
+  DashboardOutlined,
+  RiseOutlined,
 } from '@ant-design/icons'
 import React, { useMemo } from 'react'
 import CustomCard from 'src/components/custom/CustomCard'
@@ -37,25 +37,59 @@ const KpiIcon = styled.div<{ $bg: string; $color: string }>`
 
 const formatNumber = (value: number): string => value.toLocaleString('es-DO')
 
+const formatHours = (value?: number | null): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/D'
+  }
+  return `${Number(value).toFixed(1)} h`
+}
+
+const formatSignedHours = (value?: number | null): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/D'
+  }
+  const hours = Number(value)
+  const sign = hours > 0 ? '+' : hours < 0 ? '' : ''
+  return `${sign}${hours.toFixed(1)} h`
+}
+
 interface InfoCardsProps {
   summary?: DashboardSummaryResponse
 }
 
-const KpiCards: React.FC<InfoCardsProps> = ({ summary }) => {
+const KpiCards: React.FC<InfoCardsProps> = ({
+  summary = {} as DashboardSummaryResponse,
+}) => {
+  const totals = summary?.goalProductivity?.totals
+  const averageScore = summary?.kpis?.evaluationsAverageScore ?? null
+
   const kpiCards = useMemo(() => {
-    const averageScore =
-      summary.kpis.evaluationsAverageScore !== null
+    const safeTotals = totals ?? {
+      totalGoals: 0,
+      completedGoals: 0,
+      completionRate: null,
+      averageTargetTime: null,
+      averageActualTime: null,
+      averageTimeVariance: null,
+      totalTargetValue: 0,
+      totalActualValue: 0,
+      totalTargetTime: 0,
+      totalActualTime: 0,
+    }
+
+    const completionRateLabel =
+      safeTotals.completionRate !== null
         ? formatter({
-            value: summary.kpis.evaluationsAverageScore,
+            value: safeTotals.completionRate,
             format: 'percentage',
             fix: 1,
           })
         : 'N/D'
 
-    const goalComplianceAverage =
-      summary.kpis.goalComplianceAverage !== null
+    const evaluationAverage =
+      averageScore !== null
         ? formatter({
-            value: summary.kpis.goalComplianceAverage,
+            value: averageScore,
             format: 'percentage',
             fix: 1,
           })
@@ -63,39 +97,41 @@ const KpiCards: React.FC<InfoCardsProps> = ({ summary }) => {
 
     return [
       {
-        key: 'talent',
-        title: 'Talento activo',
-        value: formatNumber(summary.kpis.totalStaff),
-        icon: <TeamOutlined />,
-        colors: { bg: '#e6f7ff', color: '#1890ff' },
-        extra: `+${formatNumber(summary.kpis.newStaffLast30Days)} en 30 días`,
-      },
-      {
-        key: 'modules',
-        title: 'Módulos activos',
-        value: formatNumber(summary.kpis.activeModules),
-        icon: <AppstoreOutlined />,
-        colors: { bg: '#fff7e6', color: '#faad14' },
-        extra: `Promedio score ${averageScore}`,
-      },
-      {
-        key: 'evaluations',
-        title: 'Evaluaciones completadas',
-        value: formatNumber(summary.kpis.evaluationsCompleted),
+        key: 'completedGoals',
+        title: 'Metas completadas',
+        value: formatNumber(safeTotals.completedGoals),
         icon: <CheckCircleOutlined />,
-        colors: { bg: '#f0f5ff', color: '#2f54eb' },
-        extra: `${formatNumber(summary.kpis.evaluationsPending)} pendientes`,
+        colors: { bg: '#f6ffed', color: '#389e0d' },
+        extra: `Total metas ${formatNumber(safeTotals.totalGoals)}`,
       },
       {
-        key: 'goals',
-        title: 'Metas activas',
-        value: formatNumber(summary.kpis.activeGoals),
-        icon: <AimOutlined />,
-        colors: { bg: '#e6fffb', color: '#13c2c2' },
-        extra: `Cumplimiento prom. ${goalComplianceAverage}`,
+        key: 'completionRate',
+        title: 'Tasa de cumplimiento',
+        value: completionRateLabel,
+        icon: <RiseOutlined />,
+        colors: { bg: '#e6f7ff', color: '#096dd9' },
+        extra: `Score promedio ${evaluationAverage}`,
+      },
+      {
+        key: 'actualTime',
+        title: 'Tiempo real promedio',
+        value: formatHours(safeTotals.averageActualTime),
+        icon: <ClockCircleOutlined />,
+        colors: { bg: '#fff7e6', color: '#d48806' },
+        extra: `Estimado ${formatHours(safeTotals.averageTargetTime)}`,
+      },
+      {
+        key: 'timeVariance',
+        title: 'Desviacion de tiempo',
+        value: formatSignedHours(safeTotals.averageTimeVariance),
+        icon: <DashboardOutlined />,
+        colors: { bg: '#fff1f0', color: '#cf1322' },
+        extra: `Horas reales totales ${formatHours(
+          safeTotals.totalActualTime
+        )}`,
       },
     ]
-  }, [summary.kpis])
+  }, [totals, averageScore])
 
   return (
     <>
@@ -107,7 +143,7 @@ const KpiCards: React.FC<InfoCardsProps> = ({ summary }) => {
             split={<CustomDivider type={'vertical'} />}
           >
             {kpiCards.map((kpi) => (
-              <KPIWrapper>
+              <KPIWrapper key={kpi.key}>
                 <div className="kpi-content">
                   <KpiIcon $bg={kpi.colors.bg} $color={kpi.colors.color}>
                     {kpi.icon}

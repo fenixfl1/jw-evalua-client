@@ -23,10 +23,12 @@ import useDebounce from 'src/hooks/use-debounce'
 import ActivityHistory from './components/ActivityHistory'
 import KpiCards from './components/KpiCards'
 import GoalHealth from './components/GoalHealth'
-import PerformanceEvaluation from './components/PerformanceEvaluation'
-import RecentReviews from './components/RecentReviews'
-import StaffDistribution from './components/StaffDistribution'
-import ModulePerformance from './components/ModulePerformance'
+import GoalCompletionTrend from './components/GoalCompletionTrend'
+import GoalTimeInsights from './components/GoalTimeInsights'
+import ModuleProductivity from './components/ModuleProductivity'
+import EmployeeProductivity from './components/EmployeeProductivity'
+import TopPerformers from './components/TopPerformers'
+import DailySummary from './components/DailySummary'
 
 const SectionCard = styled(CustomCard)`
   height: 100%;
@@ -53,6 +55,47 @@ const summaryFallback: DashboardSummaryResponse = {
   filters: {
     modules: [],
     periods: [],
+  },
+  goalProductivity: {
+    totals: {
+      totalGoals: 0,
+      completedGoals: 0,
+      completionRate: null,
+      averageTargetTime: null,
+      averageActualTime: null,
+      averageTimeVariance: null,
+      totalTargetValue: 0,
+      totalActualValue: 0,
+      totalTargetTime: 0,
+      totalActualTime: 0,
+    },
+    byModule: [],
+    byPeriod: [],
+    timeInsights: {
+      completedOnTime: 0,
+      completedLate: 0,
+      completedAhead: 0,
+      inProgress: 0,
+      notStarted: 0,
+      averageTimeVariance: null,
+      averageTargetTime: null,
+      averageActualTime: null,
+    },
+    employees: [],
+  },
+  moduleTopPerformers: [],
+  dailySummary: {
+    date: new Date(0).toISOString(),
+    targetValue: 0,
+    actualValue: 0,
+    completionRate: null,
+    targetTime: null,
+    actualTime: null,
+    timeVariance: null,
+    activeGoals: 0,
+    completedGoals: 0,
+    evaluationsCompleted: 0,
+    activityCount: 0,
   },
 }
 
@@ -107,6 +150,10 @@ const Dashboard: React.FC = () => {
 
   const summary = summaryData ?? summaryFallback
   const activity = activityData ?? activityFallback
+  const goalProductivity = summary.goalProductivity
+  const goalProductivityTotals = goalProductivity.totals
+  const goalTimeInsights = goalProductivity.timeInsights
+  const dailySummary = summary.dailySummary ?? summaryFallback.dailySummary
 
   const moduleOptions = useMemo(
     () =>
@@ -126,72 +173,62 @@ const Dashboard: React.FC = () => {
     [summary.filters.periods]
   )
 
-  const trendData = useMemo(
-    () => summary.evaluationsTrend,
-    [summary.evaluationsTrend]
-  )
-  const evaluationsByModule = useMemo(
-    () => summary.evaluationsByModule,
-    [summary.evaluationsByModule]
-  )
-  const staffDistribution = useMemo(
-    () => summary.staffDistribution,
-    [summary.staffDistribution]
-  )
-
-  const performanceTrend = useMemo(
+  const goalCompletionTrend = useMemo(
     () =>
-      trendData.map((item) => ({
-        label: item.label,
-        completed: item.completed,
-        pending: item.pending,
-        averageScore: item.averageScore ?? 0,
-        total: item.total,
+      goalProductivity.byPeriod.map((item) => ({
+        label: item.periodLabel || 'Sin periodo',
+        completedGoals: item.completedGoals,
+        completionRate: Number(item.completionRate ?? 0),
+        totalGoals: item.totalGoals,
+        averageActualTime: item.averageActualTime ?? 0,
+        averageTargetTime: item.averageTargetTime ?? 0,
       })),
-    [trendData]
+    [goalProductivity.byPeriod]
   )
 
-  const modulePerformanceData = useMemo(
+  const moduleProductivityData = useMemo(
     () =>
-      evaluationsByModule
-        .map((item) => ({
-          module: item.moduleName || 'Sin módulo',
-          completed: item.completed,
-          pending: item.pending,
-          averageScore: item.averageScore ?? 0,
-        }))
-        .sort((a, b) => b.completed - a.completed)
-        .slice(0, 6),
-    [evaluationsByModule]
-  )
-
-  const goalComplianceAverageValue = useMemo(
-    () =>
-      Math.max(
-        0,
-        Math.min(100, Number(summary.kpis.goalComplianceAverage ?? 0))
-      ),
-    [summary.kpis.goalComplianceAverage]
-  )
-
-  const goalComplianceGauge = useMemo(
-    () => [
-      { name: 'Cumplidas', value: goalComplianceAverageValue },
-      {
-        name: 'Pendiente',
-        value: Math.max(0, 100 - goalComplianceAverageValue),
-      },
-    ],
-    [goalComplianceAverageValue]
-  )
-
-  const staffDistributionData = useMemo(
-    () =>
-      staffDistribution.map((item) => ({
-        name: item.moduleName || 'Sin módulo',
-        value: item.staffCount,
+      goalProductivity.byModule.map((item, index) => ({
+        key: `${item.moduleId ?? index}-${item.moduleName}`,
+        module: item.moduleName || 'Sin modulo',
+        totalGoals: item.totalGoals,
+        completedGoals: item.completedGoals,
+        completionRate: Number(item.completionRate ?? 0),
+        goalsOnTime: item.goalsOnTime,
+        goalsLate: item.goalsLate,
+        goalsInProgress: item.goalsInProgress,
+        goalsPending: item.goalsPending,
+        timeEfficiency: item.timeEfficiency ?? null,
+        averageActualTime: item.averageActualTime ?? null,
+        averageTargetTime: item.averageTargetTime ?? null,
+        averageTimeVariance: item.averageTimeVariance ?? null,
       })),
-    [staffDistribution]
+    [goalProductivity.byModule]
+  )
+
+  const goalCompletionGauge = useMemo(() => {
+    const completed = goalProductivityTotals.completedGoals ?? 0
+    const total = goalProductivityTotals.totalGoals ?? 0
+    const pending = Math.max(0, total - completed)
+
+    return [
+      { name: 'Completadas', value: completed },
+      { name: 'Pendientes', value: pending },
+    ]
+  }, [goalProductivityTotals.completedGoals, goalProductivityTotals.totalGoals])
+
+  const employeeProductivityData = useMemo(
+    () =>
+      goalProductivity.employees.map((item, index) => ({
+        key: `${item.staffId ?? index}-${item.staffName}`,
+        ...item,
+      })),
+    [goalProductivity.employees]
+  )
+
+  const employeeHighlights = useMemo(
+    () => goalProductivity.employees.slice(0, 5),
+    [goalProductivity.employees]
   )
 
   const handleModuleChange = (value: number | null) => {
@@ -241,9 +278,10 @@ const Dashboard: React.FC = () => {
       <CustomSpace direction="vertical" size={24} style={{ width: '100%' }}>
         <CustomRow justify={'space-between'} align={'middle'}>
           <CustomCol>
-            <CustomTitle level={3}>Panel de control general</CustomTitle>
+            <CustomTitle level={3}>Panel de productividad</CustomTitle>
             <CustomText type="secondary">
-              Visualiza el desempeño semanal de módulos, metas y evaluaciones.
+              Sigue el desempeno, las metas cumplidas y los tiempos de respuesta
+              por modulo.
             </CustomText>
           </CustomCol>
           <CustomCol>
@@ -317,45 +355,67 @@ const Dashboard: React.FC = () => {
         </CustomRow>
 
         <CustomRow gutter={[16, 16]} align="stretch">
+          <CustomCol xs={24}>
+            <DailySummary summary={dailySummary} />
+          </CustomCol>
+        </CustomRow>
+
+        <CustomRow gutter={[16, 16]} align="stretch">
           <CustomCol xs={24} xl={14}>
             <SectionCard>
-              <PerformanceEvaluation dataSource={performanceTrend} />
+              <GoalTimeInsights
+                insights={goalTimeInsights}
+                totals={goalProductivityTotals}
+              />
             </SectionCard>
           </CustomCol>
           <CustomCol xs={24} xl={10}>
             <SectionCard>
-              <GoalHealth dataSource={goalComplianceGauge} summary={summary} />
+              <GoalCompletionTrend
+                dataSource={goalCompletionTrend}
+                totals={goalProductivityTotals}
+              />
             </SectionCard>
           </CustomCol>
         </CustomRow>
 
         <CustomRow gutter={[16, 16]} align="stretch">
-          <CustomCol xs={24} xl={10}>
+          <CustomCol xs={24}>
             <SectionCard>
-              <ModulePerformance dataSource={modulePerformanceData} />
-            </SectionCard>
-          </CustomCol>
-          <CustomCol xs={24} xl={14}>
-            <SectionCard>
-              <StaffDistribution dataSource={staffDistributionData} />
+              <GoalHealth dataSource={goalCompletionGauge} summary={summary} />
             </SectionCard>
           </CustomCol>
         </CustomRow>
 
         <CustomRow gutter={[16, 16]} align="stretch">
-          <CustomCol xs={24} lg={12}>
+          <CustomCol xs={24}>
             <SectionCard>
-              <RecentReviews summary={summary} />
+              <ModuleProductivity dataSource={moduleProductivityData} />
             </SectionCard>
           </CustomCol>
+        </CustomRow>
 
-          <CustomCol xs={24} lg={12}>
+        <CustomRow gutter={[16, 16]} align="stretch">
+          <CustomCol xs={24}>
+            <SectionCard>
+              <EmployeeProductivity dataSource={employeeProductivityData} />
+            </SectionCard>
+          </CustomCol>
+        </CustomRow>
+
+        <CustomRow gutter={[16, 16]} align="stretch">
+          <CustomCol xs={24} lg={16}>
+            <SectionCard>
+              <TopPerformers dataSource={employeeHighlights} />
+            </SectionCard>
+          </CustomCol>
+          <CustomCol xs={24} lg={8}>
             <SectionCard>
               <ActivityHistory
                 onOpenSearch={setModelSearch}
                 openSearch={modelSearch}
                 dataSource={activity}
-                metadata={activityData.metadata.pagination}
+                metadata={activity.metadata.pagination}
                 loading={isFetchingActivity}
               />
             </SectionCard>

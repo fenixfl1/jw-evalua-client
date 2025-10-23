@@ -19,7 +19,9 @@ interface RecentReviewsProps {
   summary: DashboardSummaryResponse
 }
 
-const RecentReviews: React.FC<RecentReviewsProps> = ({ summary }) => {
+const RecentReviews: React.FC<RecentReviewsProps> = ({
+  summary = {} as DashboardSummaryResponse,
+}) => {
   return (
     <CustomCol xs={24}>
       <CustomDivider>

@@ -169,7 +169,7 @@ interface StaffDistributionProps {
 }
 
 const StaffDistribution: React.FC<StaffDistributionProps> = ({
-  dataSource,
+  dataSource = [],
 }) => {
   const [, setActiveIndex] = useState(0)
   const totalStaffCount = useMemo(
