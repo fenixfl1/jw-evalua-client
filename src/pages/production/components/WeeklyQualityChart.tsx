@@ -42,20 +42,47 @@ const WeeklyQualityChart: React.FC<WeeklyQualityChartProps> = ({
   const { moduleSummary } = useGoalStore()
 
   const chartData = useMemo(() => {
-    const normalized = moduleSummary.map((d) => ({
-      date: d.TARGET_DATE,
-      dia: formatDate(d.TARGET_DATE),
-      target: Number(d.TARGET_VALUE),
-      actual: Number(d.ACTUAL_VALUE),
-      targetAcc: Number(d.TARGET_VALUE_ACC),
-      actualAcc: Number(d.ACTUAL_VALUE_ACC),
-      compliance: Number(d.COMPLIANCE), // 0–100
-    }))
+    const dailyMap = new Map<
+      string,
+      { date: string; target: number; actual: number }
+    >()
 
-    normalized.sort(
+    moduleSummary.forEach((detail) => {
+      const date = detail.TARGET_DATE
+      if (!date) return
+      if (!dailyMap.has(date)) {
+        dailyMap.set(date, { date, target: 0, actual: 0 })
+      }
+      const bucket = dailyMap.get(date)!
+      bucket.target += Number(detail.TARGET_VALUE ?? 0)
+      bucket.actual += Number(detail.ACTUAL_VALUE ?? 0)
+    })
+
+    const sortedDays = Array.from(dailyMap.values()).sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
-    return normalized
+
+    let cumulativeTarget = 0
+    let cumulativeActual = 0
+
+    return sortedDays.map((day) => {
+      cumulativeTarget += day.target
+      cumulativeActual += day.actual
+      const compliance =
+        cumulativeTarget > 0
+          ? Math.min((cumulativeActual / cumulativeTarget) * 100, 120)
+          : 0
+
+      return {
+        dia: formatDate(day.date),
+        date: day.date,
+        target: day.target,
+        actual: day.actual,
+        targetAcc: cumulativeTarget,
+        actualAcc: cumulativeActual,
+        compliance,
+      }
+    })
   }, [moduleSummary])
 
   return (
@@ -125,12 +152,14 @@ const WeeklyQualityChart: React.FC<WeeklyQualityChartProps> = ({
             name="Target diario"
             dataKey="target"
             barSize={18}
+            fill="#bfbfbf"
           />
           <Bar
             yAxisId="left"
             name="Actual diario"
             dataKey="actual"
             barSize={18}
+            fill="#1890ff"
           />
 
           {/* Líneas acumuladas */}

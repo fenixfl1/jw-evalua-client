@@ -1,6 +1,7 @@
 export const PATH_HOME = '/'
 export const PATH_DASHBOARD =
   '/' + import.meta.env.VITE_INITIAL_ACTIVITY_ID + '/dashboard'
+export const PATH_OPERATORS = '/operators'
 export const PATH_CONSOLE = 'console'
 export const PATH_APPS = 'services'
 export const PATH_SETTING = 'settings'
@@ -45,6 +46,13 @@ export const API_PATH_GET_GOAL_SUMMARY_MODULE = '/goal/summary/module/'
 export const API_PATH_GET_GOAL_SUMMARY_MODULE_PAGINATION =
   '/goal/summary/module/pagination'
 export const API_PATH_GET_GOALS_BY_MODULE = '/goal/module/'
+export const API_PATH_GET_GOAL_MODULE_TASKS = '/goal/module'
+export const API_PATH_POST_MODULE_EFFICIENCY = '/module/efficiency'
+export const API_PATH_GET_MODULE_EFFICIENCY = '/module/:moduleId/efficiency'
+export const API_PATH_GET_MODULE_WORKED_MINUTES =
+  '/module/:moduleId/efficiency/worked-minutes'
+export const API_PATH_POST_PROCESS_AUDIT = '/audits/process'
+export const API_PATH_GET_PROCESS_AUDIT = '/audits/process'
 
 // competencies
 export const API_PATH_GET_COMPETENCIES = '/competency'
@@ -59,3 +67,10 @@ export const API_PATH_CHECK_EVALUATION_AVAILABILITY = '/evaluation/availability'
 // dashboard
 export const API_PATH_GET_DASHBOARD_SUMMARY = '/dashboard/summary'
 export const API_PATH_GET_DASHBOARD_ACTIVITY = '/dashboard/activity'
+export const API_PATH_GET_OPERATOR_DASHBOARD = '/operator/dashboard'
+export const API_PATH_OPERATOR_TASK_COMPLETIONS = '/operator/tasks'
+export const API_PATH_OPERATOR_TASK_SESSION = '/operator/tasks'
+export const API_PATH_GET_WORKED_HOURS_BY_MODULE =
+  '/dashboard/worked-hours/modules'
+export const API_PATH_GET_WORKED_HOURS_BY_STAFF =
+  '/dashboard/worked-hours/staff'

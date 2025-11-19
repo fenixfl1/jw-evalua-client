@@ -1,5 +1,6 @@
-import { Form, FormProps } from 'antd'
+import { Form } from 'antd'
 import React from 'react'
+import { CustomFormProps, CustomFormProvider } from 'src/context/FormContext'
 
 export const validateMessages = {
   required: '${label} es requerido.',
@@ -24,24 +25,29 @@ export const validateMessages = {
   min: '"${label}" debe tener mínimo "${len}" caracteres.',
 }
 
-interface CustomFormProps extends FormProps {
-  children: React.ReactNode | React.ReactNode[]
-}
-
 const CustomForm: React.FC<CustomFormProps> = ({
   autoComplete = 'off',
   name = 'custom-form',
+  readonly = false,
   ...props
 }) => {
   return (
-    <Form
-      autoComplete={autoComplete}
-      name={name}
-      validateMessages={validateMessages}
-      {...props}
+    <CustomFormProvider
+      value={{
+        name,
+        readonly,
+        ...props,
+      }}
     >
-      {props.children}
-    </Form>
+      <Form
+        autoComplete={autoComplete}
+        name={name}
+        validateMessages={validateMessages}
+        {...props}
+      >
+        {props.children}
+      </Form>
+    </CustomFormProvider>
   )
 }
 

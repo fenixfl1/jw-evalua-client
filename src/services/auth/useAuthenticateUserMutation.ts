@@ -1,11 +1,8 @@
-import {
-  PATH_LOGIN,
-  PATH_DASHBOARD,
-  API_PATH_LOGIN,
-} from 'src/constants/routes'
+import { PATH_LOGIN, API_PATH_LOGIN } from 'src/constants/routes'
 import { postRequest } from 'src/services/api'
 import { createSession, UserData } from 'src/lib/session'
 import { useCustomMutation } from 'src/hooks/use-custom-mutation'
+import { getHomePathByRole } from 'src/utils/get-home-path'
 
 interface LoginPayload {
   username: string
@@ -23,7 +20,8 @@ export function useAuthenticateUserMutation(applyNextUrl = true) {
         )
 
         if (next || window.location.href.includes(PATH_LOGIN)) {
-          window.location.href = next ?? PATH_DASHBOARD
+          const defaultHome = getHomePathByRole(data.roleId)
+          window.location.href = next ?? defaultHome
         }
       }
     } catch (error) {

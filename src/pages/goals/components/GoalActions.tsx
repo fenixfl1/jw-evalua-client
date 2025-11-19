@@ -5,11 +5,13 @@ import { useSearchParams } from 'react-router-dom'
 import CustomButton from 'src/components/custom/CustomButton'
 import CustomCol from 'src/components/custom/CustomCol'
 import CustomCollapse from 'src/components/custom/CustomCollapse'
+import CustomDivider from 'src/components/custom/CustomDivider'
 import CustomFormItem from 'src/components/custom/CustomFormItem'
 import CustomForm from 'src/components/custom/CustomFrom'
 import CustomInputNumber from 'src/components/custom/CustomInputNumber'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import CustomSpace from 'src/components/custom/CustomSpace'
+import GoalTasksForm from 'src/pages/production/components/GoalTasksForm'
 import useDebounce from 'src/hooks/use-debounce'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { useGetPeriods } from 'src/hooks/use-get-periods'
@@ -66,6 +68,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({
   const targetValue = Form.useWatch(['MODULE', 'TARGET_VALUE'], form)
   const dailyTargets = Form.useWatch(['MODULE', 'DAILY_TARGETS'], form)
   const selectedGoalId = Form.useWatch(['MODULE', 'GOAL_ID'], form)
+  const moduleTasks = Form.useWatch(['MODULE', 'TASKS'], form)
 
   const autoFillDailyRef = useRef(false)
   const lastGoalIdRef = useRef<number | null>(null)
@@ -98,6 +101,15 @@ const GoalActions: React.FC<GoalActionsProps> = ({
     })
   }, [selectedPeriod])
 
+  const staffOptions = useMemo(
+    () =>
+      (module?.MEMBERS ?? []).map((member) => ({
+        value: member.STAFF_ID,
+        label: `${member.NAME ?? ''} ${member.LAST_NAME ?? ''}`.trim(),
+      })),
+    [module?.MEMBERS]
+  )
+
   useEffect(() => {
     if (!selectedPeriod || !weekDays.length) {
       return
@@ -110,10 +122,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({
         : []
 
     const existing = existingRaw.filter(Boolean)
-    const numericTarget = Math.max(
-      0,
-      Math.round(Number(targetValue ?? 0))
-    )
+    const numericTarget = Math.max(0, Math.round(Number(targetValue ?? 0)))
     const distribution = distributeEvenly(numericTarget, weekDays.length)
 
     const hasMismatchedDates =
@@ -131,9 +140,13 @@ const GoalActions: React.FC<GoalActionsProps> = ({
     )
 
     const shouldAutofillValues =
-      autoFillDailyRef.current || hasMismatchedDates || !hasValues || numericTarget === 0
+      autoFillDailyRef.current ||
+      hasMismatchedDates ||
+      !hasValues ||
+      numericTarget === 0
 
-    let shouldUpdate = hasMismatchedDates || needsNormalization || shouldAutofillValues
+    let shouldUpdate =
+      hasMismatchedDates || needsNormalization || shouldAutofillValues
 
     const nextDaily = weekDays.map((day, index) => {
       const stored = existing.find((item) => item?.TARGET_DATE === day.date)
@@ -180,6 +193,14 @@ const GoalActions: React.FC<GoalActionsProps> = ({
     }, 0)
   }, [dailyTargets])
 
+  const taskTotal = useMemo(() => {
+    if (!Array.isArray(moduleTasks)) return 0
+    return moduleTasks.reduce((acc, task) => {
+      const value = Number(task?.TARGET ?? 0)
+      return acc + (Number.isFinite(value) ? value : 0)
+    }, 0)
+  }, [moduleTasks])
+
   useEffect(() => {
     if (!selectedGoalId) {
       lastGoalIdRef.current = null
@@ -191,9 +212,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({
       return
     }
 
-    const selectedGoal = goals.find(
-      (goal) => goal.GOAL_ID === numericGoalId
-    )
+    const selectedGoal = goals.find((goal) => goal.GOAL_ID === numericGoalId)
 
     if (!selectedGoal) {
       return
@@ -262,6 +281,16 @@ const GoalActions: React.FC<GoalActionsProps> = ({
     )
   }, [searchParams])
 
+  useEffect(() => {
+    const moduleValues = form.getFieldValue('MODULE') ?? {}
+    if (!Array.isArray(moduleValues.TASKS) || !moduleValues.TASKS.length) {
+      form.setFieldValue('MODULE', {
+        ...moduleValues,
+        TASKS: [{ STAFF: [{}] }],
+      })
+    }
+  }, [form, module?.MODULE_ID, moduleTasks])
+
   return (
     <CustomCol xs={24}>
       <CustomCollapse
@@ -317,7 +346,10 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                   <CustomFormItem shouldUpdate noStyle>
                     {() =>
                       weekDays.length ? (
-                        <CustomSpace direction="vertical" style={{ width: '100%' }}>
+                        <CustomSpace
+                          direction="vertical"
+                          style={{ width: '100%' }}
+                        >
                           <CustomText strong>Objetivo diario</CustomText>
                           <Form.List name={['MODULE', 'DAILY_TARGETS']}>
                             {(fields) => (
@@ -346,7 +378,8 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                                         rules={[
                                           {
                                             required: true,
-                                            message: 'Ingresa el objetivo diario',
+                                            message:
+                                              'Ingresa el objetivo diario',
                                           },
                                         ]}
                                       >
@@ -370,19 +403,49 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                       ) : null
                     }
                   </CustomFormItem>
+                  <CustomFormItem shouldUpdate noStyle>
+                    {() => (
+                      <CustomSpace
+                        direction="vertical"
+                        style={{ width: '100%' }}
+                      >
+                        <CustomDivider>Tareas</CustomDivider>
+                        <GoalTasksForm
+                          form={form}
+                          name={['MODULE', 'TASKS']}
+                          staffOptions={staffOptions}
+                        />
+                        <CustomText type="secondary">
+                          Total por tareas: {taskTotal} / Objetivo semanal:{' '}
+                          {Number(targetValue ?? 0)}
+                        </CustomText>
+                      </CustomSpace>
+                    )}
+                  </CustomFormItem>
                   <CustomFormItem>
                     <CustomButton
                       loading={isAssigning}
                       onClick={async () => {
                         try {
                           const { MODULE: values } = await form.validateFields()
-                          const nextDaily: { TARGET_DATE: string; TARGET_VALUE: number }[] =
-                            (values.DAILY_TARGETS ?? []).map(
-                              (item: { TARGET_DATE: string; TARGET_VALUE: number }) => ({
-                                TARGET_DATE: item.TARGET_DATE,
-                                TARGET_VALUE: Number(item.TARGET_VALUE ?? 0),
-                              })
+                          if (!(module?.MEMBERS?.length ?? 0)) {
+                            message.warning(
+                              'El módulo no tiene operadores activos para asignar tareas.'
                             )
+                            return
+                          }
+                          const nextDaily: {
+                            TARGET_DATE: string
+                            TARGET_VALUE: number
+                          }[] = (values.DAILY_TARGETS ?? []).map(
+                            (item: {
+                              TARGET_DATE: string
+                              TARGET_VALUE: number
+                            }) => ({
+                              TARGET_DATE: item.TARGET_DATE,
+                              TARGET_VALUE: Number(item.TARGET_VALUE ?? 0),
+                            })
+                          )
 
                           const sumDaily = nextDaily.reduce(
                             (acc, item) => acc + Number(item.TARGET_VALUE ?? 0),
@@ -399,6 +462,49 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                             return
                           }
 
+                          const sanitizedTasks =
+                            (values.TASKS ?? []).map(
+                              (task: {
+                                DESCRIPTION?: string
+                                COMMENT?: string
+                                TARGET?: number
+                                STAFF?: { STAFF_ID?: number; TARGET?: number }[]
+                              }) => ({
+                                DESCRIPTION: String(
+                                  task.DESCRIPTION ?? ''
+                                ).trim(),
+                                COMMENT: task.COMMENT
+                                  ? String(task.COMMENT).trim()
+                                  : undefined,
+                                TARGET: Number(task.TARGET ?? 0),
+                                STAFF:
+                                  task.STAFF?.map((member) => ({
+                                    STAFF_ID: Number(member.STAFF_ID),
+                                    TARGET: Number(member.TARGET ?? 0),
+                                  })) ?? [],
+                              })
+                            ) ?? []
+
+                          if (!sanitizedTasks.length) {
+                            message.warning('Agrega al menos una tarea.')
+                            return
+                          }
+
+                          const totalTasksTarget = sanitizedTasks.reduce(
+                            (acc, task) => acc + Number(task.TARGET ?? 0),
+                            0
+                          )
+
+                          if (
+                            Number(values.TARGET_VALUE ?? 0) !==
+                            totalTasksTarget
+                          ) {
+                            message.warning(
+                              'La suma de los objetivos por tarea debe coincidir con el objetivo total.'
+                            )
+                            return
+                          }
+
                           await assignGoal({
                             ...values,
                             DAILY_TARGETS: nextDaily,
@@ -407,14 +513,14 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                             MODULE_ID: Number(
                               values.MODULE_ID ?? module?.MODULE_ID ?? 0
                             ),
+                            TASKS: sanitizedTasks,
                           })
-                          message.success(
-                            'Asignación registrada y distribuida entre el equipo activo.'
-                          )
+                          message.success('Meta y tareas asignadas con éxito.')
                           form.resetFields([
                             ['MODULE', 'TARGET_VALUE'],
                             ['MODULE', 'GOAL_ID'],
                             ['MODULE', 'DAILY_TARGETS'],
+                            ['MODULE', 'TASKS'],
                           ])
                           onFinish?.()
                         } catch (error) {

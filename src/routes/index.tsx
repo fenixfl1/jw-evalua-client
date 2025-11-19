@@ -4,13 +4,20 @@ import {
   Navigate,
   Route,
 } from 'react-router'
-import { publicRoutes, privateRoutes } from './auto-routes'
+import { publicRoutes, privateRoutes, operatorRoutes } from './auto-routes'
 import { PATH_HOME } from 'src/constants/routes'
 import AuthGuard from './AuthGuard'
 import GuestGuard from './GuestGuard'
-// import ErrorBoundary from 'src/pages/error'
-import { PATH_DASHBOARD } from '../constants/routes'
 import ErrorElement from 'src/pages/error'
+import { getSessionInfo } from 'src/lib/session'
+import { getHomePathByRole } from 'src/utils/get-home-path'
+
+const RoleHomeRedirect = () => {
+  const { roleId } = getSessionInfo() ?? {}
+  const target = getHomePathByRole(roleId)
+
+  return <Navigate replace to={target} />
+}
 
 const router = () =>
   createBrowserRouter(
@@ -23,12 +30,15 @@ const router = () =>
         </Route>
 
         <Route element={<AuthGuard />}>
-          <Route path={PATH_HOME} element={<Navigate to={PATH_DASHBOARD} />} />
+          <Route path={PATH_HOME} element={<RoleHomeRedirect />} />
           <Route path={'/:activityId'}>
             {privateRoutes.map(({ path, loader, element }, key) => (
               <Route element={element} key={key} loader={loader} path={path} />
             ))}
           </Route>
+          {operatorRoutes.map(({ path, loader, element }, key) => (
+            <Route element={element} key={key} loader={loader} path={path} />
+          ))}
         </Route>
       </Route>
     )

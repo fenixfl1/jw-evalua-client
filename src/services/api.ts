@@ -45,6 +45,10 @@ export const getRequest = async <T>(
   return api.get(url)
 }
 
+export const deleteRequest = async <T>(url: string): Promise<ApiResponse<T>> => {
+  return api.delete(url)
+}
+
 type QueryParams = Record<string, string | number | boolean | null | undefined>
 
 export function buildQueryString(

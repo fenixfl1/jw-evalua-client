@@ -1,120 +1,76 @@
-import { useRouteError } from 'react-router-dom'
-import { ReloadOutlined, HomeOutlined } from '@ant-design/icons'
-import CustomButton from 'src/components/custom/CustomButton'
-import CustomCollapse from 'src/components/custom/CustomCollapse'
-import CustomResult from 'src/components/custom/CustomResult'
-import styled from 'styled-components'
-import CustomCol from 'src/components/custom/CustomCol'
-import CustomRow from 'src/components/custom/CustomRow'
-import ConditionalComponent from 'src/components/ConditionalComponent'
+import React from 'react'
+import { isRouteErrorResponse, useRouteError } from 'react-router-dom'
+import Forbidden from './403'
+import NotFound from './404'
+import InternalServerError from './500'
+import type {
+  ErrorStatusCode,
+  StatusErrorPageProps,
+} from './error-page-layout'
 import { AppError } from 'src/utils/app-error'
-import { useEffect } from 'react'
 
-const StackDescription = styled.div`
-  position: relative;
-  margin-top: 16px;
-  font-size: 14px;
-  line-height: 1.5;
-  text-align: left;
-  width: 100%;
-  max-width: 500px;
-  max-height: 200px;
-  height: 250px;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-x: hidden;
+const ERROR_COMPONENTS: Record<
+  ErrorStatusCode,
+  React.FC<StatusErrorPageProps>
+> = {
+  '403': Forbidden,
+  '404': NotFound,
+  '500': InternalServerError,
+}
 
-  p {
-    text-align: center;
-  }
-`
-
-const Result = styled(CustomResult)`
-  .ant-result-subtitle {
-    color: ${({ theme: { isDark } }) => (isDark ? '#ffff' : '#333')};
-  }
-  .ant-result-content {
-    background-color: transparent;
-  }
-`
-
-const Container = styled(CustomRow)`
-  background-color: ${({ theme: { isDark } }) =>
-    isDark ? '#000000' : undefined};
-  height: 100vh;
-`
+const DEFAULT_STATUS: ErrorStatusCode = '500'
 
 const RouteErrorElement = () => {
-  const error = useRouteError() as AppError
+  const error = useRouteError()
+  const status = getStatusFromError(error) ?? DEFAULT_STATUS
+  const Component = ERROR_COMPONENTS[status] ?? ERROR_COMPONENTS[DEFAULT_STATUS]
 
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.error({ error })
-  }, [error])
+  return <Component error={error} />
+}
 
-  return (
-    <Container justify="center" align="middle">
-      <CustomCol xs={24} md={12} lg={10}>
-        <Result
-          style={{ width: '100%' }}
-          status={'error'}
-          subTitle={
-            <span style={{ fontSize: 14 }}>
-              Intente nuevamente. Si el error persiste póngase en contacto con
-              el equipo de soporte técnico.
-            </span>
-          }
-          extra={
-            <CustomRow justify={'center'} gap={10}>
-              <CustomButton
-                icon={<HomeOutlined />}
-                type="link"
-                onClick={() => (window.location.href = '/')}
-              >
-                Ir a inicio
-              </CustomButton>
-              <CustomButton
-                icon={<ReloadOutlined />}
-                onClick={() => window?.location.reload()}
-                type="link"
-              >
-                Recargar página
-              </CustomButton>
-            </CustomRow>
-          }
-        >
-          <div>
-            <ConditionalComponent condition={!!error.stack}>
-              <CustomCol xs={24}>
-                <CustomCollapse
-                  size={'middle'}
-                  bordered={false}
-                  items={[
-                    {
-                      key: 1,
-                      label: 'Detalles del error',
-                      children: (
-                        <StackDescription>
-                          {error.stack?.split(' at ')?.map((item, index) =>
-                            index > 0 ? (
-                              <span key={index}>
-                                {item}
-                                <br />
-                              </span>
-                            ) : null
-                          )}
-                        </StackDescription>
-                      ),
-                    },
-                  ]}
-                />
-              </CustomCol>
-            </ConditionalComponent>
-          </div>
-        </Result>
-      </CustomCol>
-    </Container>
-  )
+function normalizeStatus(code: unknown): ErrorStatusCode | undefined {
+  if (typeof code === 'number') {
+    return normalizeStatus(code.toString())
+  }
+
+  if (typeof code === 'string') {
+    const trimmed = code.trim()
+    if (trimmed === '403' || trimmed === '404' || trimmed === '500') {
+      return trimmed as ErrorStatusCode
+    }
+  }
+
+  return undefined
+}
+
+function getStatusFromError(error: unknown): ErrorStatusCode | undefined {
+  if (!error) return undefined
+
+  if (isRouteErrorResponse(error)) {
+    return normalizeStatus(error.status)
+  }
+
+  if (error instanceof AppError) {
+    return normalizeStatus(error.code)
+  }
+
+  if (error instanceof Error) {
+    const candidate =
+      (error as unknown as { status?: unknown }).status ??
+      (error as unknown as { statusCode?: unknown }).statusCode ??
+      (error as unknown as { code?: unknown }).code
+    return normalizeStatus(candidate)
+  }
+
+  if (typeof error === 'object') {
+    const candidate =
+      (error as { status?: unknown }).status ??
+      (error as { statusCode?: unknown }).statusCode ??
+      (error as { code?: unknown }).code
+    return normalizeStatus(candidate)
+  }
+
+  return undefined
 }
 
 export default RouteErrorElement

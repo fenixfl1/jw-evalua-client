@@ -150,6 +150,8 @@ export interface EmployeeProductivityEntry {
   pendingGoals: number
   totalTargetTime: number
   totalActualTime: number
+  totalTargetValue: number
+  totalActualValue: number
   averageTargetTime: number | null
   averageActualTime: number | null
   averageTimeVariance: number | null

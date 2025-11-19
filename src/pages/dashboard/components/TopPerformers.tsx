@@ -13,7 +13,10 @@ interface TopPerformersProps {
   dataSource: EmployeeProductivityEntry[]
 }
 
-const formatNumber = (value: number): string => value.toLocaleString('es-DO')
+const formatNumber = (value?: number | null): string =>
+  typeof value === 'number' && !Number.isNaN(value)
+    ? value.toLocaleString('es-DO')
+    : '0'
 
 const formatPercentage = (value?: number | null): string => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -29,18 +32,20 @@ const formatHours = (value?: number | null): string => {
   return `${Number(value).toFixed(1)} h`
 }
 
+const formatUnits = (value?: number | null): string => formatNumber(value)
+
 const TopPerformers: React.FC<TopPerformersProps> = ({ dataSource = [] }) => {
   const topEmployees = useMemo(
     () =>
       dataSource
         .slice()
         .sort((a, b) => {
-          const rateA = a.completionRate ?? -Infinity
-          const rateB = b.completionRate ?? -Infinity
-          if (rateA === rateB) {
-            return b.completedGoals - a.completedGoals
+          const effA = a.efficiency ?? -Infinity
+          const effB = b.efficiency ?? -Infinity
+          if (effA === effB) {
+            return (b.totalActualValue ?? 0) - (a.totalActualValue ?? 0)
           }
-          return rateB - rateA
+          return effB - effA
         })
         .slice(0, 5),
     [dataSource]
@@ -67,13 +72,14 @@ const TopPerformers: React.FC<TopPerformersProps> = ({ dataSource = [] }) => {
               <CustomSpace direction="vertical" size={2}>
                 <CustomText>{employee.staffName}</CustomText>
                 <CustomText type="secondary">
-                  Cumplimiento {formatPercentage(employee.completionRate)} •
-                  Metas {formatNumber(employee.completedGoals)}/
-                  {formatNumber(employee.assignedGoals)}
+                  Unidades {formatUnits(employee.totalActualValue)}/
+                  {formatUnits(employee.totalTargetValue)} • Tiempo real{' '}
+                  {formatHours(employee.totalActualTime)} vs plan{' '}
+                  {formatHours(employee.totalTargetTime)}
                 </CustomText>
                 <CustomText type="secondary">
-                  Eficiencia {formatPercentage(employee.efficiency)} • Tiempo
-                  real prom. {formatHours(employee.averageActualTime)}
+                  Eficiencia {formatPercentage(employee.efficiency)} •
+                  Cumplimiento {formatPercentage(employee.completionRate)}
                 </CustomText>
               </CustomSpace>
             </CustomSpace>

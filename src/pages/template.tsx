@@ -2,34 +2,26 @@ import React, { useEffect } from 'react'
 import { App } from 'antd'
 import CustomSider from 'src/components/custom/CustomSider'
 import CustomLayout from 'src/components/custom/CustomLayout'
-import CustomHeader from 'src/components/custom/CustomHeader'
 import CustomMenu from 'src/components/custom/CustomMenu'
 import CustomContent from 'src/components/custom/CustomContent'
 import CustomRow from 'src/components/custom/CustomRow'
-import CustomAvatar from 'src/components/custom/CustomAvatar'
 import styled from 'styled-components'
-import { CustomText, CustomTitle } from 'src/components/custom/CustomParagraph'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import ThemeTransitionLayout from 'src/components/ThemeTransition'
 import { useAppContext } from 'src/context/AppContext'
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
+import { LogoutOutlined } from '@ant-design/icons'
 import { getSessionInfo, removeSession } from 'src/lib/session'
-import capitalize from 'src/utils/capitalize'
-import CustomCol from 'src/components/custom/CustomCol'
 import { useGetUserMenuOptionsQuery } from 'src/services/menu-options/useGetUserMenuOptionsQuery'
 import { MenuOption } from 'src/services/menu-options/menu-options.types'
 import SVGReader from 'src/components/SVGReader'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useMenuOptionStore } from 'src/store/menu-options.store'
 import { findParentKeys } from 'src/utils/find-parent-keys'
 import { MenuProps } from 'antd'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import CustomButton from 'src/components/custom/CustomButton'
-import UserProfile from 'src/components/Profile'
-import { useUserStore } from 'src/store/user.store'
-import { getAvatarLink } from 'src/utils/get-avatar-link'
 import CustomDivider from 'src/components/custom/CustomDivider'
-import CustomSpace from 'src/components/custom/CustomSpace'
+import MainHeader from 'src/components/layout/MainHeader'
 
 const LogoContainer = styled.div`
   display: flex;
@@ -38,16 +30,6 @@ const LogoContainer = styled.div`
   img {
     width: 65%;
   }
-`
-
-const Header = styled(CustomHeader)`
-  display: flex;
-  align-items: center;
-  height: 64px;
-  width: calc(100vw - 280px);
-  border-radius: 8px !important;
-  margin: 21px 24px 0 20px;
-  padding: 0 35px !important;
 `
 
 const Content = styled(CustomContent)`
@@ -95,11 +77,8 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { activityId } = useParams()
   const navigate = useNavigate()
   const { isAuthenticated } = useAppContext()
-  const [searchParams, setSearchParams] = useSearchParams()
 
   const { refetch } = useGetUserMenuOptionsQuery()
-
-  const { profileVisibilityState, setProfileVisibilitySate } = useUserStore()
 
   const {
     setCurrentMenuOption,
@@ -112,15 +91,9 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
     reset,
   } = useMenuOptionStore()
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!menuOptions.length && getSessionInfo().username) refetch()
   }, [])
-
-  useEffect(() => {
-    if (!profileVisibilityState && searchParams.get('username')) {
-      setProfileVisibilitySate(true)
-    }
-  }, [profileVisibilityState, searchParams])
 
   useEffect(() => {
     let current = currenMenuOption
@@ -255,44 +228,7 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
             </Sider>
             <BodyContainer>
               <CustomLayout>
-                <Header>
-                  <CustomRow
-                    justify={'space-between'}
-                    width={'100%'}
-                    height={'100%'}
-                    align={'middle'}
-                  >
-                    <CustomCol xs={12}>
-                      <CustomTitle
-                        level={3}
-                        style={{ margin: 'auto', color: 'white' }}
-                      >
-                        {currenMenuOption?.DESCRIPTION}
-                      </CustomTitle>
-                    </CustomCol>
-                    <CustomSpace direction="horizontal" width={null}>
-                      <CustomAvatar
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setSearchParams({
-                            username: getSessionInfo().username,
-                          })
-                          setProfileVisibilitySate(true)
-                        }}
-                        size={44}
-                        icon={<UserOutlined />}
-                        src={getAvatarLink()}
-                      />
-                      <CustomText strong style={{ color: '#ffffff' }}>
-                        {capitalize(
-                          getSessionInfo().name ||
-                            getSessionInfo().username ||
-                            ''
-                        )}
-                      </CustomText>
-                    </CustomSpace>
-                  </CustomRow>
-                </Header>
+                <MainHeader />
 
                 <CustomLayout style={{ padding: '0 24px 24px' }}>
                   <CustomRow width={'100%'} justify={'center'}>
@@ -303,9 +239,6 @@ const RootTemplate: React.FC<React.PropsWithChildren> = ({ children }) => {
             </BodyContainer>
           </Layout>
         </ThemeTransitionLayout>
-      </ConditionalComponent>
-      <ConditionalComponent condition={profileVisibilityState}>
-        <UserProfile />
       </ConditionalComponent>
     </>
   )

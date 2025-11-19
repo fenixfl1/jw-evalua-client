@@ -26,6 +26,7 @@ export interface AssignGoalToModulePayload {
   PERIOD: number
   TARGET_VALUE: number
   DAILY_TARGETS?: GoalDailyTargetPayload[]
+  TASKS: GoalTaskAssignmentPayload[]
 }
 
 export interface GoalProgressContribution {
@@ -49,6 +50,36 @@ export interface GoalDailyTargetPayload {
   TARGET_TIME?: string
 }
 
+export interface GoalTaskStaffAssignmentPayload {
+  STAFF_ID: number
+  TARGET: number
+}
+
+export interface GoalTaskAssignmentPayload {
+  DESCRIPTION: string
+  COMMENT?: string
+  TARGET: number
+  UNITS_PER_ITEM?: number
+  STAFF: GoalTaskStaffAssignmentPayload[]
+}
+
+export interface ModuleTaskAssignee {
+  staffId: number
+  staffName: string
+  target: number
+  completed: number
+}
+
+export interface ModuleTaskSummary {
+  goalTaskId: number
+  description: string
+  comment: string | null
+  target: number
+  completedUnits: number
+  unitsPerItem?: number
+  assignees: ModuleTaskAssignee[]
+}
+
 export interface ModuleSummaryDetail {
   GOAL_ID: number
   TARGET_VALUE: number
@@ -63,6 +94,7 @@ export interface ModuleSummaryDetail {
   TARGET_DATE: string
   TARGET_VALUE_ACC: number
   ACTUAL_VALUE_ACC: number
+  TASKS?: ModuleTaskSummary[]
 }
 
 export interface ModuleSummary {

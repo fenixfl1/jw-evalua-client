@@ -7,6 +7,7 @@ import { AdvancedCondition } from 'src/types/general'
 import CustomSpin from 'src/components/custom/CustomSpin'
 import { useSearchParams } from 'react-router-dom'
 import Production from './components/Production'
+import { getSessionInfo } from 'src/lib/session'
 
 const Page: React.FC = () => {
   const [, setSearchParams] = useSearchParams()
@@ -22,6 +23,15 @@ const Page: React.FC = () => {
         operator: '=',
       },
     ]
+
+    if (['2', '3'].includes(getSessionInfo().roleId)) {
+      condition.push({
+        value: getSessionInfo().userId,
+        field: 'SUPERVISOR_ID',
+        operator: '=',
+      })
+    }
+
     getModules({ page: 1, size: 100, condition })
   }, [])
 

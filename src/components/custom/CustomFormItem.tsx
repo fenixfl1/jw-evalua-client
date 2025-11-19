@@ -1,6 +1,8 @@
 import React from 'react'
 import { Form, FormItemProps } from 'antd'
 import { RuleRender } from 'antd/lib/form'
+import { useFormContext } from 'src/context/FormContext'
+import { CustomFormItemProvider } from 'src/context/FormItemContext'
 
 const { Item } = Form
 
@@ -9,6 +11,7 @@ interface CustomFormItemProps extends FormItemProps {
   match?: RegExp
   matchMessage?: string
   uppercase?: boolean
+  readonly?: boolean
 }
 
 const CustomFormItem: React.FC<CustomFormItemProps> = ({
@@ -19,8 +22,10 @@ const CustomFormItem: React.FC<CustomFormItemProps> = ({
   rules = [],
   uppercase = false,
   matchMessage = 'Formato no valido',
+  readonly,
   ...props
 }) => {
+  const ctx = useFormContext()
   const updatedRules = [...rules]
 
   const normalize = (value: string) => {
@@ -53,15 +58,29 @@ const CustomFormItem: React.FC<CustomFormItemProps> = ({
   }
 
   return (
-    <Item
-      validateTrigger={validateTrigger}
-      required={required}
-      {...props}
-      normalize={noSpaces || uppercase ? normalize : props.normalize}
-      rules={updatedRules}
+    <CustomFormItemProvider
+      value={{
+        readonly: readonly ?? ctx?.readonly,
+        required,
+        noSpaces,
+        match,
+        validateTrigger,
+        rules,
+        uppercase,
+        matchMessage,
+        ...props,
+      }}
     >
-      {props.children}
-    </Item>
+      <Item
+        validateTrigger={validateTrigger}
+        required={required}
+        {...props}
+        normalize={noSpaces || uppercase ? normalize : props.normalize}
+        rules={updatedRules}
+      >
+        {props.children}
+      </Item>
+    </CustomFormItemProvider>
   )
 }
 

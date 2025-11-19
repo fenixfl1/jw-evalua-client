@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Form } from 'antd'
+import { Empty, Form } from 'antd'
+import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
@@ -27,7 +28,10 @@ import { useGoalStore } from 'src/store/goal.store'
 import WeeklyQualityChart from './WeeklyQualityChart'
 import CustomCard from 'src/components/custom/CustomCard'
 import formatter from 'src/utils/formatter'
-import { ModuleSummaryDetail } from 'src/services/goals/types'
+import {
+  ModuleSummaryDetail,
+  ModuleTaskSummary,
+} from 'src/services/goals/types'
 import { ColumnsMap } from 'src/components/custom/CustomTable'
 import CustomButton from 'src/components/custom/CustomButton'
 import { FlagOutlined, LineChartOutlined } from '@ant-design/icons'
@@ -36,6 +40,16 @@ import PeriodSelector from 'src/components/PeriodSelector'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import capitalize from 'src/utils/capitalize'
 import { useGetModuleGoalsQuery } from 'src/services/goals/useGetModuleGoalsQuery'
+import styled from 'styled-components'
+import CustomTag from 'src/components/custom/CustomTag'
+import CustomDivider from 'src/components/custom/CustomDivider'
+import ModuleEfficiencyCard from './ModuleEfficiencyCard'
+import ProcessAuditForm from './ProcessAuditForm'
+import ProcessAuditHistory from './ProcessAuditHistory'
+import CustomCol from 'src/components/custom/CustomCol'
+import CustomRow from 'src/components/custom/CustomRow'
+import { getSessionInfo } from 'src/lib/session'
+import { getSocket, ProgressUpdateEvent } from 'src/lib/socket'
 
 const getIsoWeekStart = (period: number) => {
   const year = Math.floor(period / 100)
@@ -146,9 +160,11 @@ type GoalsProps = {
 const Goals: React.FC<GoalsProps> = ({ module }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [form] = Form.useForm()
+  const queryClient = useQueryClient()
 
   const [progressModalState, setProgressModalState] = useState<boolean>()
   const [modalState, setModalState] = useState<boolean>()
+  const [auditModalState, setAuditModalState] = useState<boolean>()
   const [searchKey, setSearchKey] = useState('')
   const debounce = useDebounce(searchKey)
   const [tablePagination, setTablePagination] = useState({
@@ -164,15 +180,15 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     form
   )
 
-  const { data: goalModules } = useGetModuleGoalsQuery(module.MODULE_ID, period)
+  const selectedModuleId =
+    module.MODULE_ID ?? Number(searchParams.get('moduleId'))
+
+  const { data: goalModules } = useGetModuleGoalsQuery(selectedModuleId, period)
   const { mutate: getModuleSummary, isPending: isGetSummaryPending } =
     useGetModuleSummaryPaginationMutation()
 
   const { data: summaryData, isFetching: isSummaryFetching } =
-    useGetModuleSummaryQuery(
-      module.MODULE_ID ?? Number(searchParams.get('moduleId')),
-      period
-    )
+    useGetModuleSummaryQuery(selectedModuleId, period)
 
   const { workModules } = useModuleStore()
   const { moduleSummary, metadata } = useGoalStore()
@@ -185,7 +201,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       const condition: AdvancedCondition[] = [
         {
-          value: Number(searchParams.get('moduleId')),
+          value: selectedModuleId,
           field: 'MODULE_ID',
           operator: '=',
         },
@@ -194,10 +210,51 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       getModuleSummary({ condition, page, size })
     },
-    [debounce, searchParams, progressModalState, modalState]
+    [
+      debounce,
+      searchParams,
+      progressModalState,
+      modalState,
+      selectedModuleId,
+      form,
+      getModuleSummary,
+      metadata.currentPage,
+      metadata.pageSize,
+    ]
   )
 
   useEffect(handleSearch, [handleSearch])
+
+  useEffect(() => {
+    if (!selectedModuleId) return
+
+    const socket = getSocket()
+
+    const handleProgress = (event: ProgressUpdateEvent) => {
+      if (event.moduleId && event.moduleId !== selectedModuleId) return
+      if (event.period && event.period !== period) return
+
+      handleSearch(metadata.currentPage, metadata.pageSize)
+      queryClient.invalidateQueries({
+        queryKey: ['goals', 'summary', 'module', selectedModuleId, period],
+      })
+    }
+
+    socket.emit('joinModule', selectedModuleId)
+    socket.on('progress:update', handleProgress)
+
+    return () => {
+      socket.emit('leaveModule', selectedModuleId)
+      socket.off('progress:update', handleProgress)
+    }
+  }, [
+    selectedModuleId,
+    period,
+    handleSearch,
+    metadata.currentPage,
+    metadata.pageSize,
+    queryClient,
+  ])
 
   useEffect(() => {
     if (!searchParams.get('moduleId')) {
@@ -224,7 +281,13 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     const inWeek = weekDays.some((d) => d.format('YYYY-MM-DD') === sel)
     if (!inWeek) {
       form.setFields([
-        { name: ['FILTER', 'TARGET_DATE__IN'], value: defaultTargetDate },
+        {
+          name: ['FILTER', 'TARGET_DATE__IN'],
+          value:
+            typeof defaultTargetDate === 'string'
+              ? [defaultTargetDate]
+              : defaultTargetDate,
+        },
       ])
     }
   }, [weekDays, defaultTargetDate, form])
@@ -532,22 +595,37 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     },
   ]
 
+  const toggleAuditModal = () => setAuditModalState((prev) => !prev)
+
   const header = (
     <CustomSpace direction={'horizontal'} width={'max-content'}>
-      <CustomButton
-        type={'primary'}
-        icon={<FlagOutlined />}
-        onClick={toggleModalState}
+      <ConditionalComponent
+        condition={['1', '2'].includes(getSessionInfo().roleId)}
       >
-        Asignar Metas
-      </CustomButton>
-      <CustomButton
-        type={'primary'}
-        icon={<LineChartOutlined />}
-        onClick={toggleProgressModal}
+        <CustomSpace direction={'horizontal'} width={'max-content'}>
+          <CustomButton
+            type={'primary'}
+            icon={<FlagOutlined />}
+            onClick={toggleModalState}
+          >
+            Asignar Metas
+          </CustomButton>
+          <CustomButton
+            type={'primary'}
+            icon={<LineChartOutlined />}
+            onClick={toggleProgressModal}
+          >
+            Registrar Progreso
+          </CustomButton>
+        </CustomSpace>
+      </ConditionalComponent>
+      <ConditionalComponent
+        condition={['1', '4'].includes(getSessionInfo().roleId)}
       >
-        Registrar Progreso
-      </CustomButton>
+        <CustomButton type="primary" onClick={toggleAuditModal}>
+          Auditoría de proceso
+        </CustomButton>
+      </ConditionalComponent>
     </CustomSpace>
   )
 
@@ -581,6 +659,18 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     },
   }
 
+  const moduleTaskExpandable = useMemo(
+    () => ({
+      expandedRowRender: (record: ModuleSummaryDetail) => (
+        <TaskExpandable tasks={record.TASKS} />
+      ),
+      rowExpandable: (record: ModuleSummaryDetail) =>
+        Boolean(record?.TASKS?.length),
+      expandRowByClick: true,
+    }),
+    []
+  )
+
   return (
     <>
       <CustomSpin spinning={isGetSummaryPending}>
@@ -610,6 +700,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
             columns={columns}
             columnsMap={columnsMap}
             dataSource={moduleSummary}
+            expandable={moduleTaskExpandable}
             exportable
             showStates={false}
             filter={filter}
@@ -619,11 +710,22 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
             metadata={tableMetadata}
             onChange={handleSearch}
             onSearch={setSearchKey}
-            rowKey={'key'}
+            rowKey={'GOAL_MODULE_ID'}
             searchPlaceholder={'Buscar metas o fechas...'}
             showActions={false}
             exportInitialValues={{ extraHeaderHtml }}
           />
+          <CustomRow gutter={16} align={'top'}>
+            <CustomCol xs={24} lg={14}>
+              <ModuleEfficiencyCard
+                moduleId={selectedModuleId}
+                period={period}
+              />
+            </CustomCol>
+            <CustomCol xs={24} lg={10}>
+              <ProcessAuditHistory moduleId={selectedModuleId} />
+            </CustomCol>
+          </CustomRow>
         </CustomSpace>
       </CustomSpin>
 
@@ -636,8 +738,182 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
           onCancel={toggleProgressModal}
         />
       </ConditionalComponent>
+      <ConditionalComponent condition={auditModalState}>
+        <ProcessAuditForm
+          open={auditModalState}
+          onCancel={toggleAuditModal}
+          onSuccess={() =>
+            queryClient.invalidateQueries({
+              queryKey: ['production', 'audits', selectedModuleId],
+            })
+          }
+        />
+      </ConditionalComponent>
     </>
   )
 }
 
 export default Goals
+
+const formatUnits = (value?: number) =>
+  formatter({ value: value ?? 0, format: 'currency' })
+
+const TaskExpandable: React.FC<{ tasks?: ModuleTaskSummary[] }> = ({
+  tasks,
+}) => {
+  if (!tasks?.length) {
+    return (
+      <ExpandedRowContainer>
+        <Empty
+          description="Esta meta aún no tiene tareas asignadas para mostrar."
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
+      </ExpandedRowContainer>
+    )
+  }
+
+  return (
+    <ExpandedRowContainer>
+      <CustomCollapse
+        items={tasks.map((task) => {
+          const totalPercent =
+            task.target > 0
+              ? Math.min((task.completedUnits / task.target) * 100, 100)
+              : 0
+
+          return {
+            key: String(task.goalTaskId),
+            label: (
+              <TaskHeader>
+                <CustomText strong>{task.description}</CustomText>
+                <CustomTag>
+                  {formatUnits(task.completedUnits)} /{' '}
+                  {formatUnits(task.target)} unidades
+                </CustomTag>
+              </TaskHeader>
+            ),
+            children: (
+              <TaskPanel>
+                {task.comment && <TaskComment>{task.comment}</TaskComment>}
+
+                <CustomProgress
+                  percent={Math.round(totalPercent)}
+                  status="active"
+                  showInfo
+                />
+                <TaskTotals>
+                  Progreso total:&nbsp;
+                  <strong>
+                    {formatUnits(task.completedUnits)} /{' '}
+                    {formatUnits(task.target)}
+                  </strong>
+                  &nbsp;unidades
+                </TaskTotals>
+
+                <CustomDivider />
+                <AssigneeList>
+                  {task.assignees?.length ? (
+                    task.assignees.map((assignee) => {
+                      const assigneePercent =
+                        assignee.target > 0
+                          ? Math.min(
+                              ((assignee.completed ?? 0) / assignee.target) *
+                                100,
+                              100
+                            )
+                          : 0
+                      return (
+                        <AssigneeRow
+                          key={`${task.goalTaskId}-${assignee.staffId}`}
+                        >
+                          <div>
+                            <CustomText strong>
+                              {assignee.staffName ||
+                                `Operador ${assignee.staffId ?? ''}`}
+                            </CustomText>
+                            <AssigneeMeta>
+                              {formatUnits(assignee.completed ?? 0)} /{' '}
+                              {formatUnits(assignee.target)} unidades
+                            </AssigneeMeta>
+                          </div>
+                          <CustomProgress
+                            percent={Math.round(assigneePercent)}
+                            showInfo
+                          />
+                        </AssigneeRow>
+                      )
+                    })
+                  ) : (
+                    <MutedText>
+                      Sin operadores asignados para esta tarea.
+                    </MutedText>
+                  )}
+                </AssigneeList>
+              </TaskPanel>
+            ),
+          }
+        })}
+      />
+    </ExpandedRowContainer>
+  )
+}
+
+const ExpandedRowContainer = styled.div`
+  background: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255, 255, 255, 0.03)' : '#f5f7fb'};
+  padding: 20px;
+  border-radius: 12px;
+`
+
+const TaskPanel = styled.div`
+  border: 1px solid
+    ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb')};
+  border-radius: 12px;
+  padding: 16px;
+  background: ${({ theme }) => (theme?.isDark ? '#0f1b2f' : '#fff')};
+  box-shadow: ${({ theme }) =>
+    theme?.isDark ? 'none' : '0 4px 12px rgba(15, 27, 47, 0.06)'};
+`
+
+const TaskHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+`
+
+const TaskComment = styled.p`
+  margin: 8px 0 12px;
+  color: ${({ theme }) => (theme?.isDark ? '#d6e4ff' : '#4b5563')};
+`
+
+const TaskTotals = styled.p`
+  margin: 8px 0 0;
+  color: ${({ theme }) => (theme?.isDark ? '#d6e4ff' : '#4b5563')};
+`
+
+const AssigneeList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const AssigneeRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+`
+
+const AssigneeMeta = styled.span`
+  display: block;
+  font-size: 0.85rem;
+  color: ${({ theme }) => (theme?.isDark ? '#9fb0d3' : '#6b7280')};
+`
+
+const MutedText = styled.span`
+  color: ${({ theme }) => (theme?.isDark ? '#94a3b8' : '#94a3b8')};
+  font-size: 0.9rem;
+`

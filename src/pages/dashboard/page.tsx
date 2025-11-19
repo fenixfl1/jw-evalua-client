@@ -29,6 +29,13 @@ import ModuleProductivity from './components/ModuleProductivity'
 import EmployeeProductivity from './components/EmployeeProductivity'
 import TopPerformers from './components/TopPerformers'
 import DailySummary from './components/DailySummary'
+import EfficiencyOverview from './components/EfficiencyOverview'
+import ProcessAuditSummary from './components/ProcessAuditSummary'
+import WorkedHours from './components/WorkedHours'
+import {
+  useGetWorkedHoursByModuleQuery,
+  useGetWorkedHoursByStaffQuery,
+} from 'src/services/dashboard/useGetWorkedHoursQuery'
 
 const SectionCard = styled(CustomCard)`
   height: 100%;
@@ -135,6 +142,13 @@ const Dashboard: React.FC = () => {
     mutateAsync: fetchActivity,
     isPending: isFetchingActivity,
   } = useGetDashboardActivityMutation()
+
+  const { data: workedModules = [] } =
+    useGetWorkedHoursByModuleQuery(filters.periodEnd ?? filters.periodStart)
+  const { data: workedStaff = [] } = useGetWorkedHoursByStaffQuery(
+    filters.periodEnd ?? filters.periodStart,
+    filters.moduleId ?? undefined
+  )
 
   useEffect(() => {
     setActivityFilters((prev) => ({
@@ -273,6 +287,14 @@ const Dashboard: React.FC = () => {
     fetchActivity(activityFilters)
   }
 
+  const selectedModuleForStats =
+    filters.moduleId ?? moduleOptions[0]?.value ?? undefined
+  const selectedPeriodForStats =
+    filters.periodEnd ??
+    filters.periodStart ??
+    periodOptions[0]?.value ??
+    undefined
+
   return (
     <CustomSpin spinning={isFetchingSummary}>
       <CustomSpace direction="vertical" size={24} style={{ width: '100%' }}>
@@ -280,7 +302,7 @@ const Dashboard: React.FC = () => {
           <CustomCol>
             <CustomTitle level={3}>Panel de productividad</CustomTitle>
             <CustomText type="secondary">
-              Sigue el desempeno, las metas cumplidas y los tiempos de respuesta
+              Sigue el desempeño, las metas cumplidas y los tiempos de respuesta
               por modulo.
             </CustomText>
           </CustomCol>
@@ -361,6 +383,18 @@ const Dashboard: React.FC = () => {
         </CustomRow>
 
         <CustomRow gutter={[16, 16]} align="stretch">
+          <CustomCol xs={24} lg={14}>
+            <EfficiencyOverview
+              moduleId={selectedModuleForStats}
+              period={selectedPeriodForStats}
+            />
+          </CustomCol>
+          <CustomCol xs={24} lg={10}>
+            <ProcessAuditSummary moduleId={selectedModuleForStats} />
+          </CustomCol>
+        </CustomRow>
+
+        <CustomRow gutter={[16, 16]} align="stretch">
           <CustomCol xs={24} xl={14}>
             <SectionCard>
               <GoalTimeInsights
@@ -383,6 +417,14 @@ const Dashboard: React.FC = () => {
           <CustomCol xs={24}>
             <SectionCard>
               <GoalHealth dataSource={goalCompletionGauge} summary={summary} />
+            </SectionCard>
+          </CustomCol>
+        </CustomRow>
+
+        <CustomRow gutter={[16, 16]} align="stretch">
+          <CustomCol xs={24}>
+            <SectionCard>
+              <WorkedHours modules={workedModules} staff={workedStaff} />
             </SectionCard>
           </CustomCol>
         </CustomRow>
@@ -421,6 +463,7 @@ const Dashboard: React.FC = () => {
             </SectionCard>
           </CustomCol>
         </CustomRow>
+
       </CustomSpace>
     </CustomSpin>
   )

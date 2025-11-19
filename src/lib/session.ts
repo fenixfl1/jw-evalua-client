@@ -17,6 +17,7 @@ export const isLoggedIn = (): boolean => {
 
 export type UserData = {
   username: string
+  roleId: string
   userId: string
   name: string
   avatar: string
@@ -28,13 +29,15 @@ export type UserData = {
 }
 
 export const createSession = async (user: UserData): Promise<void> => {
-  const { username, sessionCookie, userId, avatar, name, business } = user
+  const { username, sessionCookie, userId, avatar, name, business, roleId } =
+    user
   const { token: sessionToken, expiration: sessionExpiration } = sessionCookie
   const expires = new Date(sessionExpiration)
   const sessionInfo = JSON.stringify({
     username,
     userId,
     name,
+    roleId,
   })
 
   sessionStorage.setItem('avatar', avatar)

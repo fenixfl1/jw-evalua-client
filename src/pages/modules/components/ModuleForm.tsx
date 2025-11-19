@@ -65,9 +65,9 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ record, open, onClose }) => {
         operator: '=',
       },
       {
-        value: true,
-        field: 'USER_ID',
-        operator: 'IS NULL',
+        value: [1, 2],
+        field: 'ROLE_ID',
+        operator: 'NOT IN',
       },
     ]
 

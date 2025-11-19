@@ -8,10 +8,12 @@ const CustomModal: React.FC<ModalProps> = ({
   okButtonProps,
   cancelButtonProps,
   closable = true,
+  destroyOnHidden = true,
   ...props
 }) => {
   return (
     <Modal
+      destroyOnHidden={destroyOnHidden}
       closable={closable}
       cancelButtonProps={{
         icon: <StopOutlined />,

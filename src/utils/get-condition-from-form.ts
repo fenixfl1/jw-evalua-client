@@ -32,7 +32,7 @@ export function getConditionFromForm<
       operator = 'IS NULL'
     }
 
-    if (value) {
+    if (value || value?.length) {
       condition.push({
         field,
         operator,

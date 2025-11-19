@@ -4,9 +4,12 @@ import './index.css'
 import App from './App.tsx'
 import '@ant-design/v5-patch-for-react-19'
 import 'antd/dist/reset.css'
+import AppContextProvider from './context/AppContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
+  <AppContextProvider>
+    <StrictMode>
+      <App />
+    </StrictMode>
+  </AppContextProvider>
 )

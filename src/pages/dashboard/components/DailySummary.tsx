@@ -18,8 +18,11 @@ const HighlightsGrid = styled.div`
 const HighlightCard = styled.div`
   padding: 18px 22px;
   border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 12px 28px rgba(9, 30, 66, 0.05);
+  background: ${({ theme }) => (theme?.isDark ? '#161f34' : '#ffffff')};
+  border: 1px solid
+    ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.08)' : '#edf1f7')};
+  box-shadow: ${({ theme }) =>
+    theme?.isDark ? '0 10px 20px rgba(0,0,0,0.3)' : '0 12px 28px rgba(9,30,66,0.05)'};
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -29,23 +32,23 @@ const HighlightLabel = styled.span`
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: rgba(0, 0, 0, 0.45);
+  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)')};
 `
 
 const HighlightValue = styled.span`
   font-size: 28px;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.88);
+  color: ${({ theme }) => (theme?.isDark ? '#ffffff' : 'rgba(0,0,0,0.88)')};
 `
 
 const HighlightComplement = styled.span`
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.65);
+  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)')};
 `
 
 const HighlightHint = styled.span`
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)')};
 `
 
 const DetailsGrid = styled.div`
@@ -57,8 +60,9 @@ const DetailsGrid = styled.div`
 const DetailCard = styled.div`
   padding: 14px 18px;
   border-radius: 14px;
-  background: #f7f9fc;
-  border: 1px solid #edf1f7;
+  background: ${({ theme }) => (theme?.isDark ? '#111a2e' : '#f7f9fc')};
+  border: 1px solid
+    ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.08)' : '#edf1f7')};
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -68,18 +72,18 @@ const DetailLabel = styled.span`
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(0, 0, 0, 0.45);
+  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)')};
 `
 
 const DetailValue = styled.span`
   font-size: 18px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.88);
+  color: ${({ theme }) => (theme?.isDark ? '#ffffff' : 'rgba(0,0,0,0.88)')};
 `
 
 const DetailHint = styled.span`
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)')};
 `
 
 const formatNumber = (value?: number | null): string => {
@@ -244,4 +248,3 @@ const DailySummary: React.FC<DailySummaryProps> = ({ summary }) => {
 }
 
 export default DailySummary
-

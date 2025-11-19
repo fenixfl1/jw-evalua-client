@@ -30,7 +30,9 @@ import { useGetPeriods } from 'src/hooks/use-get-periods'
 import { useAssignGoalToModuleMutation } from 'src/services/goals/useAssignGoalToModuleMutation'
 import { useGetGoalPaginationMutation } from 'src/services/goals/useGetGoalPaginationMutation'
 import { useGoalStore } from 'src/store/goal.store'
+import { useModuleStore } from 'src/store/module.store'
 import { AdvancedCondition } from 'src/types/general'
+import GoalTasksForm from 'src/pages/production/components/GoalTasksForm'
 
 interface AssignGoalProps {
   open: boolean
@@ -139,6 +141,8 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
   const selectedGoalId = Form.useWatch('GOAL_ID', form)
   const targetValue = Form.useWatch('TARGET_VALUE', form)
   const dailyTargets = Form.useWatch('DAILY_TARGETS', form)
+  const moduleId = Form.useWatch('MODULE_ID', form)
+  const tasks = Form.useWatch('TASKS', form)
 
   const autoFillDailyRef = useRef(false)
   const [autoFillSeed, setAutoFillSeed] = useState(0)
@@ -149,10 +153,31 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
   const [searchParams] = useSearchParams()
   const [periodOptions, currentPeriod] = useGetPeriods()
   const { goals } = useGoalStore()
+  const { workModules } = useModuleStore()
 
   const { mutate: getGoals } = useGetGoalPaginationMutation()
   const { mutateAsync: assignGoal, isPending: isAssigning } =
     useAssignGoalToModuleMutation()
+
+  const moduleMembers = useMemo(() => {
+    const formModuleId = Number(moduleId ?? searchParams.get('moduleId'))
+    if (!Number.isFinite(formModuleId)) {
+      return []
+    }
+    const foundModule = workModules.find(
+      (item) => item.MODULE_ID === formModuleId
+    )
+    return foundModule?.MEMBERS ?? []
+  }, [moduleId, workModules, searchParams])
+
+  const staffOptions = useMemo(
+    () =>
+      moduleMembers.map((member) => ({
+        value: member.STAFF_ID,
+        label: `${member.NAME ?? ''} ${member.LAST_NAME ?? ''}`.trim(),
+      })),
+    [moduleMembers]
+  )
 
   const getIsoWeekStart = (period: number) => {
     const year = Math.floor(period / 100)
@@ -238,6 +263,14 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       })
     }
   }, [open, searchParams, currentPeriod, form])
+
+  useEffect(() => {
+    if (!open) return
+    const currentTasks = form.getFieldValue('TASKS')
+    if (!Array.isArray(currentTasks) || !currentTasks.length) {
+      form.setFieldsValue({ TASKS: [{ STAFF: [{}] }] })
+    }
+  }, [open, form])
 
   useEffect(() => {
     if (!selectedGoalId) {
@@ -367,6 +400,14 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
     }, 0)
   }, [dailyTargets])
 
+  const taskTotal = useMemo(() => {
+    if (!Array.isArray(tasks)) return 0
+    return tasks.reduce((acc, task) => {
+      const value = Number(task?.TARGET ?? 0)
+      return acc + (Number.isFinite(value) ? value : 0)
+    }, 0)
+  }, [tasks])
+
   const handleAutoDistribute = () => {
     autoFillDailyRef.current = true
     setAutoFillSeed((seed) => seed + 1)
@@ -378,6 +419,12 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
 
       if (!values) {
         throw new Error('Los datos del formulario no son validos.')
+      }
+
+      if (!staffOptions.length) {
+        throw new Error(
+          'El módulo seleccionado no tiene operadores activos para asignar tareas.'
+        )
       }
 
       const nextDaily: {
@@ -417,16 +464,38 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
         )
       }
 
+      const sanitizedTasks =
+        (values.TASKS ?? []).map(
+          (task: {
+            DESCRIPTION?: string
+            COMMENT?: string
+            TARGET?: number
+            STAFF?: { STAFF_ID?: number; TARGET?: number }[]
+          }) => ({
+            DESCRIPTION: String(task.DESCRIPTION ?? '').trim(),
+            COMMENT: task.COMMENT ? String(task.COMMENT).trim() : undefined,
+            TARGET: Number(task.TARGET ?? 0),
+            STAFF:
+              task.STAFF?.map((member) => ({
+                STAFF_ID: Number(member.STAFF_ID),
+                TARGET: Number(member.TARGET ?? 0),
+              })) ?? [],
+          })
+        ) ?? []
+
+      if (!sanitizedTasks.length) {
+        throw new Error('Debes registrar al menos una tarea para la meta.')
+      }
+
       await assignGoal({
         GOAL_ID: Number(values.GOAL_ID ?? 0),
         MODULE_ID: Number(values.MODULE_ID ?? 0),
         TARGET_VALUE: totalTarget,
         PERIOD: Number(values.PERIOD ?? currentPeriod ?? 0),
         DAILY_TARGETS: nextDaily,
+        TASKS: sanitizedTasks,
       })
-      message.success(
-        'Asignación registrada y distribuida entre el equipo activo.'
-      )
+      message.success('Meta y tareas asignadas con éxito.')
       form.resetFields()
       autoFillDailyRef.current = false
       setAutoFillSeed(0)
@@ -451,7 +520,7 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       open={open}
       onCancel={handleCancel}
       onOk={handleFinish}
-      width={'550px'}
+      width={'65%'}
     >
       <CustomSpin spinning={isAssigning}>
         <CustomForm form={form} {...formItemLayout}>
@@ -586,7 +655,7 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
                               rules={[{ required: true }]}
                             >
                               <CustomDatePicker
-                                width={'150px'}
+                                width={null}
                                 placeholder={'Tiempo estimado'}
                                 picker={'time'}
                                 format={null}
@@ -601,6 +670,21 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
               </CustomFormItem>
               <CustomText type="secondary">
                 Total diario: {dailyTotal} / Objetivo semanal:{' '}
+                {Number(targetValue ?? 0)}
+              </CustomText>
+            </CustomCol>
+
+            <CustomDivider>
+              <CustomTitle level={5}>Tareas</CustomTitle>
+            </CustomDivider>
+            <CustomCol xs={24}>
+              <GoalTasksForm
+                form={form}
+                name={['TASKS']}
+                staffOptions={staffOptions}
+              />
+              <CustomText type="secondary">
+                Total por tareas: {taskTotal} / Objetivo semanal:{' '}
                 {Number(targetValue ?? 0)}
               </CustomText>
             </CustomCol>

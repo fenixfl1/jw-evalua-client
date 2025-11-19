@@ -2,7 +2,7 @@ import { PageMetadata } from 'src/types/general'
 
 const metadata: PageMetadata = {
   public: true,
-  title: 'JW Evalúa | Login',
+  title: 'Inicio de sesión',
 }
 
 export default metadata

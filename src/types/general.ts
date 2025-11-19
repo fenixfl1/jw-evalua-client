@@ -30,11 +30,12 @@ export interface Metadata {
 }
 
 export interface PageMetadata {
-  title?: string
+  title?: string | ((params: any) => string)
   public?: boolean
   layout?: string
   loader?: () => Promise<unknown>
   path?: string
+  scope?: 0 | 1 | 2 | 3
 }
 
 export type AnyType = any
