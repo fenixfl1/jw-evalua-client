@@ -19,6 +19,7 @@ import { getSessionInfo } from 'src/lib/session'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import CustomTooltip from 'src/components/custom/CustomTooltip'
 import CustomSpaceCompact from 'src/components/custom/CustomSpaceCompact'
+import CustomSpace from 'src/components/custom/CustomSpace'
 
 interface ModuleEfficiencyCardProps {
   moduleId?: number
@@ -175,22 +176,24 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
         <ConditionalComponent
           condition={['2'].includes(getSessionInfo().roleId)}
         >
-          <CustomButton
-            type="primary"
-            onClick={handleSubmit}
-            loading={isPending}
-            disabled={isLoadingWorkedTime}
-          >
-            Calcular y guardar
-          </CustomButton>
-          <CustomButton
-            style={{ marginLeft: 8 }}
-            onClick={() => refetchWorkedTime()}
-            loading={isLoadingWorkedTime}
-            disabled={!moduleId}
-          >
-            Actualizar minutos
-          </CustomButton>
+          <CustomSpace direction={'horizontal'}>
+            <CustomButton
+              type="primary"
+              onClick={handleSubmit}
+              loading={isPending}
+              disabled={isLoadingWorkedTime}
+            >
+              Calcular y guardar
+            </CustomButton>
+            <CustomButton
+              style={{ marginLeft: 8 }}
+              onClick={() => refetchWorkedTime()}
+              loading={isLoadingWorkedTime}
+              disabled={!moduleId}
+            >
+              Actualizar minutos
+            </CustomButton>
+          </CustomSpace>
         </ConditionalComponent>
       </CustomForm>
 

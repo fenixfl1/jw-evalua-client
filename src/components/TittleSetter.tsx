@@ -9,8 +9,6 @@ type TitleResolverCtx = {
 
 function applyTemplate(title: string, template?: string) {
   if (!template) return title
-  // eslint-disable-next-line no-console
-  console.log({ template })
   return template.replace('%s', title || '')
 }
 
@@ -29,7 +27,7 @@ const TitleSetter: React.FC<TitleSetterProps> = ({ title, template, data }) => {
   )
 
   const resolvedTitle = useMemo(() => {
-    if (!title) return 'Ok'
+    if (!title) return ''
     if (typeof title === 'function') {
       return title({
         params: params as Record<string, string>,

@@ -39,6 +39,13 @@ interface TaskContributionFormValue {
   TARGET?: number
   COMPLETED_UNITS?: number
   CONTRIBUTIONS?: StaffTaskContribution[]
+  UNITS_PER_ITEM?: number
+}
+
+interface ProgressFormValues {
+  PERIOD?: number
+  GOAL_ID?: number
+  TASKS?: TaskContributionFormValue[]
 }
 
 interface ProgressFormProps {
@@ -51,38 +58,53 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
   const queryClient = useQueryClient()
   const { message } = App.useApp()
   const [errorHandler] = useErrorHandler()
-  const period = Form.useWatch('PERIOD', form)
-  const selectedGoalId = Form.useWatch('GOAL_ID', form)
-  const taskFormValues = Form.useWatch('TASKS', form) as
-    | TaskContributionFormValue[]
-    | undefined
   const [searchParams] = useSearchParams()
+  const [taskFormValues, setTaskFormValues] = React.useState<
+    TaskContributionFormValue[]
+  >([])
+  const [periodValue, setPeriodValue] = React.useState<number | undefined>()
+  const [selectedGoalId, setSelectedGoalId] = React.useState<
+    number | undefined
+  >(undefined)
 
   const moduleId = searchParams.get('moduleId')
   const parsedModuleId = moduleId ? Number(moduleId) : undefined
 
   const [, currentPeriod] = useGetPeriods()
 
-  const { data: goalModules } = useGetModuleGoalsQuery(parsedModuleId, period)
+  const { data: goalModules } = useGetModuleGoalsQuery(
+    parsedModuleId,
+    periodValue
+  )
   const {
     data: taskDetail,
     isFetching: isFetchingTasks,
     refetch: refetchTasks,
-  } = useGetGoalTasksDetailQuery(parsedModuleId, period, selectedGoalId)
+  } = useGetGoalTasksDetailQuery(
+    parsedModuleId,
+    periodValue,
+    selectedGoalId
+  )
   const { mutateAsync: registerCompletion, isPending: isRegistering } =
     useRegisterOperatorCompletionMutation()
 
   const handleRefreshTasks = useCallback(() => {
-    if (!parsedModuleId || !period || !selectedGoalId) return
+    if (!parsedModuleId || !periodValue || !selectedGoalId) return
     refetchTasks()
-  }, [parsedModuleId, period, selectedGoalId, refetchTasks])
+  }, [parsedModuleId, periodValue, selectedGoalId, refetchTasks])
 
   useEffect(handleRefreshTasks, [handleRefreshTasks])
 
   useEffect(() => {
-    if (!currentPeriod) return
-    if (!form.getFieldValue('PERIOD')) {
+    const currentFormPeriod = form.getFieldValue('PERIOD')
+    if (typeof currentFormPeriod === 'number') {
+      setPeriodValue(currentFormPeriod)
+      return
+    }
+
+    if (currentPeriod) {
       form.setFieldValue('PERIOD', currentPeriod)
+      setPeriodValue(currentPeriod)
     }
   }, [currentPeriod, form])
 
@@ -95,6 +117,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
   useEffect(() => {
     if (!taskDetail?.length) {
       form.setFieldValue('TASKS', [])
+      setTaskFormValues([])
       return
     }
 
@@ -113,9 +136,28 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
     }))
 
     form.setFieldValue('TASKS', mapped)
+    setTaskFormValues(mapped)
   }, [taskDetail, form])
 
   const hasTasks = Array.isArray(taskFormValues) && taskFormValues.length > 0
+
+  const handleValuesChange = useCallback(
+    (_: unknown, allValues: ProgressFormValues = {}) => {
+      const nextTasks = Array.isArray(allValues?.TASKS) ? allValues.TASKS : []
+      setTaskFormValues(nextTasks)
+
+      setPeriodValue(
+        typeof allValues?.PERIOD === 'number' ? allValues.PERIOD : undefined
+      )
+
+      setSelectedGoalId(
+        typeof allValues?.GOAL_ID === 'number'
+          ? allValues.GOAL_ID
+          : undefined
+      )
+    },
+    []
+  )
 
   const getTaskContributionTotal = useCallback(
     (task?: TaskContributionFormValue) => {
@@ -132,7 +174,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
     try {
       const values = await form.validateFields()
 
-      const selectedPeriodValue = Number(values.PERIOD ?? period)
+      const selectedPeriodValue = Number(values.PERIOD ?? periodValue)
 
       if (!parsedModuleId || !selectedPeriodValue || !selectedGoalId) {
         message.warning('Selecciona el módulo, período y meta.')
@@ -189,6 +231,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
 
       message.success('Progreso registrado con éxito.')
       form.resetFields(['TASKS'])
+      setTaskFormValues([])
       onCancel?.()
     } catch (error) {
       errorHandler(error)
@@ -209,10 +252,12 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
       <CustomSpin spinning={isFetchingTasks || isRegistering}>
         <CustomForm
           form={form}
+          onValuesChange={handleValuesChange}
           initialValues={{
             SCOPE: 'module',
             MODULE_ID: parsedModuleId,
-            PERIOD: period ?? currentPeriod,
+            PERIOD: periodValue ?? currentPeriod,
+            TASKS: [{}],
           }}
           {...formItemLayout}
         >
@@ -251,13 +296,15 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
             </CustomCol>
           </CustomRow>
           <CustomDivider>Tareas del módulo</CustomDivider>
-          <ConditionalComponent condition={!hasTasks}>
-            <CustomText type="secondary">
-              Selecciona una meta para ver las tareas y registrar el avance.
-            </CustomText>
-          </ConditionalComponent>
-          <ConditionalComponent condition={hasTasks}>
-            <CustomFormList name={'TASKS'}>
+          <ConditionalComponent
+            condition={hasTasks}
+            fallback={
+              <CustomText type="secondary">
+                Selecciona una meta para ver las tareas y registrar el avance.
+              </CustomText>
+            }
+          >
+            <CustomFormList name={'TASKS'} initialValue={[{}]}>
               {(taskFields) => {
                 const items = taskFields.map((taskField) => {
                   const taskData = taskFormValues?.[taskField.name]
