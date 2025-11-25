@@ -74,7 +74,7 @@ const getPercentageLabel = (numerator: number, denominator: number): string => {
   }
 
   return formatter({
-    value: numerator / denominator,
+    value: (numerator / denominator) * 100,
     format: 'percentage',
     fix: 1,
   })
@@ -279,14 +279,14 @@ const GoalTimeInsights: React.FC<GoalTimeInsightsProps> = ({
                   </LegendItem>
                 ))}
               </LegendList>
-              <CustomSpace direction="vertical" size={4}>
+              {/* <CustomSpace direction="vertical" size={4}>
                 <CustomText strong>Tiempos promedio</CustomText>
                 <CustomText type="secondary">
                   Real: {formatHours(insights.averageActualTime)} | Objetivo:{' '}
                   {formatHours(insights.averageTargetTime)} | Variación:{' '}
                   {formatHours(insights.averageTimeVariance)}
                 </CustomText>
-              </CustomSpace>
+              </CustomSpace> */}
             </CustomSpace>
           </CustomCol>
         </CustomRow>

@@ -80,11 +80,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
     data: taskDetail,
     isFetching: isFetchingTasks,
     refetch: refetchTasks,
-  } = useGetGoalTasksDetailQuery(
-    parsedModuleId,
-    periodValue,
-    selectedGoalId
-  )
+  } = useGetGoalTasksDetailQuery(parsedModuleId, periodValue, selectedGoalId)
   const { mutateAsync: registerCompletion, isPending: isRegistering } =
     useRegisterOperatorCompletionMutation()
 
@@ -151,9 +147,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
       )
 
       setSelectedGoalId(
-        typeof allValues?.GOAL_ID === 'number'
-          ? allValues.GOAL_ID
-          : undefined
+        typeof allValues?.GOAL_ID === 'number' ? allValues.GOAL_ID : undefined
       )
     },
     []
@@ -349,11 +343,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
                           name={[taskField.name, 'CONTRIBUTIONS']}
                         >
                           {(contributionFields) => (
-                            <CustomSpace
-                              direction="vertical"
-                              style={{ width: '100%' }}
-                              size={12}
-                            >
+                            <CustomSpace size={12}>
                               {contributionFields.map((contributionField) => {
                                 const contributionValue =
                                   taskData?.CONTRIBUTIONS?.[
@@ -367,7 +357,10 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ open, onCancel }) => {
                                           contributionValue?.STAFF_ID ?? ''
                                         }`}
                                     </strong>
-                                    <CustomSpace size={12}>
+                                    <CustomSpace
+                                      size={12}
+                                      direction={'horizontal'}
+                                    >
                                       <CustomFormItem
                                         name={[contributionField.name, 'UNITS']}
                                         rules={[

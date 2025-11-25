@@ -119,10 +119,6 @@ const GoalCompletionTrend: React.FC<GoalCompletionTrendProps> = ({
               Completadas:{' '}
               <strong>{formatNumber(totals.completedGoals)}</strong>
             </CustomText>
-            <CustomText type="secondary">
-              Tiempo real promedio:{' '}
-              <strong>{formatHours(totals.averageActualTime)}</strong>
-            </CustomText>
           </CustomSpace>
         </>
       </ConditionalComponent>

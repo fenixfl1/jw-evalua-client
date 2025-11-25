@@ -13,6 +13,7 @@ export const LOG_DATE_FORMAT = 'dddd D [de] MMMM [del] YYYY'
 export const DATE_FORMAT = 'DD/MM/YYYY'
 export const TIME_FORMAT = 'HH:mm'
 export const DAY_FORMAT = 'dddd D'
+export const DEFAULT_DATE_FORMAT = 'YYYY-MM-DD'
 
 type StrDate = string | undefined
 

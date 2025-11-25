@@ -36,7 +36,7 @@ export function useGetGoalPaginationMutation() {
         condition
       )
 
-      return data
+      return data || initialData
     },
   })
 }

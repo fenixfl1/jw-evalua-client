@@ -23,7 +23,7 @@ import AssignGoal from './AssignGoal'
 import { useGetModuleSummaryPaginationMutation } from 'src/services/goals/useGetModuleSummaryPaginationMutation'
 import { AdvancedCondition } from 'src/types/general'
 import { getConditionFromForm } from 'src/utils/get-condition-from-form'
-import { dayFormat } from 'src/utils/date-utils'
+import { dayFormat, DEFAULT_DATE_FORMAT } from 'src/utils/date-utils'
 import { useGoalStore } from 'src/store/goal.store'
 import WeeklyQualityChart from './WeeklyQualityChart'
 import CustomCard from 'src/components/custom/CustomCard'
@@ -197,7 +197,16 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
     (page = metadata.currentPage, size = metadata.pageSize) => {
       if (progressModalState || modalState) return
       const { FILTER = initialFilter.FILTER } = form.getFieldsValue()
-      const filterConditions = getConditionFromForm(FILTER)
+      const filterConditions = getConditionFromForm(FILTER).map(
+        ({ value, ...props }) => ({
+          ...props,
+          value: props.field.toString().includes('DATE')
+            ? (value as never[]).map((v) =>
+                dayjs(v).format(DEFAULT_DATE_FORMAT)
+              )
+            : value,
+        })
+      )
 
       const condition: AdvancedCondition[] = [
         {

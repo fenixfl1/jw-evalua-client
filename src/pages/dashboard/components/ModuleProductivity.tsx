@@ -212,11 +212,11 @@ const ModuleProductivity: React.FC<ModuleProductivityProps> = ({
           completionRatePct:
             entry.completionRate === null || Number.isNaN(entry.completionRate)
               ? null
-              : entry.completionRate * 100,
+              : entry.completionRate,
           timeEfficiencyPct:
             entry.timeEfficiency === null || Number.isNaN(entry.timeEfficiency)
               ? null
-              : entry.timeEfficiency * 100,
+              : entry.timeEfficiency,
           topStackSegment,
         }
       }),
