@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Empty, Form } from 'antd'
-import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
@@ -50,6 +49,7 @@ import CustomCol from 'src/components/custom/CustomCol'
 import CustomRow from 'src/components/custom/CustomRow'
 import { getSessionInfo } from 'src/lib/session'
 import { getSocket, ProgressUpdateEvent } from 'src/lib/socket'
+import queryClient from 'src/lib/query-client'
 
 const getIsoWeekStart = (period: number) => {
   const year = Math.floor(period / 100)
@@ -160,7 +160,6 @@ type GoalsProps = {
 const Goals: React.FC<GoalsProps> = ({ module }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [form] = Form.useForm()
-  const queryClient = useQueryClient()
 
   const [progressModalState, setProgressModalState] = useState<boolean>()
   const [modalState, setModalState] = useState<boolean>()
@@ -235,6 +234,13 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
   useEffect(handleSearch, [handleSearch])
 
   useEffect(() => {
+    if (progressModalState) return
+    queryClient.invalidateQueries({
+      queryKey: ['efficiency', 'worked-minutes', selectedModuleId, period],
+    })
+  }, [progressModalState])
+
+  useEffect(() => {
     if (!selectedModuleId) return
 
     const socket = getSocket()
@@ -245,7 +251,15 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       handleSearch(metadata.currentPage, metadata.pageSize)
       queryClient.invalidateQueries({
-        queryKey: ['goals', 'summary', 'module', selectedModuleId, period],
+        queryKey: [
+          'efficiency',
+          'worked-minutes',
+          'goals',
+          'summary',
+          'module',
+          selectedModuleId,
+          period,
+        ],
       })
     }
 
@@ -729,6 +743,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
               <ModuleEfficiencyCard
                 moduleId={selectedModuleId}
                 period={period}
+                shouldUpdate={progressModalState}
               />
             </CustomCol>
             <CustomCol xs={24} lg={10}>

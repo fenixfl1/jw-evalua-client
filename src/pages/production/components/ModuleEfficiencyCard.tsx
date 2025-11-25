@@ -24,11 +24,13 @@ import CustomSpace from 'src/components/custom/CustomSpace'
 interface ModuleEfficiencyCardProps {
   moduleId?: number
   period?: number
+  shouldUpdate?: boolean
 }
 
 const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
   moduleId,
   period,
+  shouldUpdate,
 }) => {
   const [form] = Form.useForm()
   const { message } = App.useApp()
@@ -45,6 +47,10 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
     isFetching: isLoadingWorkedTime,
     refetch: refetchWorkedTime,
   } = useGetModuleWorkedMinutesQuery(moduleId, period)
+
+  useEffect(() => {
+    refetchWorkedTime()
+  }, [shouldUpdate])
 
   useEffect(() => {
     form.setFieldsValue({
