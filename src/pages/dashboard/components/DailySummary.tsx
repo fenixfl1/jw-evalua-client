@@ -22,7 +22,9 @@ const HighlightCard = styled.div`
   border: 1px solid
     ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.08)' : '#edf1f7')};
   box-shadow: ${({ theme }) =>
-    theme?.isDark ? '0 10px 20px rgba(0,0,0,0.3)' : '0 12px 28px rgba(9,30,66,0.05)'};
+    theme?.isDark
+      ? '0 10px 20px rgba(0,0,0,0.3)'
+      : '0 12px 28px rgba(9,30,66,0.05)'};
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -32,7 +34,8 @@ const HighlightLabel = styled.span`
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)')};
+  color: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'};
 `
 
 const HighlightValue = styled.span`
@@ -43,12 +46,14 @@ const HighlightValue = styled.span`
 
 const HighlightComplement = styled.span`
   font-size: 14px;
-  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)')};
+  color: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.65)'};
 `
 
 const HighlightHint = styled.span`
   font-size: 12px;
-  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)')};
+  color: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'};
 `
 
 const DetailsGrid = styled.div`
@@ -72,7 +77,8 @@ const DetailLabel = styled.span`
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)')};
+  color: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'};
 `
 
 const DetailValue = styled.span`
@@ -83,7 +89,8 @@ const DetailValue = styled.span`
 
 const DetailHint = styled.span`
   font-size: 12px;
-  color: ${({ theme }) => (theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)')};
+  color: ${({ theme }) =>
+    theme?.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'};
 `
 
 const formatNumber = (value?: number | null): string => {
@@ -177,12 +184,6 @@ const DailySummary: React.FC<DailySummaryProps> = ({ summary }) => {
       label: 'Variación de tiempo',
       value: formatSignedHours(summary.timeVariance),
       hint: 'Horas respecto al plan',
-    },
-    {
-      key: 'evaluations',
-      label: 'Evaluaciones completadas',
-      value: formatNumber(summary.evaluationsCompleted),
-      hint: 'Registradas hoy',
     },
     {
       key: 'activity',

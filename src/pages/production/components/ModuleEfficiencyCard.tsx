@@ -127,6 +127,7 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
             <CustomFormItem
               label="SAM (min)"
               name="SAM"
+              initialValue={5.52}
               rules={[{ required: true }]}
             >
               <CustomInputNumber
@@ -226,6 +227,7 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
             >
               <CustomText>
                 Periodo {record.PERIOD}: {record.EFFICIENCY_PERCENT}% eficiencia
+                <br />
               </CustomText>
               <CustomText type="secondary">
                 Prendas: {record.TOTAL_UNITS} · SAM: {record.SAM} · Minutos:{' '}

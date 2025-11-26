@@ -15,7 +15,10 @@ import CustomDivider from 'src/components/custom/CustomDivider'
 import { CustomText, CustomTitle } from 'src/components/custom/CustomParagraph'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import ConditionalComponent from 'src/components/ConditionalComponent'
-import { WorkedHoursModule, WorkedHoursStaff } from 'src/services/dashboard/useGetWorkedHoursQuery'
+import {
+  WorkedHoursModule,
+  WorkedHoursStaff,
+} from 'src/services/dashboard/useGetWorkedHoursQuery'
 
 type WorkedHoursProps = {
   modules: WorkedHoursModule[]
@@ -61,9 +64,18 @@ const WorkedHours: React.FC<WorkedHoursProps> = ({ modules, staff }) => {
           >
             <ChartContainer>
               <ResponsiveContainer>
-                <BarChart data={topModules} margin={{ left: 0, right: 12, top: 10 }}>
+                <BarChart
+                  data={topModules}
+                  margin={{ left: 0, right: 12, top: 10 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="moduleName" tick={{ fontSize: 12 }} angle={-15} height={60} interval={0} />
+                  <XAxis
+                    dataKey="moduleName"
+                    tick={{ fontSize: 12 }}
+                    angle={-15}
+                    height={60}
+                    interval={0}
+                  />
                   <YAxis tickFormatter={(value) => `${value}h`} width={40} />
                   <Tooltip
                     content={({ active, payload, label }) => {
@@ -88,7 +100,11 @@ const WorkedHours: React.FC<WorkedHoursProps> = ({ modules, staff }) => {
                       )
                     }}
                   />
-                  <Bar dataKey="hoursWorked" fill="#3f51b5" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="hoursWorked"
+                    fill="#3f51b5"
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -106,10 +122,12 @@ const WorkedHours: React.FC<WorkedHoursProps> = ({ modules, staff }) => {
                 <StaffCard key={item.staffId}>
                   <div>
                     <CustomText strong>{item.staffName}</CustomText>
+                    <br />
                     <CustomText type="secondary">{item.moduleName}</CustomText>
                   </div>
                   <div>
                     <CustomText>{formatHours(item.hoursWorked)}</CustomText>
+                    <br />
                     <CustomText type="secondary">
                       Sesiones activas: {item.activeSessions}
                     </CustomText>
