@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query'
 import { buildQueryString, getRequest } from 'src/services/api'
 import { API_PATH_GET_PROCESS_AUDIT } from 'src/constants/routes'
@@ -21,7 +22,7 @@ export function useGetProcessAuditsQuery(
   endDate?: string
 ) {
   return useQuery<ProcessAuditRecord[] | undefined>({
-    enabled: Number.isFinite(moduleId),
+    // enabled: Number.isFinite(moduleId),
     queryKey: ['production', 'audits', moduleId, startDate, endDate],
     queryFn: async () => {
       const url = buildQueryString(API_PATH_GET_PROCESS_AUDIT, {

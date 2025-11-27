@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react'
 import CustomCard from 'src/components/custom/CustomCard'
-import { CustomText } from 'src/components/custom/CustomParagraph'
+import { CustomText, CustomTitle } from 'src/components/custom/CustomParagraph'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import { Empty } from 'antd'
 import { useGetProcessAuditsQuery } from 'src/services/production/useGetProcessAuditsQuery'
+import ConditionalComponent from 'src/components/ConditionalComponent'
+import CustomDivider from 'src/components/custom/CustomDivider'
 
 interface ProcessAuditSummaryProps {
   moduleId?: number
@@ -12,7 +14,14 @@ interface ProcessAuditSummaryProps {
 const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
   moduleId,
 }) => {
-  const { data, isFetching } = useGetProcessAuditsQuery(moduleId)
+  const moduleFilter =
+    typeof moduleId === 'number' && Number.isFinite(moduleId)
+      ? moduleId
+      : undefined
+  const { data = [], isFetching } = useGetProcessAuditsQuery(moduleFilter)
+  const scopeLabel = moduleFilter
+    ? 'el módulo seleccionado'
+    : 'todos los módulos'
 
   const summary = useMemo(() => {
     if (!data?.length) {
@@ -29,7 +38,7 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
           (entryAcc, entry) =>
             entryAcc +
             (entry.defects?.reduce(
-              (defectAcc: number, defect: any) =>
+              (defectAcc: number, defect) =>
                 defectAcc + Number(defect.count ?? 0),
               0
             ) ?? 0),
@@ -45,8 +54,20 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
   }, [data])
 
   return (
-    <CustomCard title="Auditorías recientes" loading={isFetching}>
-      {data?.length ? (
+    <CustomCard loading={isFetching}>
+      <CustomDivider>
+        <CustomTitle level={5}>Auditorías recientes</CustomTitle>
+      </CustomDivider>
+      <CustomText
+        type="secondary"
+        style={{ display: 'block', marginBottom: 8 }}
+      >
+        Mostrando auditorías de {scopeLabel}.
+      </CustomText>
+      <ConditionalComponent
+        condition={!!data?.length}
+        fallback={<Empty description="Sin auditorías registradas" />}
+      >
         <CustomSpace direction="vertical" size={12} style={{ width: '100%' }}>
           <CustomText>
             Auditorías registradas: <strong>{summary.total}</strong>
@@ -56,7 +77,7 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
           </CustomText>
           <CustomText strong>Últimos reportes</CustomText>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {data.slice(0, 4).map((audit) => (
+            {data?.slice(0, 4).map((audit) => (
               <li key={audit.PROCESS_AUDIT_ID}>
                 {new Date(audit.AUDIT_DATE).toLocaleDateString('es-DO')} ·{' '}
                 {audit.SHIFT || 'Turno no especificado'} ·{' '}
@@ -65,9 +86,7 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
             ))}
           </ul>
         </CustomSpace>
-      ) : (
-        <Empty description="Sin auditorías registradas" />
-      )}
+      </ConditionalComponent>
     </CustomCard>
   )
 }

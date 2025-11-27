@@ -1,9 +1,12 @@
 import React from 'react'
 import CustomCard from 'src/components/custom/CustomCard'
 import CustomSpace from 'src/components/custom/CustomSpace'
-import { CustomText } from 'src/components/custom/CustomParagraph'
+import { CustomText, CustomTitle } from 'src/components/custom/CustomParagraph'
 import { useGetModuleEfficiencyQuery } from 'src/services/production/useGetModuleEfficiencyQuery'
 import { Empty } from 'antd'
+import CustomDivider from 'src/components/custom/CustomDivider'
+import ConditionalComponent from 'src/components/ConditionalComponent'
+import { ModuleEfficiencyRecord } from 'src/services/production/useSaveModuleEfficiencyMutation'
 
 interface EfficiencyOverviewProps {
   moduleId?: number
@@ -15,16 +18,23 @@ const EfficiencyOverview: React.FC<EfficiencyOverviewProps> = ({
   period,
 }) => {
   const { data, isFetching } = useGetModuleEfficiencyQuery(moduleId, period)
-  const latest = data?.[0]
+  const latest = data?.[0] ?? ({} as ModuleEfficiencyRecord)
 
   const history = data?.slice(0, 3) ?? []
 
   return (
-    <CustomCard title="Eficiencia reciente" loading={isFetching}>
-      {latest ? (
+    <CustomCard loading={isFetching} height={'100%'}>
+      <CustomDivider>
+        <CustomTitle level={5}>Eficiencia reciente</CustomTitle>
+      </CustomDivider>
+      <ConditionalComponent
+        condition={!!latest?.PERIOD}
+        fallback={<Empty description="Sin registros de eficiencia" />}
+      >
         <CustomSpace direction="vertical" size={12} style={{ width: '100%' }}>
           <CustomText>
-            Periodo {latest.PERIOD}: <strong>{latest.EFFICIENCY_PERCENT}%</strong>
+            Periodo {latest.PERIOD}:{' '}
+            <strong>{latest.EFFICIENCY_PERCENT}%</strong>
           </CustomText>
           <CustomText type="secondary">
             {latest.TOTAL_UNITS} prendas · SAM {latest.SAM} ·{' '}
@@ -47,9 +57,7 @@ const EfficiencyOverview: React.FC<EfficiencyOverviewProps> = ({
             </>
           )}
         </CustomSpace>
-      ) : (
-        <Empty description="Sin registros de eficiencia" />
-      )}
+      </ConditionalComponent>
     </CustomCard>
   )
 }

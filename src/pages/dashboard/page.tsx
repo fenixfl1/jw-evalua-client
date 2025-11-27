@@ -143,8 +143,9 @@ const Dashboard: React.FC = () => {
     isPending: isFetchingActivity,
   } = useGetDashboardActivityMutation()
 
-  const { data: workedModules = [] } =
-    useGetWorkedHoursByModuleQuery(filters.periodEnd ?? filters.periodStart)
+  const { data: workedModules = [] } = useGetWorkedHoursByModuleQuery(
+    filters.periodEnd ?? filters.periodStart
+  )
   const { data: workedStaff = [] } = useGetWorkedHoursByStaffQuery(
     filters.periodEnd ?? filters.periodStart,
     filters.moduleId ?? undefined
@@ -287,8 +288,7 @@ const Dashboard: React.FC = () => {
     fetchActivity(activityFilters)
   }
 
-  const selectedModuleForStats =
-    filters.moduleId ?? moduleOptions[0]?.value ?? undefined
+  const selectedModuleForStats = filters.moduleId ?? undefined
   const selectedPeriodForStats =
     filters.periodEnd ??
     filters.periodStart ??
@@ -382,7 +382,7 @@ const Dashboard: React.FC = () => {
           </CustomCol>
         </CustomRow>
 
-        <CustomRow gutter={[16, 16]} align="stretch">
+        <CustomRow gutter={[16, 16]} align="stretch" height={'100%'}>
           <CustomCol xs={24} lg={14}>
             <EfficiencyOverview
               moduleId={selectedModuleForStats}
@@ -463,7 +463,6 @@ const Dashboard: React.FC = () => {
             </SectionCard>
           </CustomCol>
         </CustomRow>
-
       </CustomSpace>
     </CustomSpin>
   )

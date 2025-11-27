@@ -39,6 +39,7 @@ const ProcessAuditHistory: React.FC<ProcessAuditHistoryProps> = ({
                   {dayjs(audit.AUDIT_DATE).format('DD MMM YYYY')} ·{' '}
                   {audit.SHIFT || 'Turno no especificado'}
                 </CustomText>
+                <br />
                 <CustomText type="secondary">
                   Auditor: {audit.AUDITOR || 'No indicado'} · Supervisor:{' '}
                   {audit.SUPERVISOR || '—'}

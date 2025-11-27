@@ -56,6 +56,11 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     data: { data: supervisorList },
   } = useGetUserPaginationMutation()
 
+  const {
+    mutate: getOperator,
+    data: { data: operatorList },
+  } = useGetUserPaginationMutation()
+
   const handleSearchSupervisor = useCallback(() => {
     const condition: AdvancedCondition[] = [
       {
@@ -81,7 +86,25 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     getSupervisors({ page: 1, size: 100, condition })
   }, [debounce])
 
+  const handleSearchOperator = useCallback(() => {
+    const condition: AdvancedCondition[] = [
+      {
+        value: 'A',
+        field: 'STATE',
+        operator: '=',
+      },
+      {
+        value: moduleId,
+        field: 'MODULE_ID',
+        operator: '=',
+      },
+    ]
+
+    getOperator({ page: 1, size: 100, condition })
+  }, [])
+
   useEffect(handleSearchSupervisor, [handleSearchSupervisor])
+  useEffect(handleSearchOperator, [handleSearchOperator])
 
   const handleSubmit = async () => {
     try {
@@ -207,93 +230,102 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
                 itemLabel={(index) => entries?.[index]?.operation}
               >
                 {(field) => (
-                  <CustomForm {...formItemLayout}>
-                    <CustomRow justify={'start'}>
-                      <CustomCol {...defaultBreakpoints}>
-                        <CustomFormItem
-                          label="Operación"
-                          name={[field.name, 'operation']}
-                        >
-                          <CustomInput placeholder="Descripción de la operación" />
-                        </CustomFormItem>
-                      </CustomCol>
-                      <CustomCol {...defaultBreakpoints}>
-                        <CustomFormItem
-                          label="Operario"
-                          name={[field.name, 'operator']}
-                        >
-                          <CustomInput placeholder="Nombre del operario" />
-                        </CustomFormItem>
-                      </CustomCol>
-                      <CustomCol {...defaultBreakpoints}>
-                        <CustomFormItem
-                          label="Horario / Muestreo"
-                          name={[field.name, 'timeSlot']}
-                        >
-                          <CustomInput placeholder="Ej. 7:45 - 10:00 am" />
-                        </CustomFormItem>
-                      </CustomCol>
-                      <CustomCol {...defaultBreakpoints}>
-                        <CustomFormItem
-                          label="Muestreos"
-                          name={[field.name, 'samples']}
-                        >
-                          <CustomInputNumber min={0} precision={0} />
-                        </CustomFormItem>
-                      </CustomCol>
-                      <CustomCol {...defaultBreakpoints}>
-                        <CustomFormItem
-                          label="Comentarios"
-                          name={[field.name, 'comments']}
-                        >
-                          <CustomInput placeholder="Observaciones específicas" />
-                        </CustomFormItem>
-                      </CustomCol>
+                  <CustomRow justify={'start'} gutter={[16, 16]}>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Operación"
+                        name={[field.name, 'operation']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomInput placeholder={'Descripción de operación'} />
+                      </CustomFormItem>
+                    </CustomCol>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Operario"
+                        name={[field.name, 'operator']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomSelect
+                          placeholder={'Seleccionar Operario'}
+                          options={operatorList.map((item) => ({
+                            label: `${item.NAME} ${item.LAST_NAME}`,
+                            value: item.USER_ID,
+                          }))}
+                        />
+                      </CustomFormItem>
+                    </CustomCol>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Horario"
+                        name={[field.name, 'timeSlot']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomInput placeholder="Ej. 7:45 - 10:00 am" />
+                      </CustomFormItem>
+                    </CustomCol>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Muestreos"
+                        name={[field.name, 'samples']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomInputNumber min={0} precision={0} />
+                      </CustomFormItem>
+                    </CustomCol>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Comentarios"
+                        name={[field.name, 'comments']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomInput placeholder="Observaciones específicas" />
+                      </CustomFormItem>
+                    </CustomCol>
 
-                      <CustomDivider>Defectos encontrados</CustomDivider>
-                      <CustomCol xs={24}>
-                        <CustomCard>
-                          <CustomCollapseFormList
-                            addButtonPosition={'bottom'}
-                            addText={'Agregar Defectos'}
-                            form={form}
-                            name={[field.name, 'defects']}
-                            itemLabel={(index) =>
-                              entries?.[field.name]?.defects?.[index]?.type
-                            }
-                          >
-                            {(defectField) => (
-                              <CustomSpace
-                                direction={'horizontal'}
-                                key={defectField.key}
-                                size={12}
+                    <CustomDivider>Defectos encontrados</CustomDivider>
+                    <CustomCol xs={24}>
+                      <CustomCard>
+                        <CustomCollapseFormList
+                          addButtonPosition={'bottom'}
+                          addText={'Agregar Defectos'}
+                          form={form}
+                          name={[field.name, 'defects']}
+                          itemLabel={(index) =>
+                            entries?.[field.name]?.defects?.[index]?.type
+                          }
+                        >
+                          {(defectField) => (
+                            <CustomSpace
+                              direction={'horizontal'}
+                              key={defectField.key}
+                              size={12}
+                            >
+                              <CustomFormItem
+                                label="Defecto"
+                                name={[defectField.name, 'type']}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: 'Ingrese el nombre del defecto.',
+                                  },
+                                ]}
                               >
-                                <CustomFormItem
-                                  label="Defecto"
-                                  name={[defectField.name, 'type']}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: 'Ingrese el nombre del defecto.',
-                                    },
-                                  ]}
-                                >
-                                  <CustomInput placeholder="Tipo de defecto" />
-                                </CustomFormItem>
-                                <CustomFormItem
-                                  label="Cantidad"
-                                  name={[defectField.name, 'count']}
-                                  rules={[{ required: true }]}
-                                >
-                                  <CustomInputNumber min={0} precision={0} />
-                                </CustomFormItem>
-                              </CustomSpace>
-                            )}
-                          </CustomCollapseFormList>
-                        </CustomCard>
-                      </CustomCol>
-                    </CustomRow>
-                  </CustomForm>
+                                <CustomInput placeholder="Tipo de defecto" />
+                              </CustomFormItem>
+                              <CustomFormItem
+                                label="Cantidad"
+                                name={[defectField.name, 'count']}
+                                rules={[{ required: true }]}
+                              >
+                                <CustomInputNumber min={0} precision={0} />
+                              </CustomFormItem>
+                            </CustomSpace>
+                          )}
+                        </CustomCollapseFormList>
+                      </CustomCard>
+                    </CustomCol>
+                  </CustomRow>
                 )}
               </CustomCollapseFormList>
             </CustomFormItem>

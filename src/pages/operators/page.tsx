@@ -483,7 +483,12 @@ const OperatorsPage: React.FC = () => {
             <CounterButton
               type="button"
               onClick={handleRegisterUnit}
-              disabled={isCounterDisabled}
+              disabled={
+                isCounterDisabled ||
+                !currentSession?.isActive ||
+                isTimerBusy ||
+                isLoadingDashboard
+              }
             >
               <CounterValue $highlight={selectedTask?.color}>
                 {taskCount ?? 0}
