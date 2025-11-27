@@ -50,17 +50,22 @@ const Page: React.FC = () => {
 
   const { metadata, workModules } = useModuleStore()
 
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ metadata })
+  }, [metadata])
+
   const handleSearch = useCallback(
     (page = metadata.currentPage, size = metadata.pageSize) => {
       if (moduleModalState) return
       const { FILTER } = form.getFieldsValue()
 
-      const condition: AdvancedCondition[] = []
       const filter = getConditionFromForm(FILTER)
 
-      if (filter.length) {
-        condition.concat(filter)
-      }
+      const condition: AdvancedCondition[] = [...filter]
+
+      // eslint-disable-next-line no-console
+      console.log({ condition, filter, FILTER, page, size })
 
       if (debounce) {
         condition.push({
@@ -192,7 +197,11 @@ const Page: React.FC = () => {
         initialFilter={initialFilter}
         loading={isGetModulesPending}
         metadata={metadata}
-        onChange={handleSearch}
+        onChange={(cur, size) => {
+          // eslint-disable-next-line no-console
+          console.log({ cur, size })
+          handleSearch(cur, size)
+        }}
         onSearch={setSearchKey}
         searchPlaceholder={'Buscar módulos...'}
         onCreate={toggleModalState}

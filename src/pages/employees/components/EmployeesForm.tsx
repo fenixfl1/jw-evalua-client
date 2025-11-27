@@ -27,6 +27,7 @@ import { useValidateIdentityDocumentMutation } from 'src/services/staff/useValid
 import { normalizeIdentityDocument } from 'src/utils/identity-document'
 import { PhoneOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { useCustomModal } from 'src/hooks/use-custom-modal'
 
 interface EmployeesFormProps {
   open?: boolean
@@ -41,6 +42,7 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
 }) => {
   const [errorHandler] = useErrorHandler()
   const notification = useAppNotification()
+  const { confirmModal } = useCustomModal()
   const [form] = Form.useForm<Staff>()
 
   const isEditing = !!record?.STAFF_ID
@@ -92,11 +94,20 @@ const EmployeesForm: React.FC<EmployeesFormProps> = ({
     }
   }
 
+  const handleClose = () => {
+    confirmModal({
+      onOk: onClose,
+      title: 'Confirmación',
+      content:
+        'Sí cierra la ventana perderá cualquier información que halla introducido.',
+    })
+  }
+
   return (
     <CustomModal
       title={'Formulario de empleados'}
       open={open}
-      onCancel={onClose}
+      onCancel={handleClose}
       width={'50%'}
       onOk={handleOnFinish}
       okText={isEditing ? 'Actualizar' : 'Guardar'}

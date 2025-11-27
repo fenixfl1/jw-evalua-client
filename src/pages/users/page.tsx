@@ -127,6 +127,7 @@ const UserPage: React.FC = () => {
           />
 
           <UserList
+            onChange={handleSearch}
             onUpdate={handleChangeState}
             onEdit={(record) => {
               toggleModalState()

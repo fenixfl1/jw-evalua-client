@@ -26,6 +26,7 @@ import useDebounce from 'src/hooks/use-debounce'
 import { AdvancedCondition } from 'src/types/general'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import { getSessionInfo } from 'src/lib/session'
+import { useCustomModal } from 'src/hooks/use-custom-modal'
 
 interface ProcessAuditFormProps {
   open: boolean
@@ -45,6 +46,7 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
   const debounce = useDebounce(searchKey)
 
   const { message } = App.useApp()
+  const { confirmModal } = useCustomModal()
   const [errorHandler] = useErrorHandler()
   const [searchParams] = useSearchParams()
   const moduleId = searchParams.get('moduleId')
@@ -161,12 +163,21 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     ENTRIES: [{}],
   }
 
+  const handleClose = () => {
+    confirmModal({
+      onOk: onCancel,
+      title: 'Confirmación',
+      content:
+        'Sí cierra la ventana perderá cualquier información que halla introducido.',
+    })
+  }
+
   return (
     <CustomModal
       title="Nueva auditoría en proceso"
       open={open}
       width="65%"
-      onCancel={onCancel}
+      onCancel={handleClose}
       onOk={handleSubmit}
       okText="Guardar"
       okButtonProps={{ loading: isPending }}

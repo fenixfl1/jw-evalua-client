@@ -23,6 +23,11 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
     ? 'el módulo seleccionado'
     : 'todos los módulos'
 
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ data })
+  }, [data])
+
   const summary = useMemo(() => {
     if (!data?.length) {
       return {

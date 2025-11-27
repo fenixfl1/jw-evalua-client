@@ -292,7 +292,6 @@ const Dashboard: React.FC = () => {
   const selectedPeriodForStats =
     filters.periodEnd ??
     filters.periodStart ??
-    periodOptions[0]?.value ??
     undefined
 
   return (

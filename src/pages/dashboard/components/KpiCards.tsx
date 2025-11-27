@@ -86,14 +86,11 @@ const KpiCards: React.FC<InfoCardsProps> = ({
           })
         : 'N/D'
 
-    const evaluationAverage =
-      averageScore !== null
-        ? formatter({
-            value: averageScore,
-            format: 'percentage',
-            fix: 1,
-          })
-        : 'N/D'
+    const evaluationAverage = formatter({
+      value: averageScore ?? 0,
+      format: 'percentage',
+      fix: 1,
+    })
 
     return [
       {

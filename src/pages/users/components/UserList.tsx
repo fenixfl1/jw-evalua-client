@@ -18,14 +18,14 @@ import { User } from 'src/services/users/users.types'
 import { useUserStore } from 'src/store/user.store'
 import formatter from 'src/utils/formatter'
 import { getAvatarLink } from 'src/utils/get-avatar-link'
-import { getTablePagination } from 'src/utils/table-pagination'
 
 interface UserListProps {
   onUpdate?: (user: User) => void
   onEdit?: (record: User) => void
+  onChange?: (current: number, size: number) => void
 }
 
-const UserList: React.FC<UserListProps> = ({ onUpdate, onEdit }) => {
+const UserList: React.FC<UserListProps> = ({ onUpdate, onEdit, onChange }) => {
   const [, setSearchParam] = useSearchParams()
   const { userList, metadata } = useUserStore()
 
@@ -124,13 +124,25 @@ const UserList: React.FC<UserListProps> = ({ onUpdate, onEdit }) => {
     </CustomListItem>
   )
 
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ metadata })
+  }, [metadata])
+
   return (
     <CustomList
       columnsMap={columnsMap}
       exportOptions={{ title: 'Lista de usuarios', orientation: 'landscape' }}
       dataSource={userList}
       renderItem={renderItem}
-      pagination={getTablePagination(metadata)}
+      pagination={{
+        current: metadata.currentPage,
+        onChange,
+        pageSize: metadata.pageSize,
+        pageSizeOptions: [5, 10, 15, 20, 25, 50, 75, 100],
+        showSizeChanger: true,
+        total: Number(metadata.totalRows ?? 0),
+      }}
     />
   )
 }
