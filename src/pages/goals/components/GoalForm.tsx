@@ -21,6 +21,13 @@ import dayjs from 'dayjs'
 import { useCustomNotifications } from 'src/hooks/use-custom-notifications'
 import { useUpdateGoalMutation } from 'src/services/goals/useUpdateGoalMutation'
 import ConditionalComponent from 'src/components/ConditionalComponent'
+import GoalTasksForm from 'src/pages/production/components/GoalTasksForm'
+import CustomDivider from 'src/components/custom/CustomDivider'
+import {
+  CustomParagraph,
+  CustomTitle,
+} from 'src/components/custom/CustomParagraph'
+import { useCustomModal } from 'src/hooks/use-custom-modal'
 
 interface GoalFormProps {
   open: boolean
@@ -30,6 +37,8 @@ interface GoalFormProps {
 
 const GoalForm: React.FC<GoalFormProps> = ({ open, record, onCancel }) => {
   const [form] = Form.useForm()
+
+  const { confirmModal } = useCustomModal()
 
   const { mutateAsync: createGoal, isPending: isCreatePending } =
     useCreateGoalMutation()
@@ -43,14 +52,44 @@ const GoalForm: React.FC<GoalFormProps> = ({ open, record, onCancel }) => {
     if (record) {
       form.setFieldsValue({
         ...record,
+        TASK_TEMPLATES: record.TASK_TEMPLATES?.length
+          ? record.TASK_TEMPLATES
+          : [{}],
         FECHAS: [dayjs(record.START_DATE), dayjs(record.END_DATE)],
       })
+    } else {
+      form.resetFields()
+      form.setFieldsValue({ TASK_TEMPLATES: [{}] })
     }
-  }, [record])
+  }, [record, form])
 
   const handleFinish = async () => {
     try {
       const values = await form.validateFields()
+
+      const rawTemplates: {
+        DESCRIPTION?: string
+        COMMENT?: string
+        TARGET?: number
+        UNITS_PER_ITEM?: number
+      }[] = Array.isArray(values.TASK_TEMPLATES) ? values.TASK_TEMPLATES : []
+      values.TASK_TEMPLATES = rawTemplates
+        .map((task) => {
+          const description = String(task?.DESCRIPTION ?? '').trim()
+          const comment =
+            typeof task?.COMMENT === 'string' ? task.COMMENT.trim() : undefined
+          const target = Number(task?.TARGET ?? 0)
+          const unitsRaw = Number(task?.UNITS_PER_ITEM ?? 1)
+
+          return {
+            DESCRIPTION: description,
+            COMMENT: comment || undefined,
+            TARGET: Number.isFinite(target) ? Math.round(target) : 0,
+            UNITS_PER_ITEM:
+              Number.isFinite(unitsRaw) && unitsRaw > 0 ? Number(unitsRaw) : 1,
+          }
+        })
+        .filter((task) => task.DESCRIPTION && task.TARGET > 0)
 
       delete values.FECHAS
 
@@ -71,16 +110,38 @@ const GoalForm: React.FC<GoalFormProps> = ({ open, record, onCancel }) => {
     }
   }
 
+  const handleOnCancel = () => {
+    confirmModal({
+      title: 'Confirmación',
+      onOk: onCancel,
+      okText: 'Cerrar',
+      content: (
+        <div>
+          <p>
+            Si cierra la ventana perderá cualquier información que halla
+            introducido
+          </p>
+          <p>¿Desea cerrar?</p>
+        </div>
+      ),
+    })
+  }
+
   return (
     <CustomModal
       open={open}
       title={record ? 'Editar meta de equipo' : 'Nueva meta de equipo'}
-      onCancel={onCancel}
+      onCancel={handleOnCancel}
       onOk={handleFinish}
       okText={'Guardar'}
+      width={'45%'}
     >
       <CustomSpin spinning={isCreatePending || isUpdatePending}>
-        <CustomForm form={form} {...formItemLayout}>
+        <CustomForm
+          form={form}
+          initialValues={{ TASK_TEMPLATES: [{}] }}
+          {...formItemLayout}
+        >
           <CustomRow justify={'end'}>
             <ConditionalComponent condition={!!record?.GOAL_ID}>
               <CustomFormItem label={'ID'} name={'GOAL_ID'}>
@@ -145,6 +206,30 @@ const GoalForm: React.FC<GoalFormProps> = ({ open, record, onCancel }) => {
                 />
               </CustomFormItem>
             </CustomCol>
+
+            <CustomDivider>
+              <CustomTitle level={5}>Tareas</CustomTitle>
+            </CustomDivider>
+
+            <GoalTasksForm form={form} name={['TASK_TEMPLATES']} />
+
+            <ConditionalComponent condition={false}>
+              <CustomCol xs={24}>
+                <CustomFormItem
+                  label={' '}
+                  colon={false}
+                  {...labelColFullWidth}
+                >
+                  {() => (
+                    <CustomParagraph>
+                      <pre>
+                        {JSON.stringify(form.getFieldsValue(), null, 2)}
+                      </pre>
+                    </CustomParagraph>
+                  )}
+                </CustomFormItem>
+              </CustomCol>
+            </ConditionalComponent>
           </CustomRow>
         </CustomForm>
       </CustomSpin>

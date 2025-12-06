@@ -12,6 +12,7 @@ import CustomInputNumber from 'src/components/custom/CustomInputNumber'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import CustomSpace from 'src/components/custom/CustomSpace'
 import GoalTasksForm from 'src/pages/production/components/GoalTasksForm'
+import { buildAssignmentTasksFromTemplates } from 'src/utils/taskTemplates'
 import useDebounce from 'src/hooks/use-debounce'
 import { useErrorHandler } from 'src/hooks/use-error-handler'
 import { useGetPeriods } from 'src/hooks/use-get-periods'
@@ -233,16 +234,28 @@ const GoalActions: React.FC<GoalActionsProps> = ({
       updates.TARGET_VALUE = nextTargetValue
     }
 
-    if (Object.keys(updates).length) {
+    const isNewGoal = lastGoalIdRef.current !== numericGoalId
+    const templateTasks = isNewGoal
+      ? buildAssignmentTasksFromTemplates(selectedGoal.TASK_TEMPLATES)
+      : []
+
+    if (Object.keys(updates).length || isNewGoal) {
       form.setFieldsValue({
         MODULE: {
           ...moduleValues,
           ...updates,
+          ...(isNewGoal
+            ? {
+                TASKS: templateTasks.length
+                  ? templateTasks
+                  : [{ STAFF: [{}] }],
+              }
+            : {}),
         },
       })
     }
 
-    if (lastGoalIdRef.current !== numericGoalId) {
+    if (isNewGoal) {
       autoFillDailyRef.current = true
       lastGoalIdRef.current = numericGoalId
     }
@@ -468,6 +481,7 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                                 DESCRIPTION?: string
                                 COMMENT?: string
                                 TARGET?: number
+                                UNITS_PER_ITEM?: number
                                 STAFF?: { STAFF_ID?: number; TARGET?: number }[]
                               }) => ({
                                 DESCRIPTION: String(
@@ -477,6 +491,10 @@ const GoalActions: React.FC<GoalActionsProps> = ({
                                   ? String(task.COMMENT).trim()
                                   : undefined,
                                 TARGET: Number(task.TARGET ?? 0),
+                                UNITS_PER_ITEM:
+                                  Number(task.UNITS_PER_ITEM ?? 1) > 0
+                                    ? Number(task.UNITS_PER_ITEM ?? 1)
+                                    : 1,
                                 STAFF:
                                   task.STAFF?.map((member) => ({
                                     STAFF_ID: Number(member.STAFF_ID),

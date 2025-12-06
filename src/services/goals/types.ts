@@ -1,3 +1,10 @@
+export interface GoalTaskTemplate {
+  DESCRIPTION: string
+  COMMENT?: string | null
+  TARGET: number
+  UNITS_PER_ITEM?: number
+}
+
 export interface Goal {
   GOAL_ID: number
   MODULE_ID: number
@@ -8,6 +15,7 @@ export interface Goal {
   STATE: string
   SCOPE: 'individual' | 'module'
   TARGET_VALUE: number
+  TASK_TEMPLATES?: GoalTaskTemplate[]
 }
 
 export interface CreateGoalPayload {
@@ -18,6 +26,7 @@ export interface CreateGoalPayload {
   WEIGHT: number
   SCOPE: 'individual' | 'module'
   DAILY_TARGETS?: GoalDailyTargetPayload[]
+  TASK_TEMPLATES?: GoalTaskTemplate[]
 }
 
 export interface AssignGoalToModulePayload {

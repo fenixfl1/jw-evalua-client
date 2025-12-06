@@ -14,16 +14,17 @@ import { labelColFullWidth } from 'src/config/breakpoints'
 import CustomCard from '../../../components/custom/CustomCard'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import CustomTooltip from '../../../components/custom/CustomTooltip'
+import ConditionalComponent from 'src/components/ConditionalComponent'
 
 interface GoalTasksFormProps {
   form: FormInstance
-  name: (string | number)[]
-  staffOptions: { value: number; label: string }[]
+  name?: (string | number)[]
+  staffOptions?: { value: number; label: string }[]
 }
 
 const GoalTasksForm: React.FC<GoalTasksFormProps> = ({
   form,
-  name,
+  name = ['TASKS'],
   staffOptions,
 }) => {
   const tasks = Form.useWatch(name, form)
@@ -120,71 +121,75 @@ const GoalTasksForm: React.FC<GoalTasksFormProps> = ({
                 </CustomCol>
               </CustomRow>
 
-              <CustomDivider plain>Asignación de operadores</CustomDivider>
-              <CustomCard>
-                <CustomCollapseFormList
-                  addButtonPosition={'bottom'}
-                  addText={'Agregar Operador'}
-                  form={form}
-                  initialValue={[{}]}
-                  name={[field.name, 'STAFF']}
-                  sort={'desc'}
-                  itemLabel={(index) =>
-                    staffOptions?.find(
-                      (staff) =>
-                        staff.value ===
-                        tasks?.[field.name]?.STAFF?.[index]?.STAFF_ID
-                    )?.label ?? ''
-                  }
-                >
-                  {(staffField) => (
-                    <CustomRow
-                      key={staffField.key}
-                      gutter={[12, 12]}
-                      align="middle"
+              <ConditionalComponent condition={!!staffOptions}>
+                <>
+                  <CustomDivider plain>Asignación de operadores</CustomDivider>
+                  <CustomCard>
+                    <CustomCollapseFormList
+                      addButtonPosition={'bottom'}
+                      addText={'Agregar Operador'}
+                      form={form}
+                      initialValue={[{}]}
+                      name={[field.name, 'STAFF']}
+                      sort={'desc'}
+                      itemLabel={(index) =>
+                        staffOptions?.find(
+                          (staff) =>
+                            staff.value ===
+                            tasks?.[field.name]?.STAFF?.[index]?.STAFF_ID
+                        )?.label ?? ''
+                      }
                     >
-                      <CustomCol xs={24} md={12}>
-                        <CustomFormItem
-                          name={[staffField.name, 'STAFF_ID']}
-                          rules={[
-                            {
-                              required: true,
-                              message: 'Selecciona un operador.',
-                            },
-                          ]}
+                      {(staffField) => (
+                        <CustomRow
+                          key={staffField.key}
+                          gutter={[12, 12]}
+                          align="middle"
                         >
-                          <CustomSelect
-                            placeholder="Operador"
-                            options={staffOptions}
-                            disabled={!staffOptions.length}
-                            showSearch
-                            optionFilterProp="label"
-                          />
-                        </CustomFormItem>
-                      </CustomCol>
-                      <CustomCol xs={20} md={10}>
-                        <CustomFormItem
-                          name={[staffField.name, 'TARGET']}
-                          rules={[
-                            {
-                              required: true,
-                              message:
-                                'Ingresa el objetivo asignado al operador.',
-                            },
-                          ]}
-                        >
-                          <CustomInputNumber
-                            min={1}
-                            step={1}
-                            precision={0}
-                            placeholder="Objetivo individual"
-                          />
-                        </CustomFormItem>
-                      </CustomCol>
-                    </CustomRow>
-                  )}
-                </CustomCollapseFormList>
-              </CustomCard>
+                          <CustomCol xs={24} md={12}>
+                            <CustomFormItem
+                              name={[staffField.name, 'STAFF_ID']}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: 'Selecciona un operador.',
+                                },
+                              ]}
+                            >
+                              <CustomSelect
+                                placeholder="Operador"
+                                options={staffOptions}
+                                disabled={!staffOptions.length}
+                                showSearch
+                                optionFilterProp="label"
+                              />
+                            </CustomFormItem>
+                          </CustomCol>
+                          <CustomCol xs={20} md={10}>
+                            <CustomFormItem
+                              name={[staffField.name, 'TARGET']}
+                              rules={[
+                                {
+                                  required: true,
+                                  message:
+                                    'Ingresa el objetivo asignado al operador.',
+                                },
+                              ]}
+                            >
+                              <CustomInputNumber
+                                min={1}
+                                step={1}
+                                precision={0}
+                                placeholder="Objetivo individual"
+                              />
+                            </CustomFormItem>
+                          </CustomCol>
+                        </CustomRow>
+                      )}
+                    </CustomCollapseFormList>
+                  </CustomCard>
+                </>
+              </ConditionalComponent>
             </CustomSpace>
           )}
         </CustomCollapseFormList>

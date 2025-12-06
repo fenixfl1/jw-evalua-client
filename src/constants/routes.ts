@@ -53,6 +53,8 @@ export const API_PATH_GET_MODULE_WORKED_MINUTES =
   '/module/:moduleId/efficiency/worked-minutes'
 export const API_PATH_POST_PROCESS_AUDIT = '/audits/process'
 export const API_PATH_GET_PROCESS_AUDIT = '/audits/process'
+export const API_PATH_GET_MODULE_GOAL = '/module/goals'
+export const API_PATH_GET_MEMBER_TASKS = '/module/member/tasks'
 
 // competencies
 export const API_PATH_GET_COMPETENCIES = '/competency'

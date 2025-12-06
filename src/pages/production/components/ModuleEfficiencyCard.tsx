@@ -64,7 +64,15 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
         MINUTES_WORKED: Number(workedTime.minutesWorked ?? 0),
       })
     }
-  }, [workedTime, form])
+  }, [workedTime?.minutesWorked, form])
+
+  useEffect(() => {
+    if (workedTime?.totalUnits !== undefined) {
+      form.setFieldsValue({
+        TOTAL_UNITS: Number(workedTime.totalUnits ?? 0),
+      })
+    }
+  }, [workedTime?.totalUnits, form])
 
   const handleSubmit = async () => {
     try {
@@ -96,6 +104,7 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
   const initialValues = {
     PERIOD: period,
     MINUTES_WORKED: workedTime?.minutesWorked ?? 0,
+    TOTAL_UNITS: workedTime?.totalUnits ?? 0,
   }
 
   return (
@@ -111,16 +120,29 @@ const ModuleEfficiencyCard: React.FC<ModuleEfficiencyCardProps> = ({
       >
         <CustomRow gutter={16}>
           <CustomCol xs={24} md={12}>
-            <CustomFormItem
-              label="Prendas totales"
-              name="TOTAL_UNITS"
-              rules={[{ required: true }]}
-            >
-              <CustomInputNumber
-                min={0}
-                precision={0}
-                placeholder="Cantidad producida"
-              />
+            <CustomFormItem label="Prendas totales">
+              <CustomSpaceCompact>
+                <CustomFormItem
+                  name="TOTAL_UNITS"
+                  rules={[{ required: true }]}
+                  noStyle
+                >
+                  <CustomInputNumber
+                    min={0}
+                    precision={2}
+                    placeholder="Se calcula con las tareas completadas"
+                  />
+                </CustomFormItem>
+              </CustomSpaceCompact>
+              <CustomTooltip
+                title={
+                  'Total de prendas calculado con las unidades completadas en las tareas del módulo. Puedes ajustarlo si es necesario.'
+                }
+              >
+                <QuestionCircleOutlined
+                  style={{ cursor: 'help', marginLeft: 5, color: '#40a9ff' }}
+                />
+              </CustomTooltip>
             </CustomFormItem>
           </CustomCol>
           <CustomCol xs={24} md={12}>

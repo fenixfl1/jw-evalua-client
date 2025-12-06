@@ -33,6 +33,7 @@ import { useGoalStore } from 'src/store/goal.store'
 import { useModuleStore } from 'src/store/module.store'
 import { AdvancedCondition } from 'src/types/general'
 import GoalTasksForm from 'src/pages/production/components/GoalTasksForm'
+import { buildAssignmentTasksFromTemplates } from 'src/utils/taskTemplates'
 
 interface AssignGoalProps {
   open: boolean
@@ -145,6 +146,7 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
   const tasks = Form.useWatch('TASKS', form)
 
   const autoFillDailyRef = useRef(false)
+  const lastGoalIdRef = useRef<number | null>(null)
   const [autoFillSeed, setAutoFillSeed] = useState(0)
 
   const [searchKey, setSearchKey] = useState('')
@@ -274,6 +276,7 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
 
   useEffect(() => {
     if (!selectedGoalId) {
+      lastGoalIdRef.current = null
       return
     }
 
@@ -283,13 +286,11 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
     }
 
     const selectedGoal = goals.find((goal) => goal.GOAL_ID === numericGoalId)
-
     if (!selectedGoal) {
       return
     }
 
-    const moduleValues = form.getFieldValue('MODULE') ?? {}
-    const currentTargetValue = Number(moduleValues?.TARGET_VALUE ?? 0)
+    const currentTargetValue = Number(form.getFieldValue('TARGET_VALUE') ?? 0)
     const nextTargetValue = Math.max(
       0,
       Math.round(Number(selectedGoal.TARGET_VALUE ?? 0))
@@ -299,12 +300,17 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
       Number.isFinite(nextTargetValue) &&
       currentTargetValue !== nextTargetValue
     ) {
+      form.setFieldValue('TARGET_VALUE', nextTargetValue)
+    }
+
+    if (lastGoalIdRef.current !== numericGoalId) {
+      const templateTasks = buildAssignmentTasksFromTemplates(
+        selectedGoal.TASK_TEMPLATES
+      )
       form.setFieldsValue({
-        MODULE: {
-          ...moduleValues,
-          TARGET_VALUE: nextTargetValue,
-        },
+        TASKS: templateTasks.length ? templateTasks : [{ STAFF: [{}] }],
       })
+      lastGoalIdRef.current = numericGoalId
     }
   }, [selectedGoalId, goals, form])
 
@@ -470,11 +476,16 @@ const AssignGoal: React.FC<AssignGoalProps> = ({ open, onCancel }) => {
             DESCRIPTION?: string
             COMMENT?: string
             TARGET?: number
+            UNITS_PER_ITEM?: number
             STAFF?: { STAFF_ID?: number; TARGET?: number }[]
           }) => ({
             DESCRIPTION: String(task.DESCRIPTION ?? '').trim(),
             COMMENT: task.COMMENT ? String(task.COMMENT).trim() : undefined,
             TARGET: Number(task.TARGET ?? 0),
+            UNITS_PER_ITEM:
+              Number(task.UNITS_PER_ITEM ?? 1) > 0
+                ? Number(task.UNITS_PER_ITEM ?? 1)
+                : 1,
             STAFF:
               task.STAFF?.map((member) => ({
                 STAFF_ID: Number(member.STAFF_ID),

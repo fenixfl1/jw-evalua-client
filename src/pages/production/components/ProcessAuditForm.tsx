@@ -1,5 +1,5 @@
 import { App, Form } from 'antd'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import CustomModal from 'src/components/custom/CustomModal'
 import CustomForm from 'src/components/custom/CustomFrom'
@@ -22,11 +22,15 @@ import {
 import CustomCollapseFormList from 'src/components/custom/CustomCollapseFormList'
 import CustomCard from 'src/components/custom/CustomCard'
 import { useGetUserPaginationMutation } from '../../../services/users/useGetUserPaginationMutation'
-import useDebounce from 'src/hooks/use-debounce'
 import { AdvancedCondition } from 'src/types/general'
 import CustomSelect from 'src/components/custom/CustomSelect'
 import { getSessionInfo } from 'src/lib/session'
 import { useCustomModal } from 'src/hooks/use-custom-modal'
+import { useModuleStore } from 'src/store/module.store'
+import { CustomParagraph } from 'src/components/custom/CustomParagraph'
+import { useGetPeriods } from 'src/hooks/use-get-periods'
+import { useGetModuleGoalsMutation } from 'src/services/work_modules/useGetModuleGoalsMutation'
+import { useGetMemberTasksMutation } from 'src/services/work_modules/useMemberTasksMutation'
 
 interface ProcessAuditFormProps {
   open: boolean
@@ -41,9 +45,7 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
 }) => {
   const [form] = Form.useForm()
   const entries = Form.useWatch('ENTRIES', form)
-
-  const [searchKey, setSearchKey] = useState('')
-  const debounce = useDebounce(searchKey)
+  const goalId = Form.useWatch('STYLE', form)
 
   const { message } = App.useApp()
   const { confirmModal } = useCustomModal()
@@ -51,42 +53,59 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
   const [searchParams] = useSearchParams()
   const moduleId = searchParams.get('moduleId')
 
+  const [, period] = useGetPeriods()
+
   const { mutateAsync: createAudit, isPending } =
     useCreateProcessAuditMutation()
-  const {
-    mutate: getSupervisors,
-    data: { data: supervisorList },
-  } = useGetUserPaginationMutation()
 
   const {
     mutate: getOperator,
     data: { data: operatorList },
   } = useGetUserPaginationMutation()
+  const { mutate: getModuleGoals, data: moduleGoals } =
+    useGetModuleGoalsMutation()
+  const { mutate: getMembersTasks, data: membersTasks } =
+    useGetMemberTasksMutation()
 
-  const handleSearchSupervisor = useCallback(() => {
-    const condition: AdvancedCondition[] = [
-      {
-        value: 'A',
-        field: 'STATE',
-        operator: '=',
+  const { workModules } = useModuleStore()
+
+  const module = workModules.find((item) => String(item.MODULE_ID) === moduleId)
+
+  const handleGetModuleGoals = useCallback(() => {
+    getModuleGoals({
+      condition: {
+        MODULE_ID: module?.MODULE_ID,
+        PERIOD: period,
       },
-      {
-        value: 2,
-        field: 'ROLE_ID',
-        operator: '=',
-      },
-    ]
+    })
+  }, [period, module])
 
-    if (debounce) {
-      condition.push({
-        value: debounce,
-        field: 'FILTER',
-        operator: 'LIKEN',
-      })
-    }
+  useEffect(handleGetModuleGoals, [handleGetModuleGoals])
 
-    getSupervisors({ page: 1, size: 100, condition })
-  }, [debounce])
+  const handleGetMemberTasks = useCallback(
+    (staffIdValue: number) => {
+      if (!moduleId) {
+        return
+      }
+
+      const memberId = Number(staffIdValue)
+      if (!Number.isFinite(memberId) || memberId <= 0) {
+        return
+      }
+
+      const payload = {
+        condition: {
+          MODULE_ID: Number(moduleId),
+          PERIOD: period,
+          MEMBER_ID: memberId,
+          ...(typeof goalId === 'number' ? { GOAL_ID: goalId } : {}),
+        },
+      }
+
+      getMembersTasks(payload)
+    },
+    [goalId, moduleId, period, getMembersTasks]
+  )
 
   const handleSearchOperator = useCallback(() => {
     const condition: AdvancedCondition[] = [
@@ -105,7 +124,6 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     getOperator({ page: 1, size: 100, condition })
   }, [])
 
-  useEffect(handleSearchSupervisor, [handleSearchSupervisor])
   useEffect(handleSearchOperator, [handleSearchOperator])
 
   const handleSubmit = async () => {
@@ -127,7 +145,7 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
         AUDIT_DATE: formattedDate,
         SHIFT: values.SHIFT,
         STYLE: values.STYLE,
-        SUPERVISOR: values.SUPERVISOR,
+        SUPERVISOR: values.SUPERVISOR_ID,
         AUDITOR: values.AUDITOR,
         COMMENTS: values.COMMENTS,
         ENTRIES: (values.ENTRIES ?? []).map((entry) => ({
@@ -158,6 +176,11 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     }
   }
 
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ entries })
+  }, [entries])
+
   const initialValues = {
     AUDIT_DATE: dayjs(),
     ENTRIES: [{}],
@@ -184,13 +207,18 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
     >
       <CustomForm form={form} {...formItemLayout} initialValues={initialValues}>
         <CustomRow>
+          <CustomFormItem
+            name={'SUPERVISOR_ID'}
+            hidden
+            initialValue={module?.SUPERVISOR_ID}
+          />
           <CustomCol {...defaultBreakpoints}>
             <CustomFormItem
               label="Fecha"
               name="AUDIT_DATE"
               rules={[{ required: true }]}
             >
-              <CustomDatePicker format="YYYY-MM-DD" />
+              <CustomDatePicker disabled format="YYYY-MM-DD" />
             </CustomFormItem>
           </CustomCol>
           <CustomCol {...defaultBreakpoints}>
@@ -200,19 +228,22 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
           </CustomCol>
           <CustomCol {...defaultBreakpoints}>
             <CustomFormItem label="Estilo" name="STYLE">
-              <CustomInput placeholder="Código o descripción del estilo" />
+              <CustomSelect
+                placeholder="Seleccionar"
+                options={moduleGoals.map((item) => ({
+                  label: item.DESCRIPTION,
+                  value: item.GOAL_ID,
+                }))}
+              />
             </CustomFormItem>
           </CustomCol>
           <CustomCol {...defaultBreakpoints}>
-            <CustomFormItem label="Supervisor" name="SUPERVISOR">
-              <CustomSelect
-                onSearch={setSearchKey}
-                placeholder="Supervisor responsable"
-                options={supervisorList.map((item) => ({
-                  label: `${item.NAME} ${item.LAST_NAME}`,
-                  value: item.USER_ID,
-                }))}
-              />
+            <CustomFormItem
+              label="Supervisor"
+              name="SUPERVISOR"
+              initialValue={module?.SUPERVISOR_NAME}
+            >
+              <CustomInput readOnly />
             </CustomFormItem>
           </CustomCol>
           <CustomCol {...defaultBreakpoints}>
@@ -238,19 +269,20 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
                 addText={'Agregar Operación'}
                 form={form}
                 name={'ENTRIES'}
-                itemLabel={(index) => entries?.[index]?.operation}
+                itemLabel={(index) => {
+                  const { operator, operation } = entries?.[index] ?? {}
+                  const task = membersTasks.find(
+                    (item) => item.GOAL_TASK_ID === operation
+                  )
+                  const user = operatorList.find(
+                    (item) => item.STAFF_ID === operator
+                  )
+
+                  return `${task?.['TASK_DESCRIPTION']} - ${user?.NAME}`
+                }}
               >
                 {(field) => (
                   <CustomRow justify={'start'} gutter={[16, 16]}>
-                    <CustomCol {...defaultBreakpoints}>
-                      <CustomFormItem
-                        label="Operación"
-                        name={[field.name, 'operation']}
-                        labelCol={{ span: 8 }}
-                      >
-                        <CustomInput placeholder={'Descripción de operación'} />
-                      </CustomFormItem>
-                    </CustomCol>
                     <CustomCol {...defaultBreakpoints}>
                       <CustomFormItem
                         label="Operario"
@@ -258,10 +290,31 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
                         labelCol={{ span: 8 }}
                       >
                         <CustomSelect
+                          onSelect={(value) => {
+                            form.resetFields([
+                              ['ENTRIES', field.name, 'operation'],
+                            ])
+                            handleGetMemberTasks(Number(value))
+                          }}
                           placeholder={'Seleccionar Operario'}
                           options={operatorList.map((item) => ({
                             label: `${item.NAME} ${item.LAST_NAME}`,
-                            value: item.USER_ID,
+                            value: item.STAFF_ID,
+                          }))}
+                        />
+                      </CustomFormItem>
+                    </CustomCol>
+                    <CustomCol {...defaultBreakpoints}>
+                      <CustomFormItem
+                        label="Operación"
+                        name={[field.name, 'operation']}
+                        labelCol={{ span: 8 }}
+                      >
+                        <CustomSelect
+                          placeholder={'Descripción de operación'}
+                          options={membersTasks?.map((task) => ({
+                            label: task['TASK_DESCRIPTION'],
+                            value: task.GOAL_TASK_ID,
                           }))}
                         />
                       </CustomFormItem>
@@ -341,6 +394,18 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
               </CustomCollapseFormList>
             </CustomFormItem>
           </CustomCol>
+
+          {/* <ConditionalComponent condition> */}
+          <CustomCol xs={24}>
+            <CustomFormItem label={' '} colon={false} {...labelColFullWidth}>
+              {() => (
+                <CustomParagraph>
+                  <pre>{JSON.stringify(form.getFieldsValue(), null, 2)}</pre>
+                </CustomParagraph>
+              )}
+            </CustomFormItem>
+          </CustomCol>
+          {/* </ConditionalComponent> */}
         </CustomRow>
       </CustomForm>
     </CustomModal>

@@ -6,6 +6,7 @@ type WorkedMinutesResponse = {
   minutesWorked: number
   secondsWorked: number
   activeSessions: number
+  totalUnits?: number
 }
 
 export function useGetModuleWorkedMinutesQuery(

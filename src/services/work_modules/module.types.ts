@@ -7,6 +7,7 @@ export interface WorkModule {
   STATE: string
   CREATED_AT: string
   CREATED_BY: number
+  SUPERVISOR_NAME: string
   MEMBERS: Pick<Staff, 'STAFF_ID' | 'NAME' | 'LAST_NAME'>[]
 }
 
