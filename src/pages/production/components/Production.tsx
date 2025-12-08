@@ -209,7 +209,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       const condition: AdvancedCondition[] = [
         {
-          value: selectedModuleId,
+          value: module?.MODULE_ID,
           field: 'MODULE_ID',
           operator: '=',
         },
@@ -218,7 +218,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       getModuleSummary({ condition, page, size })
     },
-    [debounce, progressModalState, modalState, selectedModuleId]
+    [debounce, progressModalState, modalState, module]
   )
 
   useEffect(handleSearch, [handleSearch])

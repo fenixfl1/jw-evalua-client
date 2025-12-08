@@ -38,17 +38,19 @@ const Page: React.FC = () => {
   useEffect(handleSearch, [handleSearch])
 
   const items: TabsProps['items'] = useMemo(() => {
-    return workModules.map((module) => ({
-      key: `${module.MODULE_ID}`,
-      label: module.DESCRIPTION,
-      children: <Production key={module.MODULE_ID} module={module} />,
-      onClick: () => {},
-    }))
+    return workModules.map((module) => {
+      return {
+        key: `${module.MODULE_ID}`,
+        label: module.DESCRIPTION,
+        children: <Production key={module.MODULE_ID} module={module} />,
+      }
+    })
   }, [workModules])
 
   return (
     <CustomSpin spinning={isGetModulesPending}>
       <CustomTabs
+        destroyOnHidden
         tabPosition={'right'}
         items={items}
         onChange={(key) => {
