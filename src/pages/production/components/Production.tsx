@@ -218,17 +218,7 @@ const Goals: React.FC<GoalsProps> = ({ module }) => {
 
       getModuleSummary({ condition, page, size })
     },
-    [
-      debounce,
-      searchParams,
-      progressModalState,
-      modalState,
-      selectedModuleId,
-      form,
-      getModuleSummary,
-      metadata.currentPage,
-      metadata.pageSize,
-    ]
+    [debounce, progressModalState, modalState, selectedModuleId]
   )
 
   useEffect(handleSearch, [handleSearch])
