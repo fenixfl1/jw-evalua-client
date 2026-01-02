@@ -40,6 +40,7 @@ const Container = styled(CustomRow)`
   background-color: ${({ theme: { isDark } }) =>
     isDark ? '#000000' : undefined};
   height: 100vh;
+  overflow: auto;
 `
 
 export type ErrorStatusCode = '403' | '404' | '500'

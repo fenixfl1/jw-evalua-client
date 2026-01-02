@@ -430,7 +430,7 @@ const OperatorsPage: React.FC = () => {
                 condition={!!selectedTask?.moduleId}
                 fallback={<Empty description="Sin tareas asignadas" />}
               >
-                <>
+                <div>
                   <TaskDescription>
                     {selectedTask?.description || 'Sin descripción'}
                   </TaskDescription>
@@ -455,18 +455,20 @@ const OperatorsPage: React.FC = () => {
                       }
                     />
                   </ConditionalComponent>
-                  <CustomButton
-                    type="link"
-                    danger
-                    onClick={handleResetCurrentTask}
-                    disabled={
-                      !selectedTask || isResetting || isLoadingDashboard
-                    }
-                    loading={isResetting}
-                  >
-                    Reiniciar conteo de esta tarea
-                  </CustomButton>
-                </>
+                  <ConditionalComponent condition={false}>
+                    <CustomButton
+                      type="link"
+                      danger
+                      onClick={handleResetCurrentTask}
+                      disabled={
+                        !selectedTask || isResetting || isLoadingDashboard
+                      }
+                      loading={isResetting}
+                    >
+                      Reiniciar conteo de esta tarea
+                    </CustomButton>
+                  </ConditionalComponent>
+                </div>
               </ConditionalComponent>
             </CustomSpace>
           </CustomSpin>

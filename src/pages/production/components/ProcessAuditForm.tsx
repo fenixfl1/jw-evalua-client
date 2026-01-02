@@ -108,6 +108,15 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
   )
 
   const handleSearchOperator = useCallback(() => {
+    if (!moduleId) {
+      return
+    }
+
+    const moduleValue = Number(moduleId)
+    if (!Number.isFinite(moduleValue)) {
+      return
+    }
+
     const condition: AdvancedCondition[] = [
       {
         value: 'A',
@@ -115,14 +124,14 @@ const ProcessAuditForm: React.FC<ProcessAuditFormProps> = ({
         operator: '=',
       },
       {
-        value: moduleId,
+        value: moduleValue,
         field: 'MODULE_ID',
         operator: '=',
       },
     ]
 
     getOperator({ page: 1, size: 100, condition })
-  }, [])
+  }, [getOperator, moduleId])
 
   useEffect(handleSearchOperator, [handleSearchOperator])
 

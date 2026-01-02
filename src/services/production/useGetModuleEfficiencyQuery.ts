@@ -1,9 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { buildQueryString, getRequest } from 'src/services/api'
-import {
-  API_PATH_GET_MODULE_EFFICIENCY,
-  API_PATH_POST_MODULE_EFFICIENCY,
-} from 'src/constants/routes'
+import { API_PATH_GET_MODULE_EFFICIENCY } from 'src/constants/routes'
 import { ModuleEfficiencyRecord } from './useSaveModuleEfficiencyMutation'
 
 export function useGetModuleEfficiencyQuery(
@@ -12,30 +9,29 @@ export function useGetModuleEfficiencyQuery(
 ) {
   const hasModule = Number.isFinite(moduleId)
   return useQuery<ModuleEfficiencyRecord[] | undefined>({
-    enabled: hasModule || moduleId === undefined,
+    enabled: hasModule,
     queryKey: [
       'production',
       'efficiency',
-      hasModule ? moduleId : 'all',
-      period,
+      hasModule ? moduleId : 'none',
+      period ?? 'all',
     ],
     queryFn: async () => {
-      // eslint-disable-next-line no-console
-      console.log({ hasModule })
+      if (!hasModule) {
+        return []
+      }
 
-      const path = hasModule
-        ? API_PATH_GET_MODULE_EFFICIENCY.replace(':moduleId', String(moduleId))
-        : API_PATH_POST_MODULE_EFFICIENCY
+      const path = API_PATH_GET_MODULE_EFFICIENCY.replace(
+        ':moduleId',
+        String(moduleId)
+      )
       const url = buildQueryString(path, {
-        period: hasModule ? period : undefined,
+        period,
       })
 
       const {
         data: { data },
       } = await getRequest<ModuleEfficiencyRecord[]>(url)
-
-      // eslint-disable-next-line no-console
-      console.log({ data })
 
       return data ?? []
     },

@@ -7,12 +7,25 @@ import {
   CustomTitle,
 } from 'src/components/custom/CustomParagraph'
 import CustomTimeline from 'src/components/custom/CustomTimeline'
-import dayjs from 'dayjs'
 import CustomDivider from 'src/components/custom/CustomDivider'
 import ConditionalComponent from 'src/components/ConditionalComponent'
+import dayjs from 'dayjs'
+import styled from 'styled-components'
+
+const Container = styled.div`
+  height: 192px;
+  overflow: auto;
+`
 
 interface ProcessAuditHistoryProps {
   moduleId?: number
+}
+
+const formatAuditDate = (value?: string) => {
+  if (!value) return 'Fecha no disponible'
+  const [dateOnly] = value.split('T')
+  const parsed = dayjs(dateOnly)
+  return parsed.isValid() ? parsed.format('DD MMM YYYY') : 'Fecha no disponible'
 }
 
 const ProcessAuditHistory: React.FC<ProcessAuditHistoryProps> = ({
@@ -33,35 +46,37 @@ const ProcessAuditHistory: React.FC<ProcessAuditHistoryProps> = ({
           </CustomText>
         }
       >
-        <CustomTimeline
-          mode="left"
-          items={data?.map((audit) => ({
-            key: audit.PROCESS_AUDIT_ID,
-            children: (
-              <div>
-                <CustomParagraph>
-                  <CustomText strong>
-                    {dayjs(audit.AUDIT_DATE).format('DD MMM YYYY')} ·{' '}
-                    {audit.SHIFT || 'Turno no especificado'}
-                  </CustomText>
-                  <br />
-                  <CustomText type="secondary">
-                    Auditor: {audit.AUDITOR || 'No indicado'} <br /> Supervisor:{' '}
-                    {audit.SUPERVISOR || '—'}
-                  </CustomText>
-                  <ul style={{ marginLeft: 16 }}>
-                    {audit.ENTRIES?.slice(0, 3).map((entry, index) => (
-                      <li key={index}>
-                        {entry.operation || 'Operación'} —{' '}
-                        {entry.defects?.length || 0} defectos
-                      </li>
-                    ))}
-                  </ul>
-                </CustomParagraph>
-              </div>
-            ),
-          }))}
-        />
+        <Container>
+          <CustomTimeline
+            mode="left"
+            items={data?.map((audit) => ({
+              key: audit.PROCESS_AUDIT_ID,
+              children: (
+                <div>
+                  <CustomParagraph>
+                    <CustomText strong>
+                      {formatAuditDate(audit.AUDIT_DATE)} ·{' '}
+                      {audit.SHIFT || 'Turno no especificado'}
+                    </CustomText>
+                    <br />
+                    <CustomText type="secondary">
+                      Auditor: {audit.AUDITOR || 'No indicado'} <br />{' '}
+                      Supervisor: {audit.SUPERVISOR || '—'}
+                    </CustomText>
+                    <ul style={{ marginLeft: 16 }}>
+                      {audit.ENTRIES?.slice(0, 3).map((entry, index) => (
+                        <li key={index}>
+                          {entry.operation || 'Operación'} —{' '}
+                          {entry.defects?.length || 0} defectos
+                        </li>
+                      ))}
+                    </ul>
+                  </CustomParagraph>
+                </div>
+              ),
+            }))}
+          />
+        </Container>
       </ConditionalComponent>
     </CustomCard>
   )

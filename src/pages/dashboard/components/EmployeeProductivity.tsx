@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Empty } from 'antd'
 import React, { useMemo } from 'react'
 import {
@@ -89,11 +90,9 @@ const GOAL_STATUS_COLORS = {
   pendingGoals: '#bfbfbf',
 }
 
-const CustomTooltip: React.FC<TooltipProps<string, string>> = ({
-  active,
-  payload,
-  label,
-}) => {
+const CustomTooltip: React.FC<
+  TooltipProps<string, string> & { payload?: any; label?: any }
+> = ({ active, payload, label }) => {
   if (!active || !payload?.length) {
     return null
   }
@@ -150,6 +149,11 @@ const CustomTooltip: React.FC<TooltipProps<string, string>> = ({
 const EmployeeProductivity: React.FC<EmployeeProductivityProps> = ({
   dataSource,
 }) => {
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log({ dataSource })
+  }, [dataSource])
+
   const chartData = useMemo(
     () =>
       dataSource.map((entry) => ({
@@ -226,4 +230,3 @@ const EmployeeProductivity: React.FC<EmployeeProductivityProps> = ({
 }
 
 export default EmployeeProductivity
-

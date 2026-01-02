@@ -6,9 +6,19 @@ import { Empty } from 'antd'
 import { useGetProcessAuditsQuery } from 'src/services/production/useGetProcessAuditsQuery'
 import ConditionalComponent from 'src/components/ConditionalComponent'
 import CustomDivider from 'src/components/custom/CustomDivider'
+import dayjs from 'dayjs'
 
 interface ProcessAuditSummaryProps {
   moduleId?: number
+}
+
+const formatAuditDate = (value?: string) => {
+  if (!value) return 'Fecha no disponible'
+  const [dateOnly] = value.split('T')
+  const parsed = dayjs(dateOnly)
+  return parsed.isValid()
+    ? parsed.format('DD MMM YYYY')
+    : 'Fecha no disponible'
 }
 
 const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
@@ -22,11 +32,6 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
   const scopeLabel = moduleFilter
     ? 'el módulo seleccionado'
     : 'todos los módulos'
-
-  React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log({ data })
-  }, [data])
 
   const summary = useMemo(() => {
     if (!data?.length) {
@@ -84,7 +89,7 @@ const ProcessAuditSummary: React.FC<ProcessAuditSummaryProps> = ({
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {data?.slice(0, 4).map((audit) => (
               <li key={audit.PROCESS_AUDIT_ID}>
-                {new Date(audit.AUDIT_DATE).toLocaleDateString('es-DO')} ·{' '}
+                {formatAuditDate(audit.AUDIT_DATE)} ·{' '}
                 {audit.SHIFT || 'Turno no especificado'} ·{' '}
                 {audit.ENTRIES.length} operaciones
               </li>
